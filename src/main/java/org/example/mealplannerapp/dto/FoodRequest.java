@@ -13,6 +13,6 @@ public record FoodRequest(
         @PositiveOrZero double fiber100g,
         @PositiveOrZero double purchasePrice,
         @Positive double purchaseWeight,
-        @DecimalMin("0.0") @DecimalMax("1.0") double edibleRatio
+        @DecimalMin(value = "0.0", inclusive = false) @DecimalMax(value = "1.0", inclusive = true) double edibleRatio
 ) {
 }

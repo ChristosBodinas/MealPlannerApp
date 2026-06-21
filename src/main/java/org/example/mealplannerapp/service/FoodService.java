@@ -32,12 +32,15 @@ public class FoodService {
         }
     }
 
+    private double calculateNewPrice(FoodRequest request) {
+        // purchaseWeight and edibleRatio cannot be 0 currently 
+        return request.purchasePrice() / (request.purchaseWeight() * request.edibleRatio());
+    }
+
     public FoodResponse createNewFood(User user, FoodRequest request) {
         Food food = foodMapper.createFromRequest(request);
         food.setUser(user);
-        food.setPrice100g(
-                request.purchasePrice() / (request.purchaseWeight() * request.edibleRatio())
-        );
+        food.setPrice100g(calculateNewPrice(request));
         return foodMapper.generateResponse(foodRepository.save(food));
     }
 
@@ -46,9 +49,7 @@ public class FoodService {
         verifyOwnership(user.getId(), food);
 
         foodMapper.updateFromRequest(food, request);
-        food.setPrice100g(
-                request.purchasePrice() / (request.purchaseWeight() * request.edibleRatio())
-        );
+        food.setPrice100g(calculateNewPrice(request));
         return foodMapper.generateResponse(foodRepository.save(food));
     }
 
