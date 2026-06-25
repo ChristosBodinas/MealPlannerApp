@@ -33,7 +33,7 @@ public record FoodRequest(
         double purchaseWeight,
 
         @DecimalMin(value = "0.0", inclusive = false, message = "Edible ratio cannot be less than 0%.")
-        @DecimalMax(value = "1.0", message = "Edible ratio cannot be less than 100%.")
+        @DecimalMax(value = "1.0", inclusive = true, message = "Edible ratio cannot be less than 100%.")
         double edibleRatio
 ) {
 }
