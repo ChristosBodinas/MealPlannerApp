@@ -19,7 +19,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.beans.Transient;
 import java.util.Optional;
 import java.util.Set;
 
@@ -124,8 +123,6 @@ class FoodServiceUnitTests {
         // Act + Assert
         assertThatThrownBy(() -> foodService.createNewFood(user, request))
             .isInstanceOf(IllegalDuplicateValueException.class);
-        verify(foodService).verifyNoDuplicateUnits(request.units());
-        verify(foodService, never()).verifyNoDuplicatePrices(request.prices());
     }
 
     @Test
@@ -133,15 +130,11 @@ class FoodServiceUnitTests {
         // Arrange
         User user = new User();
         FoodRequest request = dupPriceFoodRequest();
-        FoodRequest();
 
         // Act + Assert
         assertThatThrownBy(() -> foodService.createNewFood(user, request))
             .isInstanceOf(IllegalDuplicateValueException.class);
-        verify(foodService).verifyNoDuplicateUnits(request.units());
-        verify(foodService).verifyNoDuplicatePrices(request.prices());
     }
-
 
     @Test
     void updateFoodById_happyFlow() {
@@ -155,17 +148,15 @@ class FoodServiceUnitTests {
 
         FoodRequest request = defaultFoodRequest();
 
-        Food savedFood = new Food();
-        when(foodRepository.save(existingFood)).thenReturn(savedFood);
-
         FoodResponse expectedResponse = defaultFoodResponse();
-        when(foodMapper.generateResponse(savedFood)).thenReturn(expectedResponse);
+        when(foodMapper.generateResponse(existingFood)).thenReturn(expectedResponse);
 
         // Act
         FoodResponse actualResponse = foodService.updateFoodById(user, 99L, request);
 
         // Assert
         assertThat(actualResponse).isEqualTo(expectedResponse);
+        verify(foodMapper).updateFromRequest(existingFood, request);
     }
 
     @Test
@@ -177,8 +168,6 @@ class FoodServiceUnitTests {
         // Act + Assert
         assertThatThrownBy(() -> foodService.updateFoodById(user, 99L, request))
             .isInstanceOf(IllegalDuplicateValueException.class);
-        verify(foodService).verifyNoDuplicateUnits(request.units());
-        verify(foodService, never()).verifyNoDuplicatePrices(request.prices());
     }
 
     @Test
@@ -186,13 +175,10 @@ class FoodServiceUnitTests {
         // Arrange
         User user = new User();
         FoodRequest request = dupPriceFoodRequest();
-        FoodRequest();
 
         // Act + Assert
         assertThatThrownBy(() -> foodService.updateFoodById(user, 99L, request))
             .isInstanceOf(IllegalDuplicateValueException.class);
-        verify(foodService).verifyNoDuplicateUnits(request.units());
-        verify(foodService).verifyNoDuplicatePrices(request.prices());
     }
 
     @Test

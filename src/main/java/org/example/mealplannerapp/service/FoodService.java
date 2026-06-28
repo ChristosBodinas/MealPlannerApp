@@ -1,6 +1,7 @@
 package org.example.mealplannerapp.service;
 
 import lombok.AllArgsConstructor;
+import org.example.mealplannerapp.dto.food.request.FoodPriceRequest;
 import org.example.mealplannerapp.dto.food.request.FoodRequest;
 import org.example.mealplannerapp.dto.food.request.FoodUnitRequest;
 import org.example.mealplannerapp.dto.food.response.FoodResponse;
@@ -35,14 +36,14 @@ public class FoodService {
     }
 
     public void verifyNoDuplicateUnits(Set<FoodUnitRequest> requests) {
-        if (requests.size() == requests.stream().map(FoodUnitRequest::name).distinct().count()) {
+        if (requests.size() > requests.stream().map(FoodUnitRequest::name).distinct().count()) {
             throw new IllegalDuplicateValueException("Can't have duplicates of the same unit.");
         }        
     }
 
     public void verifyNoDuplicatePrices(Set<FoodPriceRequest> requests) {
-        if (requests.size() == requests.stream().map(FoodPriceRequest::seller).distinct().count()) {
-            throw new IllegalDuplicateValueException("Can't have duplicates of the same.");
+        if (requests.size() > requests.stream().map(FoodPriceRequest::seller).distinct().count()) {
+            throw new IllegalDuplicateValueException("Can't have duplicates of the same seller.");
         }
     }
 
@@ -62,7 +63,7 @@ public class FoodService {
         Food food = tryFindById(foodId);
         verifyOwnership(user.getId(), food);
         foodMapper.updateFromRequest(food, request);
-        return foodMapper.generateResponse(foodRepository.save(food));
+        return foodMapper.generateResponse(food);
     }
 
     public void deleteFoodById(User user, Long foodId) {

@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -31,7 +31,7 @@ public class Plan {
 
     @ElementCollection
     @CollectionTable(name = "categories", joinColumns = @JoinColumn(name = "plan_id"))
-    private Map<Integer, String> categories;
+    private List<String> categories;
 
     @OneToMany(mappedBy = "plan")
     private Set<Day> days;
