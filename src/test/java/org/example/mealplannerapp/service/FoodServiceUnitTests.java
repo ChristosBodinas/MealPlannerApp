@@ -35,10 +35,6 @@ class FoodServiceUnitTests {
     @InjectMocks
     private FoodService foodService;
 
-    private final double purchasePrice = 7.8;
-    private final double purchaseWeight = 0.4;
-    private final double edibleRatio = 0.9;
-
     private FoodRequest defaultFoodRequest() {
         return new FoodRequest(
                 "Fake Food", "Fake Brand",

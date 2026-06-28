@@ -30,7 +30,7 @@ public record FoodRequest(
         double fiberPer100g,
 
         @DecimalMin(value = "0.0", inclusive = false, message = "Edible ratio cannot be less than 0%.")
-        @DecimalMax(value = "1.0", inclusive = true, message = "Edible ratio cannot be greater than 100%.")
+        @DecimalMax(value = "1.0", message = "Edible ratio cannot be greater than 100%.")
         double edibleRatio,
 
         // TO-DO: Validation for unique unit names.

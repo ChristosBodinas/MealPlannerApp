@@ -2,9 +2,7 @@ package org.example.mealplannerapp.controller;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.example.mealplannerapp.dto.food.request.FoodRequest;
-import org.example.mealplannerapp.dto.food.response.FoodPriceResponse;
 import org.example.mealplannerapp.dto.food.response.FoodResponse;
 import org.example.mealplannerapp.security.AuthUser;
 import org.example.mealplannerapp.service.FoodService;
@@ -13,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Set;
 
 @RestController
