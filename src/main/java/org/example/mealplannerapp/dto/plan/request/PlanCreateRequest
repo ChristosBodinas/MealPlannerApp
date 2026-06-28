@@ -1,0 +1,12 @@
+package org.example.mealplannerapp.dto.plan.request;
+
+public record PlanCreateRequest(
+    String name,
+    double startWeight,
+    double averageDeficit,
+    int numberOfDays,
+    List<String> categories,
+    //dayGoalRequests -> if null, distribute equally.
+) {
+
+}
