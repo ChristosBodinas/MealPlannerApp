@@ -8,6 +8,7 @@ import org.example.mealplannerapp.dto.food.response.FoodResponse;
 import org.example.mealplannerapp.dto.food.response.FoodUnitResponse;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
+import org.example.mealplannerapp.exception.IllegalDuplicateValueException;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.exception.ResourceNotOwnedException;
 import org.example.mealplannerapp.mapper.FoodMapper;
@@ -18,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.beans.Transient;
 import java.util.Optional;
 import java.util.Set;
 
@@ -44,6 +46,28 @@ class FoodServiceUnitTests {
                         new FoodUnitRequest("cup", 235.0)),
                 Set.of(new FoodPriceRequest("Masoutis", 6.80, 200),
                         new FoodPriceRequest("MyMarket", 5.70, 175)));
+    }
+
+    private FoodRequest dupUnitFoodRequest() {
+        return new FoodRequest(
+                "Fake Food", "Fake Brand",
+                97.0, 12.0, 37.5, 4.5, 6.0,
+                0.9,
+                Set.of(new FoodUnitRequest("tbsp", 15.0),
+                        new FoodUnitRequest("tbsp", 235.0)),
+                Set.of(new FoodPriceRequest("Masoutis", 6.80, 200),
+                        new FoodPriceRequest("MyMarket", 5.70, 175)));
+    }
+
+    private FoodRequest dupPriceFoodRequest() {
+        return new FoodRequest(
+                "Fake Food", "Fake Brand",
+                97.0, 12.0, 37.5, 4.5, 6.0,
+                0.9,
+                Set.of(new FoodUnitRequest("tbsp", 15.0),
+                        new FoodUnitRequest("cup", 235.0)),
+                Set.of(new FoodPriceRequest("Masoutis", 6.80, 200),
+                        new FoodPriceRequest("Masoutis", 5.70, 175)));
     }
 
     private FoodResponse defaultFoodResponse() {
@@ -92,6 +116,34 @@ class FoodServiceUnitTests {
     }
 
     @Test
+    void createNewFood_dupedUnits() {
+        // Arrange
+        User user = new User();
+        FoodRequest request = dupUnitFoodRequest();
+
+        // Act + Assert
+        assertThatThrownBy(() -> foodService.createNewFood(user, request))
+            .isInstanceOf(IllegalDuplicateValueException.class);
+        verify(foodService).verifyNoDuplicateUnits(request.units());
+        verify(foodService, never()).verifyNoDuplicatePrices(request.prices());
+    }
+
+    @Test
+    void createNewFood_dupedPrices() {
+        // Arrange
+        User user = new User();
+        FoodRequest request = dupPriceFoodRequest();
+        FoodRequest();
+
+        // Act + Assert
+        assertThatThrownBy(() -> foodService.createNewFood(user, request))
+            .isInstanceOf(IllegalDuplicateValueException.class);
+        verify(foodService).verifyNoDuplicateUnits(request.units());
+        verify(foodService).verifyNoDuplicatePrices(request.prices());
+    }
+
+
+    @Test
     void updateFoodById_happyFlow() {
         // Arrange
         User user = mock(User.class);
@@ -117,7 +169,34 @@ class FoodServiceUnitTests {
     }
 
     @Test
-    void updateExistingFood_foodNotFound() {
+    void updateFoodById_dupedUnits() {
+        // Arrange
+        User user = new User();
+        FoodRequest request = dupUnitFoodRequest();
+
+        // Act + Assert
+        assertThatThrownBy(() -> foodService.updateFoodById(user, 99L, request))
+            .isInstanceOf(IllegalDuplicateValueException.class);
+        verify(foodService).verifyNoDuplicateUnits(request.units());
+        verify(foodService, never()).verifyNoDuplicatePrices(request.prices());
+    }
+
+    @Test
+    void updateFoodById_dupedPrices() {
+        // Arrange
+        User user = new User();
+        FoodRequest request = dupPriceFoodRequest();
+        FoodRequest();
+
+        // Act + Assert
+        assertThatThrownBy(() -> foodService.updateFoodById(user, 99L, request))
+            .isInstanceOf(IllegalDuplicateValueException.class);
+        verify(foodService).verifyNoDuplicateUnits(request.units());
+        verify(foodService).verifyNoDuplicatePrices(request.prices());
+    }
+
+    @Test
+    void updateFoodById_foodNotFound() {
         // Arrange
         User user = new User();
         FoodRequest request = defaultFoodRequest();
@@ -130,7 +209,7 @@ class FoodServiceUnitTests {
     }
 
     @Test
-    void updateExistingFood_foodNotOwned() {
+    void updateFoodById_foodNotOwned() {
         // Arrange
         User user = mock(User.class);
         when(user.getId()).thenReturn(1L);

@@ -1,5 +1,6 @@
 package org.example.mealplannerapp.advice;
 
+import org.example.mealplannerapp.exception.IllegalDuplicateValueException;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.exception.ResourceNotOwnedException;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotOwnedException.class)
     public ResponseEntity<String> handleResourceNotOwned(
             ResourceNotOwnedException e
+    ) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+
+    @ExceptionHandler(IllegalDuplicateValueException.class)
+    public ResponseEntity<String> handleIllegalDuplicateValue(
+        IllegalDuplicateValueException e
     ) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
