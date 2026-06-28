@@ -1,7 +1,11 @@
 package org.example.mealplannerapp.service;
 
-import org.example.mealplannerapp.dto.FoodRequest;
-import org.example.mealplannerapp.dto.FoodResponse;
+import org.example.mealplannerapp.dto.food.request.FoodPriceRequest;
+import org.example.mealplannerapp.dto.food.request.FoodRequest;
+import org.example.mealplannerapp.dto.food.request.FoodUnitRequest;
+import org.example.mealplannerapp.dto.food.response.FoodPriceResponse;
+import org.example.mealplannerapp.dto.food.response.FoodResponse;
+import org.example.mealplannerapp.dto.food.response.FoodUnitResponse;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
@@ -14,8 +18,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -27,7 +31,7 @@ class FoodServiceUnitTests {
     @Mock
     private FoodRepository foodRepository;
     @Mock private FoodMapper foodMapper;
-    
+
     @InjectMocks
     private FoodService foodService;
 
@@ -37,23 +41,35 @@ class FoodServiceUnitTests {
 
     private FoodRequest defaultFoodRequest() {
         return new FoodRequest(
-            "Fake Food", "Fake Brand", // name, brand
-            97.0, 12.0, 37.5, 4.5, 6.0, // calories100g, protein100g, carbs100g, fat100g, fiber100g
-            purchasePrice, purchaseWeight, edibleRatio);
+                "Fake Food", "Fake Brand",
+                97.0, 12.0, 37.5, 4.5, 6.0,
+                0.9,
+                Set.of(new FoodUnitRequest("tbsp", 15.0),
+                        new FoodUnitRequest("cup", 235.0)),
+                Set.of(new FoodPriceRequest("Masoutis", 6.80, 200),
+                        new FoodPriceRequest("MyMarket", 5.70, 175)));
     }
 
     private FoodResponse defaultFoodResponse() {
         return new FoodResponse(
-            1L, "Fake Food", "Fake Brand", // id, name, brand
-            97.0, 12.0, 37.5, 4.5, 6.0, // calories100g, protein100g, carbs100g, fat100g, fiber100g
-            purchasePrice / (purchaseWeight * edibleRatio)); // price100g
+                99L, "Fake Food", "Fake Brand",
+                97.0, 12.0, 37.5, 4.5, 6.0,
+                0.9,
+                Set.of(new FoodUnitResponse("tbsp", 15.0),
+                        new FoodUnitResponse("cup", 235.0)),
+                Set.of(new FoodPriceResponse("Masoutis", 6.80, 200),
+                        new FoodPriceResponse("MyMarket", 5.70, 175)));
     }
 
     private FoodResponse alternateFoodResponse() {
         return new FoodResponse(
-            2L, "Made-Up Meal", "Fake Brand", // id, name, brand
-            97.0, 12.0, 37.5, 4.5, 6.0, // calories100g, protein100g, carbs100g, fat100g, fiber100g
-            purchasePrice / (purchaseWeight * edibleRatio)); // price100g
+                99L, "Mock Meal", "Fake Brand",
+                97.0, 12.0, 37.5, 4.5, 6.0,
+                0.9,
+                Set.of(new FoodUnitResponse("tbsp", 16.0),
+                        new FoodUnitResponse("cup", 235.0)),
+                Set.of(new FoodPriceResponse("Masoutis", 6.80, 200),
+                        new FoodPriceResponse("MyMarket", 5.80, 175)));
     }
 
     @Test
@@ -77,12 +93,10 @@ class FoodServiceUnitTests {
         // Assert
         assertThat(actualResponse).isEqualTo(expectedResponse);
         assertThat(mappedFood.getUser()).isEqualTo(user);
-        assertThat(mappedFood.getPrice100g()).isEqualTo(
-            request.purchasePrice() / (request.purchaseWeight() * request.edibleRatio()));
     }
 
     @Test
-    void updateExistingFood_happyFlow() {
+    void updateFoodById_happyFlow() {
         // Arrange
         User user = mock(User.class);
         when(user.getId()).thenReturn(1L);
@@ -100,12 +114,10 @@ class FoodServiceUnitTests {
         when(foodMapper.generateResponse(savedFood)).thenReturn(expectedResponse);
 
         // Act
-        FoodResponse actualResponse = foodService.updateExistingFood(user, 99L, request);
+        FoodResponse actualResponse = foodService.updateFoodById(user, 99L, request);
 
         // Assert
         assertThat(actualResponse).isEqualTo(expectedResponse);
-        assertThat(existingFood.getPrice100g()).isEqualTo(
-            request.purchasePrice() / (request.purchaseWeight() * request.edibleRatio()));
     }
 
     @Test
@@ -117,8 +129,8 @@ class FoodServiceUnitTests {
         when(foodRepository.findById(99L)).thenReturn(Optional.empty());
 
         // Act + Assert
-        assertThatThrownBy(() -> foodService.updateExistingFood(user, 99L, request))
-            .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> foodService.updateFoodById(user, 99L, request))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -137,7 +149,7 @@ class FoodServiceUnitTests {
         when(foodRepository.findById(99L)).thenReturn(Optional.of(existingFood));
 
         // Act + Assert
-        assertThatThrownBy(() -> foodService.updateExistingFood(user, 99L, request))
+        assertThatThrownBy(() -> foodService.updateFoodById(user, 99L, request))
                 .isInstanceOf(ResourceNotOwnedException.class);
     }
 
@@ -202,19 +214,19 @@ class FoodServiceUnitTests {
         FoodResponse response1 = defaultFoodResponse();
         FoodResponse response2 = alternateFoodResponse();
 
-        when(foodRepository.findAllByUserAndTextSearch(1L, "text"))
-                .thenReturn(List.of(food1, food2));
+        when(foodRepository.findAllByUserIdAndTextSearch(1L, "text"))
+                .thenReturn(Set.of(food1, food2));
         when(foodMapper.generateResponse(food1)).thenReturn(response1);
         when(foodMapper.generateResponse(food2)).thenReturn(response2);
 
-        List<FoodResponse> expectedResponse = List.of(response1, response2);
+        Set<FoodResponse> expectedResponse = Set.of(response1, response2);
 
         // Act
-        List<FoodResponse> actualResponse = foodService.retrieveFoodsByTextSearch(user, "text");
+        Set<FoodResponse> actualResponse = foodService.retrieveFoodsByTextSearch(user, "text");
 
         // Assert
         assertThat(actualResponse).isEqualTo(expectedResponse);
-        verify(foodRepository).findAllByUserAndTextSearch(1L, "text");
+        verify(foodRepository).findAllByUserIdAndTextSearch(1L, "text");
     }
 
     @Test
@@ -229,14 +241,14 @@ class FoodServiceUnitTests {
         FoodResponse response1 = defaultFoodResponse();
         FoodResponse response2 = alternateFoodResponse();
 
-        when(foodRepository.findAllByUserId(1L)).thenReturn(List.of(food1, food2));
+        when(foodRepository.findAllByUserId(1L)).thenReturn(Set.of(food1, food2));
         when(foodMapper.generateResponse(food1)).thenReturn(response1);
         when(foodMapper.generateResponse(food2)).thenReturn(response2);
 
-        List<FoodResponse> expectedResponse = List.of(response1, response2);
+        Set<FoodResponse> expectedResponse = Set.of(response1, response2);
 
         // Act
-        List<FoodResponse> actualResponse = foodService.retrieveAllFoods(user);
+        Set<FoodResponse> actualResponse = foodService.retrieveAllFoods(user);
 
         // Assert
         assertThat(actualResponse).isEqualTo(expectedResponse);

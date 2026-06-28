@@ -1,7 +1,10 @@
-package org.example.mealplannerapp.dto;
+package org.example.mealplannerapp.dto.food.request;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.Length;
+
+import java.util.Set;
 
 public record FoodRequest(
         @NotBlank(message = "Name cannot be blank.")
@@ -12,28 +15,28 @@ public record FoodRequest(
         String brand,
 
         @PositiveOrZero(message = "Calories cannot be a negative number.")
-        double calories100g,
+        double caloriesPer100g,
 
         @PositiveOrZero(message = "Protein cannot be a negative number.")
-        double protein100g,
+        double proteinPer100g,
 
         @PositiveOrZero(message = "Carbs cannot be a negative number.")
-        double carbs100g,
+        double carbsPer100g,
 
         @PositiveOrZero(message = "Fat cannot be a negative number.")
-        double fat100g,
+        double fatPer100g,
 
         @PositiveOrZero(message = "Fiber cannot be a negative number.")
-        double fiber100g,
-
-        @PositiveOrZero(message = "Purchase price cannot be a negative number.")
-        double purchasePrice,
-
-        @Positive (message = "Purchase weight must be a positive number.")
-        double purchaseWeight,
+        double fiberPer100g,
 
         @DecimalMin(value = "0.0", inclusive = false, message = "Edible ratio cannot be less than 0%.")
-        @DecimalMax(value = "1.0", inclusive = true, message = "Edible ratio cannot be less than 100%.")
-        double edibleRatio
+        @DecimalMax(value = "1.0", inclusive = true, message = "Edible ratio cannot be greater than 100%.")
+        double edibleRatio,
+
+        // TO-DO: Validation for unique unit names.
+        Set<@Valid FoodUnitRequest> units,
+
+        // TO DO: Validation for unique seller names.
+        Set<@Valid FoodPriceRequest> prices
 ) {
 }
