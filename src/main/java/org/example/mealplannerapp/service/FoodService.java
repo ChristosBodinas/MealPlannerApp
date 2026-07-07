@@ -32,26 +32,50 @@ public class FoodService {
         }
     }
 
+
     public Food findAndVerifyFoodEntity(Long userId, Long foodId) {
-        Food food = foodRepository.findById(foodId)
-                .orElseThrow(() -> new ResourceNotFoundException("Requested food (id: " + foodId + ") was not found."));
-        if (!food.getUser().getId().equals(userId)) {
-            throw new ResourceNotOwnedException("Requested food (id: " + foodId + ") belongs to another user.");
-        }
+        Food food = foodRepository.findByIdVerified(user.getId(), foodId)
+            .orElseThrow(
+                () -> new ResourceNotFoundException("Requested food (id: " + foodId + ") was not found.")
+            );
         return food;
     }
 
-    // createNewFood
     public FoodResponse createFood(User user, FoodRequest request) {
+        verifyUniqueUnitsAndPrices(request.units(), request.prices());
+
         Food food = foodMapper.createFromRequest(request);
         food.setUser(user);
+
+        Food saved = foodRepository.save(food);
+        return foodMapper.generateResponse(food);
     }
 
-    // updateFood
+    public FoodResponse updateFood(User user, Long foodId, FoodRequest request) {
+        verifyUniqueUnitsAndPrices(request.units(), request.prices());
+
+        Food food = findAndVerifyFoodEntity(user.getId(), foodId);
+        foodMapper.updateFromRequest(food, request);
+
+        return foodMapper.generateResponse(food);
+    }
 
     // deleteFood
+    public void deleteFood(User user, Long foodId) {
+        foodRepository.deleteByIdVerified(user.getId(), foodId);
+    }
 
     // retrieveFood
+    public FoodResponse retrieveFood(User user, Long foodId) {
+        Food food = findAndVerifyFoodEntity(user.getId(), foodId);
+        return foodMapper.generateResponse(food);
+    }
 
     // searchFoods
+    public List<ListedFoodResponse> searchFoods(User user, String search) {
+        return foodRepository.searchByText(user.getId(), search)
+            .stream()
+            .map(foodMapper::generateResponse)
+            .toList();
+    }
 }

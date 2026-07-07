@@ -15,64 +15,53 @@ import java.util.Set;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/foods")
 public class FoodController {
 
     private final FoodService foodService;
 
-    // TO DO: Implement validation!!!
-
-    @PostMapping
-    public ResponseEntity<FoodResponse> createNewFood(
-            @AuthenticationPrincipal AuthUser authUser,
-            @Valid @RequestBody FoodRequest request
+    @PostMapping("/foods")
+    public ResponseEntity<FoodResponse> createFood(
+        @AuthenticationPrincipal AuthUser authUser,
+        @Valid @RequestBody FoodRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                foodService.createNewFood(authUser.getUser(), request));
+        FoodResponse response = foodService.createFood(authUser.getUser(), request);
+        return new ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PutMapping("/{foodId}")
-    public ResponseEntity<FoodResponse> updateFoodById(
-            @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long foodId,
-            @RequestBody FoodRequest request
+    @PutMapping("/foods/{foodId}")
+    public ResponseEntity<FoodResponse> updateFood(
+        @AuthenticationPrincipal AuthUser authUser,
+        @PathVariable Long foodId,
+        @Valid @RequestBody FoodRequest request
     ) {
-        return ResponseEntity.ok(
-                foodService.updateFoodById(authUser.getUser(), foodId, request));
+        FoodResponse response = foodService.updateFood(authUser.getUser(), foodId, request);
+        return new ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{foodId}")
-    public ResponseEntity<Void> deleteFoodById(
-            @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long foodId
+    @DeleteMapping("/foods/{foodId}")
+    public ResponseEntity<Void> deleteFood(
+        @AuthenticationPrincipal AuthUser authUser,
+        @PathVariable Long foodId
     ) {
-        foodService.deleteFoodById(authUser.getUser(), foodId);
-        return ResponseEntity.noContent().build();
+        foodService.deleteFood(authUser.g, foodId);
+        return new ResponseEntity.noContent();
     }
 
-    @GetMapping("/{foodId}")
-    public ResponseEntity<FoodResponse> retrieveFoodById(
-            @AuthenticationPrincipal AuthUser authUser,
-            @PathVariable Long foodId
+    @GetMapping("/foods/{foodId}")
+    public ResponseEntity<FoodResponse> retrieveFood(
+        @AuthenticationPrincipal AuthUser authUser,
+        @PathVariable Long foodId
     ) {
-        return ResponseEntity.ok(
-                foodService.retrieveFoodById(authUser.getUser(), foodId));
+        FoodResponse response = foodService.retrieveFood(authUser.getId(), foodId);
+        return new ResponseEntity.ok(response);
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<Set<FoodResponse>> retrieveFoodByTextSearch(
-            @AuthenticationPrincipal AuthUser authUser,
-            @RequestParam String text
+    @GetMapping("/foods")
+    public ResponseEntity<List<ListedFoodResponse>> searchFoods(
+        @AuthenticationPrincipal AuthUser authUser,
+        @RequestParam String search
     ) {
-        return ResponseEntity.ok(
-                foodService.retrieveFoodsByTextSearch(authUser.getUser(), text));
-    }
-
-    @GetMapping
-    public ResponseEntity<Set<FoodResponse>> retrieveAllFoods(
-            @AuthenticationPrincipal AuthUser authUser
-    ) {
-        return ResponseEntity.ok(
-                foodService.retrieveAllFoods(authUser.getUser()));
+        List<ListedFoodResponse> responses = foodService.searchFoods(authUser.getId(), search);
+        return new ResponseEntity.ok(responses);
     }
 }
