@@ -88,5 +88,16 @@ class FoodServiceUnitTests {
                         new FoodPriceResponse("MyMarket", 5.80, 175)));
     }
 
+    // retrieveFoodEntity tests: happy flow, exception?
+
+    // createFood tests: happy flow, duplicate exception
+
+    // updateFood tests: happy flow, duplication exception, not found exception?
+
+    // deleteFood tests: happy flow, not found exception?
+
+    // retrieveFood tests: happy flow, not exception exception?
+
+    // searchFoods tests: happy flow
 
 }

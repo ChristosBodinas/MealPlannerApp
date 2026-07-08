@@ -14,8 +14,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Represents a food item and its associated nutritional, unit, and pricing data.
- * <p>
+ * <p>Represents a food item and its associated nutritional, unit, and pricing data.
+ * 
  * {@code Food} is the source-of-truth record referenced when creating {@code FoodEntry}
  * instances; entries snapshot nutrition data at creation time rather than referencing
  * this entity live, so later edits to a {@code Food} do not retroactively affect past entries.
