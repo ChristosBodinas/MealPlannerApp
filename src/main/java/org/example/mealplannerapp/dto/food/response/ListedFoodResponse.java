@@ -2,7 +2,7 @@ package org.example.mealplannerapp.dto.food.response;
 
 import java.util.Set;
 
-public record FoodResponse(
+public record ListedFoodResponse(
         Long id,
         String name,
         String brand,

@@ -9,7 +9,9 @@ import org.example.mealplannerapp.embeddable.FoodPrice;
 import org.example.mealplannerapp.embeddable.FoodUnit;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Represents a food item and its associated nutritional, unit, and pricing data.
@@ -89,4 +91,10 @@ public class Food {
     @AttributeOverride(name = "purchaseGrams", column = @Column(nullable = false))
     private Set<FoodPrice> prices = new HashSet<>();
 
+    public Map<String, Double> getPricesPer100g() {
+        return prices.stream().collect(Collectors.toMap(
+                FoodPrice::getMerchant,
+                p -> 100 * p.getPurchasePrice() / (p.getPurchaseGrams() * edibleRatio)
+        ));
+    }
 }
