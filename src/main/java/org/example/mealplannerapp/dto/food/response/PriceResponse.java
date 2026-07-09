@@ -1,6 +1,6 @@
 package org.example.mealplannerapp.dto.food.response;
 
-public record FoodPriceResponse(
+public record PriceResponse(
         String merchant,
         double purchasePrice,
         double purchaseGrams

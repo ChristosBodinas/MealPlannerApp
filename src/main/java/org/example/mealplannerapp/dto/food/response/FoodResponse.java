@@ -12,7 +12,7 @@ public record FoodResponse(
         double fatPer100g,
         double fiberPer100g,
         double edibleRatio,
-        Set<FoodUnitResponse> units,
-        Set<FoodPriceResponse> prices
+        Set<UnitResponse> units,
+        Set<PriceResponse> prices
 ) {
 }

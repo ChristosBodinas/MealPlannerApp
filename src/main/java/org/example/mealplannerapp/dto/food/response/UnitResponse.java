@@ -1,6 +1,6 @@
 package org.example.mealplannerapp.dto.food.response;
 
-public record FoodUnitResponse(
+public record UnitResponse(
         String name,
         double grams
 ) {

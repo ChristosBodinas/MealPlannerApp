@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import org.hibernate.validator.constraints.Length;
 
-public record FoodPriceRequest(
+public record PriceRequest(
 
         @NotBlank(message = "A merchant's name cannot be blank.")
         @Length(max = 45, message = "A merchant's name cannot exceed 45 characters.")

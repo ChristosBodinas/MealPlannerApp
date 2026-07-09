@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 /**
  * <p>Represents a food item and its associated nutritional, unit, and pricing data.
- * 
  * {@code Food} is the source-of-truth record referenced when creating {@code FoodEntry}
  * instances; entries snapshot nutrition data at creation time rather than referencing
  * this entity live, so later edits to a {@code Food} do not retroactively affect past entries.
@@ -91,7 +90,7 @@ public class Food {
     @AttributeOverride(name = "purchaseGrams", column = @Column(nullable = false))
     private Set<FoodPrice> prices = new HashSet<>();
 
-    public Map<String, Double> getPricesPer100g() {
+    public Map<String, Double> derivePricesPer100g() {
         return prices.stream().collect(Collectors.toMap(
                 FoodPrice::getMerchant,
                 p -> 100 * p.getPurchasePrice() / (p.getPurchaseGrams() * edibleRatio)

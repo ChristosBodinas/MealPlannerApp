@@ -22,7 +22,7 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
 
     @Modifying
     @Query("DELETE FROM Food f WHERE f.user.id = :userId AND f.id = :foodId")
-    void deleteByIdVerified(
+    int deleteByIdVerified(
             @Param("userId") Long userId,
             @Param("foodId") Long foodId
     );

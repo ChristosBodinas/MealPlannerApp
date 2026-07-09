@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import org.hibernate.validator.constraints.Length;
 
-public record FoodUnitRequest(
+public record UnitRequest(
 
         @NotBlank(message = "A unit's name cannot be blank.")
         @Length(max = 45, message = "A unit's name cannot exceed 45 characters.")

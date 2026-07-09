@@ -34,8 +34,8 @@ public record FoodRequest(
         @DecimalMax(value = "1.0", inclusive = true, message = "Edible ratio cannot exceed 100.0%.")
         double edibleRatio,
 
-        Set<@Valid FoodUnitRequest> units,
+        Set<@Valid UnitRequest> units,
 
-        Set<@Valid FoodPriceRequest> prices
+        Set<@Valid PriceRequest> prices
 ) {
 }
