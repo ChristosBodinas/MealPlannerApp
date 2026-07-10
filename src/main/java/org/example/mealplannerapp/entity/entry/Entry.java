@@ -16,7 +16,8 @@ public abstract class Entry {
     @Setter(AccessLevel.NONE)
     private Long id;
 
-    // day_id
+    @ManyToOne @JoinColumn(name="day_id")
+    private Day day;
 
     @Column(nullable = false, length = 15) @Enumerated(EnumType.STRING)
     private Category category;
