@@ -1,0 +1,9 @@
+package org.example.mealplannerapp.dto.entry.request;
+
+import lombok.Builder;
+
+@Builder
+public record FoodEntryCreateRequest(
+
+) implements EntryCreateRequest {
+}

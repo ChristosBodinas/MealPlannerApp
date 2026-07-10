@@ -1,7 +1,10 @@
 package org.example.mealplannerapp.dto.food.response;
 
+import lombok.Builder;
+
 import java.util.Set;
 
+@Builder
 public record FoodResponse(
         Long id,
         String name,

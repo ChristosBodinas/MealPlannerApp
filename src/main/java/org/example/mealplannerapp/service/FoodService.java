@@ -54,29 +54,12 @@ public class FoodService {
     }
 
     /**
-     * <p>Fetches the {@link Food} entity identified by {@code foodId} and owned by the user
-     * identified by {@code userId}. The associated {@link FoodUnit} and {@link FoodPrice} collections
-     * are also fetched.
-     * </p>
-     * @param userId the identifier of the requesting user
-     * @param foodId the identifier of the requested food
-     * @return the requested {@link Food} entity
-     * @throws ResourceNotFoundException if the requested food isn't found or doesn't belong to {@code user}
-     */
-    public Food retrieveFoodEntity(Long userId, Long foodId) {
-        return foodRepository.findByIdVerified(userId, foodId)
-            .orElseThrow(
-                () -> new ResourceNotFoundException("Requested food (id: " + foodId + ") was not found.")
-            );
-    }
-
-    /**
      * <p>Creates and saves a new {@link Food} entity that is owned by {@code user} and contains the
      * submitted {@code request} data.
      * </p>
      * @param user the requesting user
      * @param request the submitted food data
-     * @return a {@link FoodResponse} containing the new {@link Food} entity's full data
+     * @return the full data (incl. units and prices) of the new food
      * @throws IllegalDuplicateValueException if the submitted data contains multiple units with the same
      * name or multiple prices with the same merchant
      */
@@ -97,7 +80,7 @@ public class FoodService {
      * @param user the requesting user
      * @param foodId the identifier of the requested food
      * @param request the submitted food data
-     * @return a {@link FoodResponse} containing the updated {@link Food} entity's full data
+     * @return the full data (incl. units and prices) of the updated food
      * @throws IllegalDuplicateValueException if the submitted data contains multiple units with the same
      * name or multiple prices with the same merchant
      * @throws ResourceNotFoundException if the requested food isn't found or doesn't belong to {@code user}
@@ -106,7 +89,10 @@ public class FoodService {
     public FoodResponse updateFood(User user, Long foodId, FoodRequest request) {
         verifyUniqueUnitsAndPrices(request.units(), request.prices());
 
-        Food food = retrieveFoodEntity(user.getId(), foodId);
+        Food food = foodRepository.findByIdVerified(user.getId(), foodId)
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "Requested food (id: " + foodId + ") not found.")
+                        );
         foodMapper.updateFromRequest(food, request);
 
         return foodMapper.generateResponse(food);
@@ -132,11 +118,14 @@ public class FoodService {
      * </p>
      * @param user the requesting user
      * @param foodId the identifier of the requested food
-     * @return a {@link FoodResponse} containing the retrieved {@link Food} entity's full data
+     * @return the full data (incl. units and prices) of the requested food
      * @throws ResourceNotFoundException if the requested food isn't found or doesn't belong to {@code user}
      */
     public FoodResponse retrieveFood(User user, Long foodId) {
-        Food food = retrieveFoodEntity(user.getId(), foodId);
+        Food food = foodRepository.findByIdVerified(user.getId(), foodId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Requested food (id: " + foodId + ") not found.")
+                );
         return foodMapper.generateResponse(food);
     }
 
@@ -147,8 +136,7 @@ public class FoodService {
      * </p>
      * @param user the requesting user
      * @param search the submitted search text
-     * @return a {@link List}<{@link ListedFoodResponse}> containing the retrieved {@link Food} entities'
-     * identifiers, name, brands, and nutritional data.
+     * @return the identifiers, names, brands, and nutritional data of the matching foods
      */
     public List<ListedFoodResponse> searchFoods(User user, String search) {
         return foodRepository.searchByText(user.getId(), search)

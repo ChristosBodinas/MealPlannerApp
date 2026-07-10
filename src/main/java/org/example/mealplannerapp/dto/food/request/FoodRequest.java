@@ -2,10 +2,12 @@ package org.example.mealplannerapp.dto.food.request;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import org.hibernate.validator.constraints.Length;
 
 import java.util.Set;
 
+@Builder
 public record FoodRequest(
 
         @NotBlank(message = "A food's name cannot be blank.")

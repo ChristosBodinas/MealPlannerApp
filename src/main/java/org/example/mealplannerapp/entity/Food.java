@@ -76,7 +76,7 @@ public class Food {
             name = "food_unit",
             joinColumns = @JoinColumn(name = "food_id"),
             uniqueConstraints = @UniqueConstraint(name = "UniqueNamePerFood", columnNames = {"food_id", "name"}))
-    @AttributeOverride(name = "name", column = @Column(nullable = false, length = 45))
+    @AttributeOverride(name = "name", column = @Column(nullable = false, length = 20))
     @AttributeOverride(name = "grams", column = @Column(nullable = false))
     private Set<FoodUnit> units = new HashSet<>();
 
@@ -85,11 +85,16 @@ public class Food {
             name = "food_price",
             joinColumns = @JoinColumn(name = "food_id"),
             uniqueConstraints = @UniqueConstraint(name = "UniqueMerchantPerFood", columnNames = {"food_id", "merchant"}))
-    @AttributeOverride(name = "merchant", column = @Column(nullable = false, length = 45))
+    @AttributeOverride(name = "merchant", column = @Column(nullable = false, length = 20))
     @AttributeOverride(name = "purchasePrice", column = @Column(nullable = false))
     @AttributeOverride(name = "purchaseGrams", column = @Column(nullable = false))
     private Set<FoodPrice> prices = new HashSet<>();
 
+    /**
+     * <p>Calculates the price per 100 grams of edible product for each merchant.
+     * </p>
+     * @return all the merchant names and the corresponding calculated prices
+     */
     public Map<String, Double> derivePricesPer100g() {
         return prices.stream().collect(Collectors.toMap(
                 FoodPrice::getMerchant,
