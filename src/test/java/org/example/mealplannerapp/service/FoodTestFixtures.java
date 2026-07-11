@@ -7,6 +7,9 @@ import org.example.mealplannerapp.dto.food.response.FoodResponse;
 import org.example.mealplannerapp.dto.food.response.ListedFoodResponse;
 import org.example.mealplannerapp.dto.food.response.PriceResponse;
 import org.example.mealplannerapp.dto.food.response.UnitResponse;
+import org.example.mealplannerapp.embeddable.FoodPrice;
+import org.example.mealplannerapp.embeddable.FoodUnit;
+import org.example.mealplannerapp.entity.Food;
 
 import java.util.List;
 import java.util.Set;
@@ -55,6 +58,25 @@ public class FoodTestFixtures {
                 .proteinPer100g(12.0).carbsPer100g(37.5).fatPer100g(4.5).fiberPer100g(6.0);
     }
     //</editor-fold>
+
+    static Food defaultFood() {
+        Food food = new Food();
+        food.setName("Fake Food");
+        food.setBrand("Fake Brand");
+        food.setCaloriesPer100g(97.0);
+        food.setProteinPer100g(12.0);
+        food.setCarbsPer100g(37.5);
+        food.setFatPer100g(4.5);
+        food.setFiberPer100g(6.0);
+        food.setEdibleRatio(0.9);
+        food.setUnits(Set.of(
+                new FoodUnit("tbsp", 15.0),
+                new FoodUnit("cup", 235.0)));
+        food.setPrices(Set.of(
+                new FoodPrice("Masoutis", 6.80, 200),
+                new FoodPrice("MyMarket", 5.70, 175)));
+        return food;
+    }
 
     static FoodRequest defaultFoodRequest() {
         return defaultRequestBuilder().build();

@@ -13,7 +13,7 @@ import java.util.Map;
 
 @Entity
 @Getter @Setter @NoArgsConstructor
-public class FoodEntry extends Entry {
+public final class FoodEntry extends Entry {
 
     @ManyToOne @JoinColumn(name = "food_id")
     private Food food;

@@ -1,8 +1,15 @@
 package org.example.mealplannerapp.repository;
 
+import org.example.mealplannerapp.entity.Day;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
+
 public interface DayRepository extends JpaRepository<Day, Long> {
 
-    @Query("SELECT d FROM Day d WHERE d.user.id = :userId AND d.id = :dayId")    
-    Optional<Day> findByIdVerified(Long userId, Long dayId);
+    @Query("SELECT d FROM Day d WHERE d.plan.user.id = :userId AND d.id = :dayId")
+    Optional<Day> findByIdVerified(@Param("userId") Long userId, @Param("dayId") Long dayId);
 
 }

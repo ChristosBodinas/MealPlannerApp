@@ -6,11 +6,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.example.mealplannerapp.constants.Category;
+import org.example.mealplannerapp.entity.Day;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @Getter @Setter @NoArgsConstructor
-public abstract class Entry {
+public sealed abstract class Entry permits FoodEntry {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)

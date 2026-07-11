@@ -1,13 +1,14 @@
 package org.example.mealplannerapp.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.mealplannerapp.entity.entry.Entry;
 
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.processing.Generated;
 

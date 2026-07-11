@@ -1,10 +1,7 @@
 package org.example.mealplannerapp.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.example.mealplannerapp.embeddable.FoodPrice;
 import org.example.mealplannerapp.embeddable.FoodUnit;
 
