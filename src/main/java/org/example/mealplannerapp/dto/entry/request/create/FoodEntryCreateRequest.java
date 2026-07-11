@@ -1,4 +1,4 @@
-package org.example.mealplannerapp.dto.entry.request;
+package org.example.mealplannerapp.dto.entry.request.create;
 
 import lombok.Builder;
 import org.example.mealplannerapp.constants.Category;

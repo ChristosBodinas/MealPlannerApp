@@ -1,4 +1,4 @@
-package org.example.mealplannerapp.dto.entry.request;
+package org.example.mealplannerapp.dto.entry.request.edit;
 
 import lombok.Builder;
 

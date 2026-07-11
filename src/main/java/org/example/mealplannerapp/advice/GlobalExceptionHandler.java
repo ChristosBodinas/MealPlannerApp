@@ -1,6 +1,7 @@
 package org.example.mealplannerapp.advice;
 
 import org.example.mealplannerapp.exception.IllegalDuplicateValueException;
+import org.example.mealplannerapp.exception.RequestEntityMismatchException;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,5 +42,12 @@ public class GlobalExceptionHandler {
                 ));
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
+    @ExceptionHandler(RequestEntityMismatchException.class)
+    public ResponseEntity<String> handleRequestEntityMismatch(
+        RequestEntityMismatchException e
+    ) {
+        return ResponseEntity.badRequest().body(e.getMessage());
     }
 }
