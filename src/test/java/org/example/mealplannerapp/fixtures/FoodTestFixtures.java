@@ -1,4 +1,4 @@
-package org.example.mealplannerapp.service;
+package org.example.mealplannerapp.fixtures;
 
 import org.example.mealplannerapp.dto.food.request.FoodRequest;
 import org.example.mealplannerapp.dto.food.request.PriceRequest;
@@ -59,7 +59,7 @@ public class FoodTestFixtures {
     }
     //</editor-fold>
 
-    static Food defaultFood() {
+    public static Food defaultFood() {
         Food food = new Food();
         food.setName("Fake Food");
         food.setBrand("Fake Brand");
@@ -78,11 +78,11 @@ public class FoodTestFixtures {
         return food;
     }
 
-    static FoodRequest defaultFoodRequest() {
+    public static FoodRequest defaultFoodRequest() {
         return defaultRequestBuilder().build();
     }
 
-    static FoodRequest duplicateUnitsRequest() {
+    public static FoodRequest duplicateUnitsRequest() {
         return defaultRequestBuilder()
                 .units(Set.of(
                         new UnitRequest("tbsp", 15.0),
@@ -90,7 +90,7 @@ public class FoodTestFixtures {
                 .build();
     }
 
-    static FoodRequest duplicatePricesRequest() {
+    public static FoodRequest duplicatePricesRequest() {
         return defaultRequestBuilder()
                 .prices(Set.of(
                         new PriceRequest("Masoutis", 6.80, 200),
@@ -98,11 +98,11 @@ public class FoodTestFixtures {
                 .build();
     }
 
-    static FoodResponse defaultFoodResponse() {
+    public static FoodResponse defaultFoodResponse() {
         return defaultResponseBuilder().build();
     }
 
-    static List<ListedFoodResponse> listedResponseList(int count) {
+    public static List<ListedFoodResponse> listedResponseList(int count) {
         return IntStream.rangeClosed(1, count)
                 .mapToObj(i -> defaultListedResponseBuilder()
                         .id((long) i)

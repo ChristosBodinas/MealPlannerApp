@@ -11,7 +11,7 @@ import org.example.mealplannerapp.entity.Day;
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @Getter @Setter @NoArgsConstructor
-public sealed abstract class Entry permits FoodEntry {
+public abstract class Entry {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
@@ -23,7 +23,7 @@ public sealed abstract class Entry permits FoodEntry {
     @Column(nullable = false, length = 15) @Enumerated(EnumType.STRING)
     private Category category;
 
-    // position
+    // NOTE: For each Day + Category, positions will start from 1.\
     @Column(nullable = false)
     private int position;
 
@@ -41,4 +41,6 @@ public sealed abstract class Entry permits FoodEntry {
      * </p>
      */
     public abstract void snapshotNutritionAndPriceInfo();
+
+    public abstract Entry createDuplicate();
 }

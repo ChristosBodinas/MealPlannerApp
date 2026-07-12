@@ -20,8 +20,7 @@ import java.util.Set;
 
 /**
  * <p>A service that handles the creation, modification, deletion, and retrieval of
- * {@link Food} entities. Additionally provide ownership verification for methods that
- * target existing entities.
+ * {@link Food} entities.
  * </p>
  */
 @Service

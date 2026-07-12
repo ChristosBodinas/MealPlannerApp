@@ -13,7 +13,7 @@ import java.util.Map;
 
 @Entity
 @Getter @Setter @NoArgsConstructor
-public final class FoodEntry extends Entry {
+public class FoodEntry extends Entry {
 
     @ManyToOne @JoinColumn(name = "food_id")
     private Food food;
@@ -41,5 +41,18 @@ public final class FoodEntry extends Entry {
         } else {
             price = 0.00;
         }
+    }
+
+    @Override
+    public FoodEntry createDuplicate() {
+        FoodEntry copy = new FoodEntry();
+
+        copy.setFood(food);
+        copy.setGrams(grams);
+        copy.setDisplayUnit(displayUnit);
+        copy.setDisplayMerchant(displayMerchant);
+        copy.snapshotNutritionAndPriceInfo();
+
+        return copy;
     }
 }

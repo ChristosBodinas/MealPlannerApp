@@ -1,4 +1,4 @@
-package org.example.mealplannerapp.service;
+package org.example.mealplannerapp.fixtures;
 
 import java.util.Set;
 
@@ -17,7 +17,6 @@ public class EntryTestFixtures {
     static FoodEntryCreateRequest.FoodEntryCreateRequestBuilder defaultFoodEntryCreateRequestBuilder() {
         return FoodEntryCreateRequest.builder()
                 .category(Category.BREAKFAST)
-                .position(1)
                 .foodId(99L)
                 .grams(100.0)
                 .displayUnit("tbsp")
@@ -42,11 +41,11 @@ public class EntryTestFixtures {
     }
     //</editor-fold>
 
-    static EntryBulkRequest defaultEntryBulkRequest() {
+    public static EntryBulkRequest defaultEntryBulkRequest() {
         return new EntryBulkRequest(Set.of(5L, 10L, 15L, 20L, 25L));
     }
 
-    static FoodEntry defaultFoodEntry() {
+    public static FoodEntry defaultFoodEntry() {
         FoodEntry entry = new FoodEntry();
         entry.setCategory(Category.BREAKFAST);
         entry.setPosition(1);
@@ -56,21 +55,21 @@ public class EntryTestFixtures {
         return entry;
     }
 
-    static FoodEntry foodEntryWithId(Long id) {
+    public static FoodEntry foodEntryWithId(Long id) {
         FoodEntry entry = new FoodEntry();
-        ReflectionTestUtils.setField(entry, "id", entry);
+        ReflectionTestUtils.setField(entry, "id", id);
         return entry;
     }
 
-    static FoodEntryCreateRequest defaultFoodEntryCreateRequest() {
+    public static FoodEntryCreateRequest defaultFoodEntryCreateRequest() {
         return defaultFoodEntryCreateRequestBuilder().build();
     }
 
-    static FoodEntryEditRequest defaultFoodEntryEditRequest() {
+    public static FoodEntryEditRequest defaultFoodEntryEditRequest() {
         return defaultFoodEntryEditRequestBuilder().build();
     }
 
-    static FoodEntryResponse defaultFoodEntryResponse(FoodResponse foodResponse) {
+    public static FoodEntryResponse defaultFoodEntryResponse(FoodResponse foodResponse) {
         return defaultFoodEntryResponseBuilder()
                 .foodResponse(foodResponse)
                 .build();

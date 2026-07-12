@@ -6,7 +6,6 @@ import org.example.mealplannerapp.constants.Category;
 @Builder
 public record FoodEntryCreateRequest(
     Category category,
-    int position,
     Long foodId,
     double grams,
     String displayUnit,

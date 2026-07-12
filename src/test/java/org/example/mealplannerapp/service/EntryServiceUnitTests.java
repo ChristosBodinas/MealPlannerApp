@@ -1,17 +1,14 @@
 package org.example.mealplannerapp.service;
 
+import org.example.mealplannerapp.constants.Category;
 import org.example.mealplannerapp.dto.entry.request.EntryBulkRequest;
 import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateRequest;
 import org.example.mealplannerapp.dto.entry.request.edit.FoodEntryEditRequest;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
 import org.example.mealplannerapp.dto.entry.response.FoodEntryResponse;
-import org.example.mealplannerapp.dto.food.response.FoodResponse;
-import org.example.mealplannerapp.embeddable.FoodPrice;
-import org.example.mealplannerapp.embeddable.FoodUnit;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
-import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.mapper.EntryMapper;
@@ -30,21 +27,26 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.example.mealplannerapp.service.EntryTestFixtures.*;
-import static org.example.mealplannerapp.service.FoodTestFixtures.*;
+import static org.example.mealplannerapp.fixtures.EntryTestFixtures.*;
+import static org.example.mealplannerapp.fixtures.FoodTestFixtures.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class EntryServiceTests {
+public class EntryServiceUnitTests {
 
-    @Mock private EntryRepository entryRepository;
-    @Mock private EntryMapper entryMapper;
+    @Mock
+    private EntryRepository entryRepository;
+    @Mock
+    private EntryMapper entryMapper;
 
-    @Mock private DayRepository dayRepository;
-    @Mock private FoodRepository foodRepository;
+    @Mock
+    private DayRepository dayRepository;
+    @Mock
+    private FoodRepository foodRepository;
 
-    @InjectMocks private EntryService entryService;
+    @InjectMocks
+    private EntryService entryService;
 
     private User user;
 
@@ -54,10 +56,10 @@ public class EntryServiceTests {
         lenient().when(user.getId()).thenReturn(1L);
     }
 
-    //<editor-fold desc="createEntryInDay tests">
+    //<editor-fold desc="createEntry tests">
     @Test
-    @DisplayName("createEntryInDay with FoodEntryCreateRequest successfully adds Entry to Day and saves to database.")
-    void createEntryInDay_withFoodEntryCreateRequest_happyFlow() {
+    @DisplayName("createEntry successfully creates FoodEntry and saves to database.")
+    void createEntry_withFoodEntry_happyFlow() {
         // Arrange
         FoodEntryCreateRequest request = defaultFoodEntryCreateRequest();
         FoodEntry entry = defaultFoodEntry();
@@ -69,6 +71,8 @@ public class EntryServiceTests {
         Food food = defaultFood();
         when(foodRepository.findByIdVerified(1L, 99L)).thenReturn(Optional.of(food));
 
+        when(entryRepository.countInDayAndCategory(88L, Category.BREAKFAST)).thenReturn(2L);
+
         FoodEntry saved = new FoodEntry();
         when(entryRepository.save(entry)).thenReturn(saved);
 
@@ -76,12 +80,13 @@ public class EntryServiceTests {
         when(entryMapper.generateResponse(saved)).thenReturn(expected);
 
         // Act
-        EntryResponse response = entryService.createEntryInDay(user, 88L, request);
+        EntryResponse response = entryService.createEntry(user, 88L, request);
 
         // Assert
         assertThat(response).isEqualTo(expected);
         assertThat(entry.getDay()).isEqualTo(day);
         assertThat(entry.getFood()).isEqualTo(food);
+        assertThat(entry.getPosition()).isEqualTo(3);
         assertThat(entry.getCalories()).isCloseTo(97.0, within(0.01));
         assertThat(entry.getProtein()).isCloseTo(12.0, within(0.01));
         assertThat(entry.getCarbs()).isCloseTo(37.5, within(0.01));
@@ -91,8 +96,8 @@ public class EntryServiceTests {
     }
 
     @Test
-    @DisplayName("createEntryInDay with FoodEntryCreateRequest fails to find the requested Day.")
-    void createEntryInDay_withFoodEntryCreateRequest_throwsDayNotFound() {
+    @DisplayName("createEntry fails to find the requested day.")
+    void createEntry_throwsDayNotFound() {
         // Arrange
         FoodEntryCreateRequest request = defaultFoodEntryCreateRequest();
         FoodEntry entry = new FoodEntry();
@@ -101,14 +106,14 @@ public class EntryServiceTests {
         when(dayRepository.findByIdVerified(1L, 88L)).thenReturn(Optional.empty());
 
         // Act + Assert
-        assertThatThrownBy(() -> entryService.createEntryInDay(user, 88L, request))
+        assertThatThrownBy(() -> entryService.createEntry(user, 88L, request))
                 .isInstanceOf(ResourceNotFoundException.class);
         assertThat(entry.getDay()).isNull();
     }
 
     @Test
-    @DisplayName("createEntryInDay with FoodEntryCreateRequest fails to find the requested food.")
-    void createEntryInDay_withFoodEntryCreateRequest_throwsFoodNotFound() {
+    @DisplayName("createEntry fails to find the requested food.")
+    void createEntry_withFoodEntry_throwsFoodNotFound() {
         // Arrange
         FoodEntryCreateRequest request = defaultFoodEntryCreateRequest();
         FoodEntry entry = new FoodEntry();
@@ -120,20 +125,19 @@ public class EntryServiceTests {
         when(foodRepository.findByIdVerified(1L, 99L)).thenReturn(Optional.empty());
 
         // Act + Assert
-        assertThatThrownBy(() -> entryService.createEntryInDay(user, 88L, request))
+        assertThatThrownBy(() -> entryService.createEntry(user, 88L, request))
                 .isInstanceOf(ResourceNotFoundException.class);
         assertThat(entry.getDay()).isEqualTo(day);
         assertThat(entry.getFood()).isNull();
     }
-
     //</editor-fold>
 
     //<editor-fold desc="editEntry tests">
     @Test
-    @DisplayName("editEntry successfully updates FoodEntry.")
+    @DisplayName("editEntry successfully edits the requested entry.")
     void editEntry_happyFlow() {
         // Arrange
-        FoodEntry entry = defaultFoodEntry();
+        FoodEntry entry = new FoodEntry();
         FoodEntryEditRequest request = defaultFoodEntryEditRequest();
 
         when(entryRepository.findByIdVerified(1L, 88L)).thenReturn(Optional.of(entry));
@@ -154,51 +158,39 @@ public class EntryServiceTests {
     void editEntry_throwsEntryNotFound() {
         // Arrange
         FoodEntryEditRequest request = defaultFoodEntryEditRequest();
-        when(entryRepository.findByIdVerified(user.getId(), 88L)).thenReturn(Optional.empty());
+
+        when(entryRepository.findByIdVerified(1L, 88L)).thenReturn(Optional.empty());
 
         // Act + Assert
         assertThatThrownBy(() -> entryService.editEntry(user, 88L, request))
                 .isInstanceOf(ResourceNotFoundException.class);
         verify(entryMapper, never()).updateFromRequest(any(), any());
     }
-
     //</editor-fold>
 
-    //<editor-fold desc="reorderEntries tests">
-     
-    //</editor-fold>
-
-    //<editor-fold desc="deleteEntries tests">
-
+    //<editor-fold desc="deleteEntry tests">
     @Test
-    @DisplayName("deleteEntries successfully deletes the requested entries.")
-    void deleteEntries_happyFlow() {
+    @DisplayName("deleteEntry successfully deletes the requested entry.")
+    void deleteEntry_happyFlow() {
         // Arrange
-        EntryBulkRequest request = defaultEntryBulkRequest();
-        Set<Long> entryIds = request.entryIds();
-        
-        when(entryRepository.multipleIdsExistVerified(1L, entryIds))
-            .thenReturn((long) entryIds.size());
+        when(entryRepository.deleteByIdVerified(1L, 88L)).thenReturn(1);
 
         // Act
-        entryService.deleteEntries(user, request);
+        entryService.deleteEntry(user, 88L);
 
         // Assert
-        verify(entryRepository).multipleIdsExistVerified(1L, entryIds);
-        verify(entryRepository.deleteMultipleByIdVerified(1L, entryIds));
+        verify(entryRepository).deleteByIdVerified(1L, 88L);
     }
 
     @Test
-    void deleteEntries_throwsEntriesNotFound() {
+    @DisplayName("deleteEntry fails to find the requested entry.")
+    void deleteEntry_throwsEntryNotFound() {
         // Arrange
-        EntryBulkRequest request = defaultEntryBulkRequest();
-        Set<Long> entryIds = request.entryIds();
-        when(entryRepository.multipleIdsExistVerified(1L,entryIds))
-            .thenReturn((long) (entryIds.size() - 1));
+        when(entryRepository.deleteByIdVerified(1L, 88L)).thenReturn(0);
 
         // Act + Assert
-        assertThatThrownBy(() -> entryService.deleteEntries(user, request))
-            .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> entryService.deleteEntry(user, 88L))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
     //</editor-fold>
 
@@ -229,7 +221,6 @@ public class EntryServiceTests {
         // Act + Assert
         assertThatThrownBy(() -> entryService.retrieveEntry(user, 88L))
                 .isInstanceOf(ResourceNotFoundException.class);
-        verify(entryMapper, never()).generateResponse(any());
     }
     //</editor-fold>
 }

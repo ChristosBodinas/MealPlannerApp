@@ -14,12 +14,14 @@ import org.mapstruct.*;
 
 import java.util.Set;
 
-@Mapper(componentModel = "spring", uses = {FoodMapper.class})
+@Mapper(componentModel = "spring", uses = {FoodMapper.class}, subclassExhaustiveStrategy = SubclassExhaustiveStrategy.RUNTIME_EXCEPTION)
 public interface EntryMapper {
 
+    // CREATE NEW ENTRY FROM REQUEST
     @SubclassMapping(source = FoodEntryCreateRequest.class, target = FoodEntry.class)
     Entry createFromRequest(EntryCreateRequest request);
 
+    // UPDATE EXISTING ENTRY PARAMETERS FROM REQUEST
     void updateFoodEntry(@MappingTarget FoodEntry entry, FoodEntryEditRequest request);
 
     default void updateFromRequest(@MappingTarget Entry entry, EntryEditRequest request) {
@@ -30,14 +32,11 @@ public interface EntryMapper {
         }
     }
 
-    @Mapping(source = "entryId", ignore = true)
+    // UPDATE ENTRY POSITION/CATEGORY FROM REQUEST
+    @Mapping(target = "id", ignore = true)
     void repositionEntry(@MappingTarget Entry entry, EntryReorderRequest request);
 
+    // GENERATE RESPONSE FROM ENTRY
     @SubclassMapping(source = FoodEntry.class, target = FoodEntryResponse.class)
     EntryResponse generateResponse(Entry entry);
-
-    // TO DO: Reorder Mapping?
-    // TO DO: ignore annotations
-    // TO DO: generateResponse might need different handling?
-    
 }

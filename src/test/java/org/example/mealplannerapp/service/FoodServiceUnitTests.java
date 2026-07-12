@@ -18,7 +18,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import static org.example.mealplannerapp.service.FoodTestFixtures.*;
+import static org.example.mealplannerapp.fixtures.FoodTestFixtures.*;
 
 import java.util.List;
 import java.util.Optional;
