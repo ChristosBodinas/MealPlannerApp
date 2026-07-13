@@ -1,6 +1,5 @@
 package org.example.mealplannerapp.mapper;
 
-import org.example.mealplannerapp.dto.entry.request.EntryReorderRequest;
 import org.example.mealplannerapp.dto.entry.request.create.EntryCreateRequest;
 import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateRequest;
 import org.example.mealplannerapp.dto.entry.request.edit.EntryEditRequest;
@@ -11,8 +10,6 @@ import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.exception.RequestEntityMismatchException;
 import org.mapstruct.*;
-
-import java.util.Set;
 
 @Mapper(componentModel = "spring", uses = {FoodMapper.class}, subclassExhaustiveStrategy = SubclassExhaustiveStrategy.RUNTIME_EXCEPTION)
 public interface EntryMapper {
@@ -31,10 +28,6 @@ public interface EntryMapper {
             throw new RequestEntityMismatchException("Submitted data does not fit the requested entity.");
         }
     }
-
-    // UPDATE ENTRY POSITION/CATEGORY FROM REQUEST
-    @Mapping(target = "id", ignore = true)
-    void repositionEntry(@MappingTarget Entry entry, EntryReorderRequest request);
 
     // GENERATE RESPONSE FROM ENTRY
     @SubclassMapping(source = FoodEntry.class, target = FoodEntryResponse.class)

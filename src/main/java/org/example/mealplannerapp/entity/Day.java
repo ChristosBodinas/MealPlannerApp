@@ -22,4 +22,10 @@ public class Day {
 
     @OneToMany(mappedBy="day")
     private Set<Entry> entries;
+
+    @Column(nullable = false) private double caloriesGoal;
+    @Column(nullable = false) private double proteinGoal;
+    @Column(nullable = false) private double carbsGoal;
+    @Column(nullable = false) private double fatGoal;
+    @Column(nullable = false) private double fiberGoal;
 }

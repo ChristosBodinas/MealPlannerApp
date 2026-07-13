@@ -2,6 +2,9 @@ package org.example.mealplannerapp.service;
 
 import lombok.AllArgsConstructor;
 
+import org.example.mealplannerapp.constants.Category;
+import org.example.mealplannerapp.dto.entry.request.EntryDuplicateRequest;
+import org.example.mealplannerapp.dto.entry.request.EntryMoveRequest;
 import org.example.mealplannerapp.dto.entry.request.create.EntryCreateRequest;
 import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateRequest;
 import org.example.mealplannerapp.dto.entry.request.edit.EntryEditRequest;
@@ -17,6 +20,9 @@ import org.example.mealplannerapp.repository.DayRepository;
 import org.example.mealplannerapp.repository.EntryRepository;
 import org.example.mealplannerapp.repository.FoodRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.Tuple;
 
 /**
  * <p>A service that handles the creation, duplication, modification, deletion,
@@ -43,6 +49,7 @@ public class EntryService {
      * @return the full data of the new {@link Entry} along with all the underlying Food/Meal data
      * @throws ResourceNotFoundException if the requested day or food is not found
      */
+    @Transactional
     public EntryResponse createEntry(User user, Long dayId, EntryCreateRequest request) {
         Entry entry = entryMapper.createFromRequest(request);
 
@@ -68,9 +75,26 @@ public class EntryService {
         return entryMapper.generateResponse(saved);
     }
 
-    // duplicateEntry
+    @Transactional
+    public EntryResponse duplicateEntry(User user, Long dayId, EntryDuplicateRequest request) {
+        Entry entry = entryRepository.findByIdVerified(user.getId(), request.entryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + request.entryId() + ") not found."));
+        
+        Day day = dayRepository.findByIdVerified(user.getId(), dayId)
+                .orElseThrow(() -> new ResourceNotFoundException("Requested day (id: " + dayId + ") not found."));
 
-    // editEntry
+        Entry copy = entry.createDuplicate();
+        copy.setDay(day);
+        copy.setCategory(request.category());
+
+        long count = entryRepository.countInDayAndCategory(dayId, request.category());
+        copy.setPosition(((int) count) + 1);
+
+        Entry saved = entryRepository.save(copy);
+        return entryMapper.generateResponse(saved);
+    }
+
+    @Transactional
     public EntryResponse editEntry(User user, Long entryId, EntryEditRequest request) {
         Entry entry = entryRepository.findByIdVerified(user.getId(), entryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id:" + entryId + ") not found."));
@@ -79,102 +103,52 @@ public class EntryService {
         return entryMapper.generateResponse(entry);
     }
 
-    // reorderEntry
+    @Transactional
+    public void moveEntry(User user, Long dayId, Long entryId, EntryMoveRequest request) {
+        Entry entry = entryRepository.findShallowByIdAndDayVerified(user.getId(), dayId, entryId)
+            .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
 
+        int sourcePosition = entry.getPosition();   // 
+        int categoryCount = (int) entryRepository.countInDayAndCategory(dayId, request.category());
+        int targetPosition = 0;
+
+        if (entry.getCategory() == request.category()) {
+            targetPosition = Math.min(request.desiredPosition(), categoryCount);
+            if (sourcePosition > targetPosition) {
+                entryRepository.shiftUpInDayAndCategory(dayId, request.category(), targetPosition, sourcePosition);
+            } else if (sourcePosition < targetPosition) {
+                entryRepository.shiftDownInDayAndCategory(dayId, request.category(), sourcePosition, targetPosition);
+            }
+        } else {
+            targetPosition = Math.min(request.desiredPosition(), categoryCount + 1);
+            entryRepository.shiftUpInDayAndCategory(dayId, request.category(), null, targetPosition);
+            entryRepository.shiftDownInDayAndCategory(dayId, entry.getCategory(), sourcePosition, null);
+            entry.setCategory(request.category());
+        }
+
+        entry.setPosition(targetPosition);
+    }
+
+    @Transactional
     public void deleteEntry(User user, Long entryId) {
+        Tuple positionData = entryRepository.findPositionDataByIdVerified(user.getId(), entryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
+
+        // Check only exists to catch race conditions. Might remove later.
         if (entryRepository.deleteByIdVerified(user.getId(), entryId) == 0) {
             throw new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found.");
         }
+
+        entryRepository.shiftDownInDayAndCategory(
+            positionData.get("dayId", Long.class),
+            positionData.get("category", Category.class),
+            positionData.get("position", Integer.class),
+            null);
     }
 
-    // retrieveEntry
     public EntryResponse retrieveEntry(User user, Long entryId) {
         Entry entry = entryRepository.findByIdVerified(user.getId(), entryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
         return entryMapper.generateResponse(entry);
     }
-
-    /*
-    // TO DO: Category should default to Breakfast?
-    public List<EntryResponse> duplicateEntries(User user, Long dayId, Category category, EntryBulkRequest request) {
-        Set<Long> entryIds = request.entryIds();
-
-        // Fetch the requested day.
-        Day day = dayRepository.findByIdVerified(user.getId(), dayId)
-                .orElseThrow(() -> new ResourceNotFoundException("Requested day (id: " + dayId + ") not found."));
-
-        // Fetch the requested entries.
-        List<Entry> entries = entryRepository.findMultipleByIdVerified(user.getId(), entryIds);
-        if (entryIds.size() > entries.size()) {
-            throw new ResourceNotFoundException("One or more of the requested entries was not found.");
-        }
-
-        // Count the number of entries already in the requested Day and Category.
-        long count = entryRepository.countInDayAndCategory(dayId, category);
-        int nextPosition = (int) count + 1;
-
-        List<Entry> copies = new ArrayList<>();
-        for (Entry entry : entries) {
-            Entry copy = entry.createDuplicate();
-            copy.setDay(day);
-            copy.setCategory(category);
-            copy.setPosition(nextPosition++);
-            copies.add(copy);
-        }
-
-        entryRepository.saveAll(copies);
-        return copies.stream().map(entryMapper::generateResponse).toList();
-    }
-
-    @Transactional
-    public EntryResponse editEntry(User user, Long entryId, EntryEditRequest request) {
-        Entry entry = entryRepository.findByIdVerified(user.getId(), entryId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Requested entry (id: " + entryId + ") not found."));
-
-        entryMapper.updateFromRequest(entry, request);
-        return entryMapper.generateResponse(entry);
-    }
-
-    @Transactional
-    public List<EntryResponse> reorderEntries(User user, EntriesReorderRequest request) {
-        
-        // Transform incoming reorder requests into a form that is searchable by entryId.
-        Map<Long, EntryReorderRequest> requestsById = request.requests().stream().collect(Collectors.toMap(
-                EntryReorderRequest::entryId,
-                r -> r,
-                (a, b) -> {throw new IllegalDuplicateValueException("Received multiple positions for the same entry.");}
-        ));
-
-        // Fetch the requested entries.
-        List<Entry> entries = entryRepository.findMultipleByIdVerified(user.getId(), requestsById.keySet());
-        if (requestsById.size() > entries.size()) {
-                throw new ResourceNotFoundException("One or more of the requested entries was not found.");
-        }
-
-        // Reorder the requested entries.
-        entries.forEach(entry ->
-                entryMapper.repositionEntry(entry, requestsById.get(entry.getId())));
-
-        return entries.stream().map(entryMapper::generateResponse).toList();
-    }
-
-    @Transactional
-    public void deleteEntries(User user, EntryBulkRequest request) {
-        Set<Long> entryIds = request.entryIds();
-        Long count = entryRepository.multipleIdsExistVerified(user.getId(), entryIds);
-        if (entryIds.size() > count) {
-                throw new ResourceNotFoundException("One or more of the requested entries were not found.");
-        }
-        entryRepository.deleteMultipleByIdVerified(user.getId(), entryIds);
-    }
-
-    public EntryResponse retrieveEntry(User user, Long entryId) {
-        Entry entry = entryRepository.findByIdVerified(user.getId(), entryId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Requested entry (id: " + entryId + ") not found.")
-                );
-        return entryMapper.generateResponse(entry);
-    }
-     */
 }

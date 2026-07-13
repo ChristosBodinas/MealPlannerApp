@@ -2,9 +2,8 @@ package org.example.mealplannerapp.dto.entry.request;
 
 import org.example.mealplannerapp.constants.Category;
 
-public record EntryReorderRequest(
+public record EntryDuplicateRequest(
     Long entryId,
-    Category category,
-    int position
+    Category category
 ) {
 }

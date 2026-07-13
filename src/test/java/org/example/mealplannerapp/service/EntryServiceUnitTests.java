@@ -1,7 +1,8 @@
 package org.example.mealplannerapp.service;
 
 import org.example.mealplannerapp.constants.Category;
-import org.example.mealplannerapp.dto.entry.request.EntryBulkRequest;
+import org.example.mealplannerapp.dto.entry.request.EntryDuplicateRequest;
+import org.example.mealplannerapp.dto.entry.request.EntryMoveRequest;
 import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateRequest;
 import org.example.mealplannerapp.dto.entry.request.edit.FoodEntryEditRequest;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
@@ -19,12 +20,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import jakarta.persistence.Tuple;
+
 import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.example.mealplannerapp.fixtures.EntryTestFixtures.*;
@@ -132,6 +136,67 @@ public class EntryServiceUnitTests {
     }
     //</editor-fold>
 
+    //<editor-fold desc="duplicateEntry tests">
+    @Test
+    @DisplayName("duplicateEntry successfully copies the requested Entry to the requested Day.")
+    void duplicateEntry_happyFlow() {
+        // Arrange
+        EntryDuplicateRequest request = new EntryDuplicateRequest(88L, Category.BREAKFAST);
+        FoodEntry entry = defaultFoodEntry();
+        Food food = defaultFood();
+        entry.setFood(food);
+
+        when(entryRepository.findByIdVerified(1L, 88L)).thenReturn(Optional.of(entry));
+
+        Day day = new Day();
+        when(dayRepository.findByIdVerified(1L, 77L)).thenReturn(Optional.of(day));
+
+        when(entryRepository.countInDayAndCategory(77L, Category.BREAKFAST)).thenReturn(2L);
+
+        FoodEntry saved = new FoodEntry();
+        when(entryRepository.save(any())).thenReturn(saved);
+
+        FoodEntryResponse expected = defaultFoodEntryResponse(defaultFoodResponse());
+        when(entryMapper.generateResponse(saved)).thenReturn(expected);
+
+        // Act
+        EntryResponse response = entryService.duplicateEntry(user, 88L, request);
+
+        // Assert
+
+    }
+
+    @Test
+    @DisplayName("duplicateEntry fails to find the requested entry.")
+    void duplicateEntry_throwsEntryNotFound() {
+        // Arrange
+        EntryDuplicateRequest request = new EntryDuplicateRequest(88L, Category.BREAKFAST);
+
+        when(entryRepository.findByIdVerified(1L, 88L)).thenReturn(Optional.empty());
+
+        // Act + Assert
+        assertThatThrownBy(() -> entryService.duplicateEntry(user, 77L, request))
+            .isInstanceOf(ResourceNotFoundException.class);
+        verify(dayRepository, never()).findByIdVerified(any(), any());
+    }
+
+    @Test
+    @DisplayName("duplicateEntry fails to find the requested day.")
+    void duplicateEntry_throwsDayNotFound() {
+        // Arrange
+        EntryDuplicateRequest request = new EntryDuplicateRequest(88L, Category.BREAKFAST);
+
+        FoodEntry entry = new FoodEntry();
+        when(entryRepository.findByIdVerified(1L, 88L)).thenReturn(Optional.of(entry));
+
+        when(dayRepository.findByIdVerified(1L, 77L)).thenReturn(Optional.empty());
+
+        // Act + Assert
+        assertThatThrownBy(() -> entryService.duplicateEntry(user, 77L, request))
+            .isInstanceOf(ResourceNotFoundException.class);
+    }
+    //</editor-fold>
+
     //<editor-fold desc="editEntry tests">
     @Test
     @DisplayName("editEntry successfully edits the requested entry.")
@@ -168,11 +233,67 @@ public class EntryServiceUnitTests {
     }
     //</editor-fold>
 
-    //<editor-fold desc="deleteEntry tests">
+    //<editor-fold desc="moveEntry tests">
+
+    @Test
+    @DisplayName("moveEntry successfully moves the requested entry up in the same category.")
+    void moveEntry_withSameCategoryUp_happyFlow() {
+        // Arrange
+        FoodEntry entry = foodEntryWithPosition(Category.LUNCH, 4);
+        EntryMoveRequest request = new EntryMoveRequest(Category.LUNCH, 8);
+
+
+    }
+
+    @Test
+    @DisplayName("moveEntry successfully moves the requested entry down in the same category.")
+    void moveEntry_withSameCategoryDown_happyFlow() {
+
+    }
+
+    @ParameterizedTest
+    @DisplayName("moveEntry successfully moves the requested entry in from another category.")
+    @ValueSource(ints = {
+        8,      // desiredPosition < categoryCount
+        10,     // desiredPosition = categoryCount
+        12      // desiredPosition > categoryCount
+    })
+    void moveEntry_withDifferentCategory_happyFlow(int desiredPosition) {
+        // Arrange
+        FoodEntry entry = foodEntryWithPosition(Category.LUNCH, 5);
+        EntryMoveRequest request = new EntryMoveRequest(Category.LUNCH, desiredPosition);
+        long categoryCount = 10;
+        when(entryRepository.countInDayAndCategory(77L, Category.LUNCH)).thenReturn(categoryCount);
+
+        // Act
+        entryService.moveEntry(user, 77L, 88L, request);
+    }
+
+    @Test
+    @DisplayName("moveEntry fails to find the requested entry.")
+    void moveEntry_throwsEntryNotFound() {
+        // Arrange
+        EntryMoveRequest request = new EntryMoveRequest(Category.LUNCH, 4);
+        when(entryRepository.findShallowByIdAndDayVerified(1L, 77L, 88L)).thenReturn(Optional.empty());
+
+        // Act + Assert
+        assertThatThrownBy(() -> entryService.moveEntry(user, 77L, 88L, request))
+            .isInstanceOf(ResourceNotFoundException.class);
+        verify(entryRepository, never()).countInDayAndCategory(any(), any());
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="delete Entry tests"
     @Test
     @DisplayName("deleteEntry successfully deletes the requested entry.")
     void deleteEntry_happyFlow() {
         // Arrange
+        Tuple positionData = mock(Tuple.class);
+        when(positionData.get("dayId", Long.class)).thenReturn(77L);
+        when(positionData.get("category", Category.class)).thenReturn(Category.BREAKFAST);
+        when(positionData.get("position", Integer.class)).thenReturn(5);
+        when(entryRepository.findPositionDataByIdVerified(1L, 88L)).thenReturn(Optional.of(positionData));
+
         when(entryRepository.deleteByIdVerified(1L, 88L)).thenReturn(1);
 
         // Act
@@ -180,17 +301,18 @@ public class EntryServiceUnitTests {
 
         // Assert
         verify(entryRepository).deleteByIdVerified(1L, 88L);
+        verify(entryRepository).shiftDownInDayAndCategory(77L, Category.BREAKFAST, 5, null);
     }
 
     @Test
     @DisplayName("deleteEntry fails to find the requested entry.")
     void deleteEntry_throwsEntryNotFound() {
         // Arrange
-        when(entryRepository.deleteByIdVerified(1L, 88L)).thenReturn(0);
+        when(entryRepository.findPositionDataByIdVerified(1L, 88L)).thenReturn(Optional.empty());
 
         // Act + Assert
         assertThatThrownBy(() -> entryService.deleteEntry(user, 88L))
-                .isInstanceOf(ResourceNotFoundException.class);
+            .isInstanceOf(ResourceNotFoundException.class);
     }
     //</editor-fold>
 

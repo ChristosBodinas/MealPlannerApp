@@ -7,10 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.example.mealplannerapp.constants.Gender;
 import org.example.mealplannerapp.constants.Sex;
-import org.hibernate.annotations.Temporal;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @Getter @Setter @NoArgsConstructor

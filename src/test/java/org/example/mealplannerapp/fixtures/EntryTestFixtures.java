@@ -3,13 +3,11 @@ package org.example.mealplannerapp.fixtures;
 import java.util.Set;
 
 import org.example.mealplannerapp.constants.Category;
-import org.example.mealplannerapp.dto.entry.request.EntryBulkRequest;
 import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateRequest;
 import org.example.mealplannerapp.dto.entry.request.edit.FoodEntryEditRequest;
 import org.example.mealplannerapp.dto.entry.response.FoodEntryResponse;
 import org.example.mealplannerapp.dto.food.response.FoodResponse;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
-import org.springframework.test.util.ReflectionTestUtils;
 
 public class EntryTestFixtures {
 
@@ -41,10 +39,6 @@ public class EntryTestFixtures {
     }
     //</editor-fold>
 
-    public static EntryBulkRequest defaultEntryBulkRequest() {
-        return new EntryBulkRequest(Set.of(5L, 10L, 15L, 20L, 25L));
-    }
-
     public static FoodEntry defaultFoodEntry() {
         FoodEntry entry = new FoodEntry();
         entry.setCategory(Category.BREAKFAST);
@@ -55,9 +49,10 @@ public class EntryTestFixtures {
         return entry;
     }
 
-    public static FoodEntry foodEntryWithId(Long id) {
+    public static FoodEntry foodEntryWithPosition(Category category, int position) {
         FoodEntry entry = new FoodEntry();
-        ReflectionTestUtils.setField(entry, "id", id);
+        entry.setCategory(category);
+        entry.setPosition(position);
         return entry;
     }
 

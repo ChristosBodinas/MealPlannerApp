@@ -28,8 +28,8 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     );
 
     @Query("SELECT f FROM Food f WHERE f.user.id = :userId AND " +
-        "(LOWER(f.name) LIKE CONCAT('%', :search, '%') OR " +
-        "LOWER(f.brand) LIKE CONCAT('%', :search, '%'))")
+        "(LOWER(f.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+        "LOWER(f.brand) LIKE LOWER(CONCAT('%', :search, '%')))")
     List<Food> searchByText(
             @Param("userId") Long userId,
             @Param("search") String search
