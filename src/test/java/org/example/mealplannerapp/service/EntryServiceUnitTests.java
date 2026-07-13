@@ -10,6 +10,7 @@ import org.example.mealplannerapp.dto.entry.response.FoodEntryResponse;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
+import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.mapper.EntryMapper;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -159,11 +161,22 @@ public class EntryServiceUnitTests {
         FoodEntryResponse expected = defaultFoodEntryResponse(defaultFoodResponse());
         when(entryMapper.generateResponse(saved)).thenReturn(expected);
 
+        ArgumentCaptor<FoodEntry> captor = ArgumentCaptor.forClass(FoodEntry.class);
+
         // Act
         EntryResponse response = entryService.duplicateEntry(user, 88L, request);
 
         // Assert
-
+        assertThat(response).isEqualTo(expected);
+        verify(entryRepository).save(captor.capture());
+        FoodEntry copy = captor.getValue();
+        assertThat(copy).isNotSameAs(entry);    // The entities don't have IDs, so we use object comparison.
+        assertThat(copy.getDay()).isEqualTo(day);
+        assertThat(copy.getCategory()).isEqualTo(Category.BREAKFAST);
+        assertThat(copy.getFood()).isEqualTo(food);
+        assertThat(copy.getGrams()).isEqualTo(entry.getGrams());
+        assertThat(copy.getDisplayUnit()).isEqualTo(entry.getDisplayUnit());
+        assertThat(copy.getDisplayMerchant()).isEqualTo(entry.getDisplayMerchant());
     }
 
     @Test
@@ -238,17 +251,13 @@ public class EntryServiceUnitTests {
     @Test
     @DisplayName("moveEntry successfully moves the requested entry up in the same category.")
     void moveEntry_withSameCategoryUp_happyFlow() {
-        // Arrange
-        FoodEntry entry = foodEntryWithPosition(Category.LUNCH, 4);
-        EntryMoveRequest request = new EntryMoveRequest(Category.LUNCH, 8);
-
-
+        // TO DO
     }
 
     @Test
     @DisplayName("moveEntry successfully moves the requested entry down in the same category.")
     void moveEntry_withSameCategoryDown_happyFlow() {
-
+        // TO DO
     }
 
     @ParameterizedTest
@@ -259,14 +268,13 @@ public class EntryServiceUnitTests {
         12      // desiredPosition > categoryCount
     })
     void moveEntry_withDifferentCategory_happyFlow(int desiredPosition) {
-        // Arrange
-        FoodEntry entry = foodEntryWithPosition(Category.LUNCH, 5);
-        EntryMoveRequest request = new EntryMoveRequest(Category.LUNCH, desiredPosition);
-        long categoryCount = 10;
-        when(entryRepository.countInDayAndCategory(77L, Category.LUNCH)).thenReturn(categoryCount);
+        // TO DO
+    }
 
-        // Act
-        entryService.moveEntry(user, 77L, 88L, request);
+    @Test
+    @DisplayName("moveEntry makes no changes if requested entry is already in desired position.")
+    void moveEntry_noMovementNeeded_happyFlow() {
+        // TO DO
     }
 
     @Test

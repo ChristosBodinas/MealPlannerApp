@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
  */
 @Entity
 @Getter @Setter @NoArgsConstructor
+@AllArgsConstructor
 public class Food {
 
     @Id

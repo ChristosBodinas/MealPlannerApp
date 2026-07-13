@@ -135,9 +135,7 @@ public class EntryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
 
         // Check only exists to catch race conditions. Might remove later.
-        if (entryRepository.deleteByIdVerified(user.getId(), entryId) == 0) {
-            throw new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found.");
-        }
+        entryRepository.deleteByIdVerified(user.getId(), entryId);
 
         entryRepository.shiftDownInDayAndCategory(
             positionData.get("dayId", Long.class),
