@@ -11,20 +11,57 @@ import org.example.mealplannerapp.embeddable.FoodPrice;
 import org.example.mealplannerapp.embeddable.FoodUnit;
 import org.example.mealplannerapp.entity.Food;
 
-import java.util.List;
 import java.util.Set;
-import java.util.stream.IntStream;
 
 public class FoodTestFixtures {
 
-    //<editor-fold desc="BUILDERS">
-    static FoodRequest.FoodRequestBuilder defaultRequestBuilder() {
+    private static final Long DEFAULT_ID = 1L;
+    private static final String DEFAULT_NAME = "Fake Food";
+    private static final String DEFAULT_BRAND = "Fake Brand";
+    private static final double DEFAULT_CALORIES_PER_100G = 97.0;
+    private static final double DEFAULT_PROTEIN_PER_100G = 12.0;
+    private static final double DEFAULT_CARBS_PER_100G = 37.5;
+    private static final double DEFAULT_FAT_PER_100G = 4.5;
+    private static final double DEFAULT_FIBER_PER_100G = 6.0;
+    private static final double DEFAULT_EDIBLE_RATIO = 1.0;
+
+    /**
+     * Fixture for building {@link Food} entities.
+     * @return a Food builder with default values for all fields except {@code user}
+     */
+    public static Food.FoodBuilder defaultFoodBuilder() {
+        return Food.builder()
+                .id(DEFAULT_ID)
+                .name(DEFAULT_NAME)
+                .brand(DEFAULT_BRAND)
+                .caloriesPer100g(DEFAULT_CALORIES_PER_100G)
+                .proteinPer100g(DEFAULT_PROTEIN_PER_100G)
+                .carbsPer100g(DEFAULT_CARBS_PER_100G)
+                .fatPer100g(DEFAULT_FAT_PER_100G)
+                .fiberPer100g(DEFAULT_FIBER_PER_100G)
+                .edibleRatio(DEFAULT_EDIBLE_RATIO)
+                .units(Set.of(
+                        new FoodUnit("tbsp", 15.0),
+                        new FoodUnit("cup", 235.0)))
+                .prices(Set.of(
+                        new FoodPrice("Masoutis", 6.80, 200),
+                        new FoodPrice("MyMarket", 5.70, 175)));
+    }
+
+    /**
+     * Method for building {@link FoodRequest} DTOs.
+     * @return a FoodRequest builder with default values for all fields.
+     */
+    public static FoodRequest.FoodRequestBuilder defaultFoodRequestBuilder() {
         return FoodRequest.builder()
-                .name("Fake Food")
-                .brand("Fake Brand")
-                .caloriesPer100g(97.0)
-                .proteinPer100g(12.0).carbsPer100g(37.5).fatPer100g(4.5).fiberPer100g(6.0)
-                .edibleRatio(0.9)
+                .name(DEFAULT_NAME)
+                .brand(DEFAULT_BRAND)
+                .caloriesPer100g(DEFAULT_CALORIES_PER_100G)
+                .proteinPer100g(DEFAULT_PROTEIN_PER_100G)
+                .carbsPer100g(DEFAULT_CARBS_PER_100G)
+                .fatPer100g(DEFAULT_FAT_PER_100G)
+                .fiberPer100g(DEFAULT_FIBER_PER_100G)
+                .edibleRatio(DEFAULT_EDIBLE_RATIO)
                 .units(Set.of(
                         new UnitRequest("tbsp", 15.0),
                         new UnitRequest("cup", 235.0)))
@@ -33,14 +70,21 @@ public class FoodTestFixtures {
                         new PriceRequest("MyMarket", 5.70, 175)));
     }
 
-    static FoodResponse.FoodResponseBuilder defaultResponseBuilder() {
+    /**
+     * Method for building {@link FoodResponse} DTOs.
+     * @return a FoodResponse builder with default values for all fields.
+     */
+    public static FoodResponse.FoodResponseBuilder defaultFoodResponseBuilder() {
         return FoodResponse.builder()
-                .id(99L)
-                .name("Fake Food")
-                .brand("Fake Brand")
-                .caloriesPer100g(97.0)
-                .proteinPer100g(12.0).carbsPer100g(37.5).fatPer100g(4.5).fiberPer100g(6.0)
-                .edibleRatio(0.9)
+                .id(DEFAULT_ID)
+                .name(DEFAULT_NAME)
+                .brand(DEFAULT_BRAND)
+                .caloriesPer100g(DEFAULT_CALORIES_PER_100G)
+                .proteinPer100g(DEFAULT_PROTEIN_PER_100G)
+                .carbsPer100g(DEFAULT_CARBS_PER_100G)
+                .fatPer100g(DEFAULT_FAT_PER_100G)
+                .fiberPer100g(DEFAULT_FIBER_PER_100G)
+                .edibleRatio(DEFAULT_EDIBLE_RATIO)
                 .units(Set.of(
                         new UnitResponse("tbsp", 15.0),
                         new UnitResponse("cup", 235.0)))
@@ -49,65 +93,20 @@ public class FoodTestFixtures {
                         new PriceResponse("MyMarket", 5.70, 175)));
     }
 
+    /**
+     * Method for building {@link ListedFoodResponse} DTOs.
+     * @return a ListedFoodResponse builder with default values for all fields.
+     */
     static ListedFoodResponse.ListedFoodResponseBuilder defaultListedResponseBuilder() {
         return ListedFoodResponse.builder()
-                .id(99L)
-                .name("Fake Food")
-                .brand("Fake Brand")
-                .caloriesPer100g(97.0)
-                .proteinPer100g(12.0).carbsPer100g(37.5).fatPer100g(4.5).fiberPer100g(6.0);
-    }
-    //</editor-fold>
-
-    public static Food defaultFood() {
-        Food food = new Food();
-        food.setName("Fake Food");
-        food.setBrand("Fake Brand");
-        food.setCaloriesPer100g(97.0);
-        food.setProteinPer100g(12.0);
-        food.setCarbsPer100g(37.5);
-        food.setFatPer100g(4.5);
-        food.setFiberPer100g(6.0);
-        food.setEdibleRatio(0.9);
-        food.setUnits(Set.of(
-                new FoodUnit("tbsp", 15.0),
-                new FoodUnit("cup", 235.0)));
-        food.setPrices(Set.of(
-                new FoodPrice("Masoutis", 6.80, 200),
-                new FoodPrice("MyMarket", 5.70, 175)));
-        return food;
+                .id(DEFAULT_ID)
+                .name(DEFAULT_NAME)
+                .brand(DEFAULT_BRAND)
+                .caloriesPer100g(DEFAULT_CALORIES_PER_100G)
+                .proteinPer100g(DEFAULT_PROTEIN_PER_100G)
+                .carbsPer100g(DEFAULT_CARBS_PER_100G)
+                .fatPer100g(DEFAULT_FAT_PER_100G)
+                .fiberPer100g(DEFAULT_FIBER_PER_100G);
     }
 
-    public static FoodRequest defaultFoodRequest() {
-        return defaultRequestBuilder().build();
-    }
-
-    public static FoodRequest duplicateUnitsRequest() {
-        return defaultRequestBuilder()
-                .units(Set.of(
-                        new UnitRequest("tbsp", 15.0),
-                        new UnitRequest("tbsp", 235.0)))
-                .build();
-    }
-
-    public static FoodRequest duplicatePricesRequest() {
-        return defaultRequestBuilder()
-                .prices(Set.of(
-                        new PriceRequest("Masoutis", 6.80, 200),
-                        new PriceRequest("Masoutis", 5.70, 175)))
-                .build();
-    }
-
-    public static FoodResponse defaultFoodResponse() {
-        return defaultResponseBuilder().build();
-    }
-
-    public static List<ListedFoodResponse> listedResponseList(int count) {
-        return IntStream.rangeClosed(1, count)
-                .mapToObj(i -> defaultListedResponseBuilder()
-                        .id((long) i)
-                        .name("Fake Food" + i)
-                        .build())
-                .toList();
-    }
 }

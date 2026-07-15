@@ -1,16 +1,14 @@
 package org.example.mealplannerapp.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.example.mealplannerapp.entity.entry.Entry;
 
 import java.util.Set;
 
 @Entity
 @Getter @Setter @NoArgsConstructor
+@AllArgsConstructor @Builder
 public class Day {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,16 +1,15 @@
 package org.example.mealplannerapp.entity.entry;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.example.mealplannerapp.constants.Category;
 import org.example.mealplannerapp.entity.Day;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @Getter @Setter @NoArgsConstructor
+@AllArgsConstructor @SuperBuilder
 public abstract class Entry {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

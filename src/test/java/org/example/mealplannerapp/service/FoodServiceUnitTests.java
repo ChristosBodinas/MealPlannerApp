@@ -11,6 +11,7 @@ import org.example.mealplannerapp.mapper.FoodMapper;
 import org.example.mealplannerapp.repository.FoodRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -44,6 +45,32 @@ class FoodServiceUnitTests {
         user = mock(User.class);
         lenient().when(user.getId()).thenReturn(1L);
     }
+
+    @Nested
+    class createFood {
+
+    }
+
+    @Nested
+    class updateFood {
+
+    }
+
+    @Nested
+    class deleteFood {
+
+    }
+
+    @Nested
+    class retrieveFood {
+
+    }
+
+    @Nested
+    class searchFoods {
+
+    }
+
 
     //<editor-fold desc="createFood tests">
     @Test
