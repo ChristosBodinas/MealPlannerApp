@@ -11,4 +11,9 @@ import org.example.mealplannerapp.entity.entry.FoodEntry;
 
 public class EntryTestFixtures {
 
+    public FoodEntry.FoodEntryBuilder defaultFoodEntryBuilder() {
+        return FoodEntry.builder()
+                .
+    }
+
 }

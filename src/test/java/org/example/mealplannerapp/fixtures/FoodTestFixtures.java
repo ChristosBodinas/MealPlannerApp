@@ -97,7 +97,7 @@ public class FoodTestFixtures {
      * Method for building {@link ListedFoodResponse} DTOs.
      * @return a ListedFoodResponse builder with default values for all fields.
      */
-    static ListedFoodResponse.ListedFoodResponseBuilder defaultListedResponseBuilder() {
+    public static ListedFoodResponse.ListedFoodResponseBuilder defaultListedFoodResponseBuilder() {
         return ListedFoodResponse.builder()
                 .id(DEFAULT_ID)
                 .name(DEFAULT_NAME)

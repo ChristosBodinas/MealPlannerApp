@@ -19,10 +19,11 @@ import org.example.mealplannerapp.repository.EntryRepository;
 import org.example.mealplannerapp.repository.FoodRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -56,11 +57,37 @@ public class EntryServiceUnitTests {
 
     private User user;
 
-    @BeforeEach
-    void prepareTests() {
-        user = mock(User.class);
-        lenient().when(user.getId()).thenReturn(1L);
+    @Nested
+    class createEntry {
+
     }
+
+    @Nested
+    class duplicateEntry {
+        
+    }
+
+    @Nested
+    class editEntry {
+
+    }
+
+    @Nested
+    class moveEntry {
+
+    }
+
+    @Nested
+    class deleteEntry {
+
+    }
+
+    @Nested
+    class retrieveEntry {
+
+    }
+
+
 
     //<editor-fold desc="createEntry tests">
     @Test
