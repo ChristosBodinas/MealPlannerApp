@@ -23,8 +23,6 @@ import org.example.mealplannerapp.repository.FoodRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.Tuple;
-
 /**
  * <p>A service that handles the creation, duplication, modification, deletion,
  * and retrieval of individual {@link Entry} entities.

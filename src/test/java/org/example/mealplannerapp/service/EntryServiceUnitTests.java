@@ -2,6 +2,8 @@ package org.example.mealplannerapp.service;
 
 
 import org.example.mealplannerapp.constants.Category;
+import org.example.mealplannerapp.dto.entry.request.EntryDuplicateRequest;
+import org.example.mealplannerapp.dto.entry.request.EntryMoveRequest;
 import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateRequest;
 import org.example.mealplannerapp.dto.entry.request.edit.FoodEntryEditRequest;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
@@ -9,6 +11,7 @@ import org.example.mealplannerapp.dto.entry.response.FoodEntryResponse;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
+import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.mapper.EntryMapper;
@@ -21,6 +24,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,6 +36,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.*;
 import static org.example.mealplannerapp.fixtures.EntryTestFixtures.*;
 import static org.example.mealplannerapp.fixtures.FoodTestFixtures.defaultFoodBuilder;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -135,22 +142,80 @@ public class EntryServiceUnitTests {
     @Nested
     class duplicateEntry {
 
+        private EntryDuplicateRequest request;
+        private FoodEntry found;
+        private Food food;
+
+        private static final Category COPY_CATEGORY = Category.DINNER;
+        private static final long COUNT = 3L;
+        private static final int COPY_POSITION = 4;
+
+        @BeforeEach
+        void prepareTests() {
+            user = mock(User.class);
+            request = new EntryDuplicateRequest(ENTRY_ID, COPY_CATEGORY);
+            found = spy(defaultFoodEntryBuilder().build());
+            food = defaultFoodBuilder().build();
+            found.setFood(food);
+
+            when(user.getId()).thenReturn(USER_ID);
+        }
+
         @Test
         @DisplayName("Given a valid input, creates and saves a duplicate of the requested Entry.")
         void happyFlow() {
+            // Arrange
+            Day day = new Day();
+            ArgumentCaptor<FoodEntry> entryCaptor = ArgumentCaptor.forClass(FoodEntry.class);
+            FoodEntry saved = new FoodEntry();
+            FoodEntryResponse expected = defaultFoodEntryResponseBuilder().build();
 
+            when(entryRepository.findByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(found);
+            when(dayRepository.findByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.of(day));
+            when(entryRepository.countInDayAndCategory(DAY_ID, COPY_CATEGORY)).thenReturn(COUNT);
+            when(entryRepository.save(any())).thenReturn(saved);    // We don't have access to the new entry.
+            when(entryMapper.generateResponse(saved)).thenReturn(expected);
+
+            // Act
+            EntryResponse response = entryService.duplicateEntry(user, DAY_ID, request);
+
+            // Assert
+            assertThat(response).isEqualTo(expected);
+            verify(entryRepository).save(entryCaptor.capture());
+            FoodEntry copy = entryCaptor.getValue();
+            assertThat(copy.getId()).isNotSameAs(found);
+            assertThat(copy.getDay()).isEqualTo(day);
+            assertThat(copy.getCategory()).isEqualTo(COPY_CATEGORY);
+            assertThat(copy.getPosition()).isEqualTo(COPY_POSITION);
+            assertThat(copy.getCalories()).isCloseTo(found.getCalories(), within(0.01));
         }
 
         @Test
         @DisplayName("Given an invalid entryId, throws a ResourceNotFoundException.")
         void entryNotFound() {
+            // Arrange
+            when(entryRepository.findByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
 
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.duplicateEntry(user, DAY_ID, request))
+                    .isInstanceOf(ResourceNotFoundException.class);
+            verify(entryRepository).findByIdVerified(USER_ID, ENTRY_ID);
+            verify(dayRepository, never()).findByIdVerified(USER_ID, DAY_ID);
         }
 
         @Test
         @DisplayName("Given an invalid dayId, throws a ResourceNotFoundException.")
         void dayNotFound() {
+            // Arrange
+            when(entryRepository.findByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(found));
+            when(dayRepository.findByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.empty());
 
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.duplicateEntry(user, DAY_ID, request))
+                    .isInstanceOf(ResourceNotFoundException.class);
+            verify(entryRepository).findByIdVerified(USER_ID, ENTRY_ID);
+            verify(dayRepository).findByIdVerified(USER_ID, DAY_ID);
+            verify(found, never()).createDuplicate();
         }
 
     }
@@ -159,6 +224,7 @@ public class EntryServiceUnitTests {
     class editEntry {
 
         private FoodEntryEditRequest request;
+        private FoodEntry found;
         private static final double NEW_GRAMS = 200.0;
         private static final String NEW_UNIT = "cup";
         private static final String NEW_MERCHANT = "MyMarket";
@@ -166,8 +232,9 @@ public class EntryServiceUnitTests {
         @BeforeEach
         void prepareTests() {
             user = mock(User.class);
-            when(user.getId()).thenReturn(USER_ID);
             request = new FoodEntryEditRequest(NEW_GRAMS, NEW_UNIT, NEW_MERCHANT);
+
+            when(user.getId()).thenReturn(USER_ID);
         }
 
         @Test
@@ -209,20 +276,79 @@ public class EntryServiceUnitTests {
     @Nested
     class moveEntry {
 
-        @Test
-        @DisplayName("Given a valid input, moves the requested Entry up in its current category.")
-        void sameCategoryUp() {
+        private EntryMoveRequest request;
+        private FoodEntry found;
 
+        private static final Category SAME_CATEGORY = Category.LUNCH;
+        private static final Category DIFFERENT_CATEGORY = Category.DINNER;
+        private static final int SOURCE_POSITION = 5;
+        private static final long COUNT = 10;
+
+        @BeforeEach
+        void prepareTests() {
+            user = mock(User.class);
+            found = defaultFoodEntryBuilder()
+                .category(SAME_CATEGORY)
+                .position(SOURCE_POSITION)
+                .build();
+
+            when(user.getId()).thenReturn(USER_ID);
+        }
+
+        @ParameterizedTest
+        @DisplayName("Given a higher position in the same category, moves the requested Entry up in its current category.")
+        @ValueSource(ints = {(int) COUNT - 2, (int) COUNT, (int) COUNT + 2})
+        void sameCategoryUp(int desiredPosition) {
+            // Arrange
+            request = new EntryMoveRequest(SAME_CATEGORY, desiredPosition);
+            ArgumentCaptor<Integer> destCaptor = ArgumentCaptor.forClass(Integer.class);
+            
+            when(entryRepository.findShallowByIdAndDayVerified(USER_ID, DAY_ID, ENTRY_ID)).thenReturn(Optional.of(found));
+            when(entryRepository.countInDayAndCategory(DAY_ID, SAME_CATEGORY)).thenReturn(COUNT);
+
+            // Act
+            entryService.moveEntry(user, DAY_ID, ENTRY_ID, request);
+
+            // Assert
+            verify(entryRepository).shiftDownInDayAndCategory(DAY_ID, SAME_CATEGORY, SOURCE_POSITION, destCaptor.capture());
+            verify(entryRepository, never()).shiftUpInDayAndCategory(any(), any(), any(), any());
+
+            int destination = destCaptor.getValue();
+            assertThat(destination).isLessThanOrEqualTo((int) COUNT);   // Verifies that the targetPosition was properly clamped.
+            assertThat(found.getCategory()).isEqualTo(SAME_CATEGORY);
+            assertThat(found.getPosition()).isEqualTo(destination);
         }
 
         @Test
-        @DisplayName("Given a valid input, moves the requested Entry down in its current category.")
+        @DisplayName("Given a lower position in the same category, moves the requested Entry down in its current category.")
         void sameCategoryDown() {
+            // Arrange
+            request = new EntryMoveRequest(SAME_CATEGORY, SOURCE_POSITION - 2);
+            ArgumentCaptor<Integer> destCaptor = ArgumentCaptor.forClass(Integer.class);
+
+            when(entryRepository.findShallowByIdAndDayVerified(USER_ID, DAY_ID, ENTRY_ID)).thenReturn(Optional.of(found));
+            when(entryRepository.countInDayAndCategory(DAY_ID, SAME_CATEGORY)).thenReturn(COUNT);
+
+            // Act
+            entryService.moveEntry(user, DAY_ID, ENTRY_ID, request);
+
+            // Assert
+            verify(entryRepository).shiftUpInDayAndCategory(DAY_ID, SAME_CATEGORY, destCaptor.capture(), SOURCE_POSITION);
+            verify(entryRepository, never()).shiftDownInDayAndCategory(any(), any(), any(), any());
+
+            int destination = destCaptor.getValue();
+            assertThat(found.getCategory()).isEqualTo(SAME_CATEGORY);
+            assertThat(found.getPosition()).isEqualTo(destination);            
+        }
+
+        @Test
+        @DisplayName("Given the same position in the same category, performs no changes.")
+        void unchangedPosition() {
 
         }
 
         @Test
-        @DisplayName("Given a valid input, moves the requested Entry into a different category.")
+        @DisplayName("Given a different category, moves the requested Entry and closes the gap left behind.")
         void differentCategory() {
 
         }
@@ -230,7 +356,14 @@ public class EntryServiceUnitTests {
         @Test
         @DisplayName("Given an invalid entryId, throws a ResourceNotFoundException.")
         void entryNotFound() {
+            // Assert
+            when(entryRepository.findShallowByIdAndDayVerified(USER_ID, DAY_ID, ENTRY_ID)).thenReturn(Optional.empty());
 
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.moveEntry(user, DAY_ID, ENTRY_ID, request))
+                    .isInstanceOf(ResourceNotFoundException.class);
+            verify(entryRepository, times(1)).findShallowByIdAndDayVerified(USER_ID, DAY_ID, ENTRY_ID);
+            verifyNoMoreInteractions(entryRepository);
         }
 
     }
