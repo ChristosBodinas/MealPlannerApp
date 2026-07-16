@@ -26,7 +26,7 @@ public class FoodTestFixtures {
     private static final double DEFAULT_EDIBLE_RATIO = 1.0;
 
     /**
-     * Fixture for building {@link Food} entities.
+     * Method for building {@link Food} entities.
      * @return a Food builder with default values for all fields except {@code user}
      */
     public static Food.FoodBuilder defaultFoodBuilder() {

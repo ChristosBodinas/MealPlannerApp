@@ -40,7 +40,7 @@ class FoodServiceUnitTests {
 
     @InjectMocks private FoodService foodService;
 
-    // PRIVATE FIELDS
+    // UNIVERSAL VARIABLES
     private User user;
 
     private enum DupeType {
@@ -48,8 +48,8 @@ class FoodServiceUnitTests {
         PRICES
     }
 
-    private static final long USER_ID = 1L;
-    private static final long FOOD_ID = 99L;
+    private static final Long USER_ID = 1L;
+    private static final Long FOOD_ID = 99L;
 
     @Nested
     class createFood {
@@ -106,7 +106,7 @@ class FoodServiceUnitTests {
     @Nested
     class updateFood {
 
-        FoodRequest request;
+        private FoodRequest request;
 
         @BeforeEach
         void prepareTests() {

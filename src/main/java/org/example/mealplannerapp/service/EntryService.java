@@ -16,6 +16,7 @@ import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.mapper.EntryMapper;
+import org.example.mealplannerapp.projection.PositionData;
 import org.example.mealplannerapp.repository.DayRepository;
 import org.example.mealplannerapp.repository.EntryRepository;
 import org.example.mealplannerapp.repository.FoodRepository;
@@ -100,6 +101,8 @@ public class EntryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id:" + entryId + ") not found."));
 
         entryMapper.updateFromRequest(entry, request);
+        entry.snapshotNutritionAndPriceInfo();  // Recalculate snapshot fields to account for the change.
+
         return entryMapper.generateResponse(entry);
     }
 
@@ -110,7 +113,7 @@ public class EntryService {
 
         int sourcePosition = entry.getPosition();   // 
         int categoryCount = (int) entryRepository.countInDayAndCategory(dayId, request.category());
-        int targetPosition = 0;
+        int targetPosition;
 
         if (entry.getCategory() == request.category()) {
             targetPosition = Math.min(request.desiredPosition(), categoryCount);
@@ -131,17 +134,15 @@ public class EntryService {
 
     @Transactional
     public void deleteEntry(User user, Long entryId) {
-        Tuple positionData = entryRepository.findPositionDataByIdVerified(user.getId(), entryId)
+        PositionData positionData = entryRepository.findPositionDataByIdVerified(user.getId(), entryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
 
         // Check only exists to catch race conditions. Might remove later.
         entryRepository.deleteByIdVerified(user.getId(), entryId);
 
         entryRepository.shiftDownInDayAndCategory(
-            positionData.get("dayId", Long.class),
-            positionData.get("category", Category.class),
-            positionData.get("position", Integer.class),
-            null);
+                positionData.getDayId(), positionData.getCategory(), positionData.getPosition(), null
+        );
     }
 
     public EntryResponse retrieveEntry(User user, Long entryId) {

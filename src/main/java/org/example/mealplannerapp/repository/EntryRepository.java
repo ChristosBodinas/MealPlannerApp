@@ -2,12 +2,11 @@ package org.example.mealplannerapp.repository;
 
 import org.example.mealplannerapp.constants.Category;
 import org.example.mealplannerapp.entity.entry.Entry;
+import org.example.mealplannerapp.projection.PositionData;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import jakarta.persistence.Tuple;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +42,7 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
 
     @Query("SELECT e.day.id AS dayId, e.category AS category, e.position as position " +
             "FROM Entry e WHERE e.day.plan.user.id = :userId AND e.id = :entryId")
-    Optional<Tuple> findPositionDataByIdVerified(
+    Optional<PositionData> findPositionDataByIdVerified(
         @Param("userId") Long userId,
         @Param("entryId") Long entryId
     );
