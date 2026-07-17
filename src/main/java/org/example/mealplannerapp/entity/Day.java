@@ -2,6 +2,8 @@ package org.example.mealplannerapp.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import org.example.mealplannerapp.dto.day.DayGoalsResponse;
 import org.example.mealplannerapp.entity.entry.Entry;
 
 import java.util.Set;
@@ -23,6 +25,7 @@ public class Day {
     @JoinColumn(name = "plan_id")
     private Plan plan;
 
+    // WE PROBABLY DON'T NEED THIS TO BE BIDIRECTIONAL
     @OneToMany(mappedBy = "day")
     private Set<Entry> entries;
 
@@ -36,4 +39,5 @@ public class Day {
     private double fatGoal;
     @Column(nullable = false)
     private double fiberGoal;
+
 }

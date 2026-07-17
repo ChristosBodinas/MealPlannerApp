@@ -2,6 +2,7 @@ package org.example.mealplannerapp.repository;
 
 import org.example.mealplannerapp.constants.Category;
 import org.example.mealplannerapp.entity.entry.Entry;
+import org.example.mealplannerapp.projection.CategorySummary;
 import org.example.mealplannerapp.projection.PositionData;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -51,6 +52,14 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
     long countInDayAndCategory(
             @Param("dayId") Long dayId,
             @Param("category") Category category
+    );
+
+    @Query("SELECT e.category AS category, SUM(e.calories) AS calories, SUM(e.protein) AS protein, " +
+        "SUM(e.carbs) AS carbs, SUM(e.fat) AS fat, SUM(e.fiber) AS fiber " +
+        "FROM Entry e WHERE e.day.id = :dayId " +
+        "GROUP BY e.category")
+    List<CategorySummary> summarizeByCategoryInDay(
+        @Param("dayId") Long dayId
     );
 
     @Modifying
