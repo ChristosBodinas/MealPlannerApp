@@ -7,23 +7,33 @@ import org.example.mealplannerapp.entity.entry.Entry;
 import java.util.Set;
 
 @Entity
-@Getter @Setter @NoArgsConstructor
-@AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Day {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
     private Long id;
 
-    @ManyToOne @JoinColumn(name = "plan_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "plan_id")
     private Plan plan;
 
-    @OneToMany(mappedBy="day")
+    @OneToMany(mappedBy = "day")
     private Set<Entry> entries;
 
-    @Column(nullable = false) private double caloriesGoal;
-    @Column(nullable = false) private double proteinGoal;
-    @Column(nullable = false) private double carbsGoal;
-    @Column(nullable = false) private double fatGoal;
-    @Column(nullable = false) private double fiberGoal;
+    @Column(nullable = false)
+    private double caloriesGoal;
+    @Column(nullable = false)
+    private double proteinGoal;
+    @Column(nullable = false)
+    private double carbsGoal;
+    @Column(nullable = false)
+    private double fatGoal;
+    @Column(nullable = false)
+    private double fiberGoal;
 }

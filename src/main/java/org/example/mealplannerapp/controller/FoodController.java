@@ -22,8 +22,8 @@ public class FoodController {
 
     @PostMapping("/foods")
     public ResponseEntity<FoodResponse> createFood(
-        @AuthenticationPrincipal AuthUser authUser,
-        @Valid @RequestBody FoodRequest request
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody FoodRequest request
     ) {
         FoodResponse response = foodService.createFood(authUser.getUser(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -31,9 +31,9 @@ public class FoodController {
 
     @PutMapping("/foods/{foodId}")
     public ResponseEntity<FoodResponse> updateFood(
-        @AuthenticationPrincipal AuthUser authUser,
-        @PathVariable Long foodId,
-        @Valid @RequestBody FoodRequest request
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long foodId,
+            @Valid @RequestBody FoodRequest request
     ) {
         FoodResponse response = foodService.updateFood(authUser.getUser(), foodId, request);
         return ResponseEntity.ok(response);
@@ -41,8 +41,8 @@ public class FoodController {
 
     @DeleteMapping("/foods/{foodId}")
     public ResponseEntity<Void> deleteFood(
-        @AuthenticationPrincipal AuthUser authUser,
-        @PathVariable Long foodId
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long foodId
     ) {
         foodService.deleteFood(authUser.getUser(), foodId);
         return ResponseEntity.noContent().build();
@@ -50,8 +50,8 @@ public class FoodController {
 
     @GetMapping("/foods/{foodId}")
     public ResponseEntity<FoodResponse> retrieveFood(
-        @AuthenticationPrincipal AuthUser authUser,
-        @PathVariable Long foodId
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long foodId
     ) {
         FoodResponse response = foodService.retrieveFood(authUser.getUser(), foodId);
         return ResponseEntity.ok(response);
@@ -59,8 +59,8 @@ public class FoodController {
 
     @GetMapping("/foods")
     public ResponseEntity<List<ListedFoodResponse>> searchFoods(
-        @AuthenticationPrincipal AuthUser authUser,
-        @RequestParam String search
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam String search
     ) {
         List<ListedFoodResponse> responses = foodService.searchFoods(authUser.getUser(), search);
         return ResponseEntity.ok(responses);

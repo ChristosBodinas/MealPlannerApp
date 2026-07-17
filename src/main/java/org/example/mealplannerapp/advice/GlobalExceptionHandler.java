@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalDuplicateValueException.class)
     public ResponseEntity<String> handleIllegalDuplicateValue(
-        IllegalDuplicateValueException e
+            IllegalDuplicateValueException e
     ) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
     }
@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RequestEntityMismatchException.class)
     public ResponseEntity<String> handleRequestEntityMismatch(
-        RequestEntityMismatchException e
+            RequestEntityMismatchException e
     ) {
         return ResponseEntity.badRequest().body(e.getMessage());
     }

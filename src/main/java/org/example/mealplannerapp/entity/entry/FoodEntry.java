@@ -1,9 +1,6 @@
 package org.example.mealplannerapp.entity.entry;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,11 +11,15 @@ import org.example.mealplannerapp.entity.Food;
 import java.util.Map;
 
 @Entity
-@Getter @Setter @NoArgsConstructor
-@AllArgsConstructor @SuperBuilder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 public class FoodEntry extends Entry {
 
-    @ManyToOne @JoinColumn(name = "food_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "food_id")
     private Food food;
 
     @Column(nullable = false)

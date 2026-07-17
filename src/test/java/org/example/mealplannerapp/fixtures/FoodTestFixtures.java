@@ -27,6 +27,7 @@ public class FoodTestFixtures {
 
     /**
      * Method for building {@link Food} entities.
+     *
      * @return a Food builder with default values for all fields except {@code user}
      */
     public static Food.FoodBuilder defaultFoodBuilder() {
@@ -50,6 +51,7 @@ public class FoodTestFixtures {
 
     /**
      * Method for building {@link FoodRequest} DTOs.
+     *
      * @return a FoodRequest builder with default values for all fields.
      */
     public static FoodRequest.FoodRequestBuilder defaultFoodRequestBuilder() {
@@ -72,6 +74,7 @@ public class FoodTestFixtures {
 
     /**
      * Method for building {@link FoodResponse} DTOs.
+     *
      * @return a FoodResponse builder with default values for all fields.
      */
     public static FoodResponse.FoodResponseBuilder defaultFoodResponseBuilder() {
@@ -95,6 +98,7 @@ public class FoodTestFixtures {
 
     /**
      * Method for building {@link ListedFoodResponse} DTOs.
+     *
      * @return a ListedFoodResponse builder with default values for all fields.
      */
     public static ListedFoodResponse.ListedFoodResponseBuilder defaultListedFoodResponseBuilder() {

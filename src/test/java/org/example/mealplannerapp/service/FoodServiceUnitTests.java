@@ -21,7 +21,6 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import static org.example.mealplannerapp.fixtures.FoodTestFixtures.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,16 +28,20 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.example.mealplannerapp.fixtures.FoodTestFixtures.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class FoodServiceUnitTests {
 
     // MOCKS AND INJECTION
-    @Mock private FoodRepository foodRepository;
-    @Mock private FoodMapper foodMapper;
+    @Mock
+    private FoodRepository foodRepository;
+    @Mock
+    private FoodMapper foodMapper;
 
-    @InjectMocks private FoodService foodService;
+    @InjectMocks
+    private FoodService foodService;
 
     // UNIVERSAL VARIABLES
     private User user;
@@ -87,17 +90,17 @@ class FoodServiceUnitTests {
             FoodRequest request;
             if (dupeType == DupeType.UNITS) {
                 request = defaultFoodRequestBuilder().units(
-                    Set.of(new UnitRequest("tbsp", 15.0), new UnitRequest("tbsp", 27.0))
+                        Set.of(new UnitRequest("tbsp", 15.0), new UnitRequest("tbsp", 27.0))
                 ).build();
             } else {
                 request = defaultFoodRequestBuilder().prices(
-                    Set.of(new PriceRequest("Masoutis", 6.80, 200), new PriceRequest("Masoutis", 5.30, 500))
+                        Set.of(new PriceRequest("Masoutis", 6.80, 200), new PriceRequest("Masoutis", 5.30, 500))
                 ).build();
             }
 
             // Act + Assert
             assertThatThrownBy(() -> foodService.createFood(user, request))
-                .isInstanceOf(IllegalDuplicateValueException.class);
+                    .isInstanceOf(IllegalDuplicateValueException.class);
             verify(foodMapper, never()).updateFromRequest(any(), any());
         }
 
@@ -140,17 +143,17 @@ class FoodServiceUnitTests {
             // Arrange
             if (dupeType == DupeType.UNITS) {
                 request = defaultFoodRequestBuilder().units(
-                    Set.of(new UnitRequest("tbsp", 15.0), new UnitRequest("tbsp", 27.0))
+                        Set.of(new UnitRequest("tbsp", 15.0), new UnitRequest("tbsp", 27.0))
                 ).build();
             } else {
                 request = defaultFoodRequestBuilder().prices(
-                    Set.of(new PriceRequest("Masoutis", 6.80, 200), new PriceRequest("Masoutis", 5.30, 500))
+                        Set.of(new PriceRequest("Masoutis", 6.80, 200), new PriceRequest("Masoutis", 5.30, 500))
                 ).build();
             }
 
             // Act + Assert
             assertThatThrownBy(() -> foodService.updateFood(user, FOOD_ID, request))
-                .isInstanceOf(IllegalDuplicateValueException.class);
+                    .isInstanceOf(IllegalDuplicateValueException.class);
             verify(foodRepository, never()).findByIdVerified(anyLong(), anyLong());
             verify(foodMapper, never()).updateFromRequest(any(), any());
         }
@@ -166,7 +169,7 @@ class FoodServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> foodService.updateFood(user, FOOD_ID, request))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
             verify(foodMapper, never()).updateFromRequest(any(), any());
         }
 
@@ -186,7 +189,7 @@ class FoodServiceUnitTests {
         void happyFlow() {
             // Arrange
             when(foodRepository.deleteByIdVerified(USER_ID, FOOD_ID)).thenReturn(1);
-            
+
             // Act
             foodService.deleteFood(user, FOOD_ID);
 
@@ -202,7 +205,7 @@ class FoodServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> foodService.deleteFood(user, FOOD_ID))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
             verify(foodRepository).deleteByIdVerified(USER_ID, FOOD_ID);
         }
 
@@ -242,7 +245,7 @@ class FoodServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> foodService.retrieveFood(user, FOOD_ID))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
             verify(foodRepository).findByIdVerified(USER_ID, FOOD_ID);
             verify(foodMapper, never()).generateResponse(any());
         }

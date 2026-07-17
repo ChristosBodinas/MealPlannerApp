@@ -19,6 +19,7 @@ public interface EntryMapper {
     Entry createFromRequest(EntryCreateRequest request);
 
     // UPDATE EXISTING ENTRY PARAMETERS FROM REQUEST
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateFoodEntry(@MappingTarget FoodEntry entry, FoodEntryEditRequest request);
 
     default void updateFromRequest(@MappingTarget Entry entry, EntryEditRequest request) {

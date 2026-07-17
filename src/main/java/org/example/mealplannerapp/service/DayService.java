@@ -1,16 +1,17 @@
 package org.example.mealplannerapp.service;
 
-import java.util.List;
-
+import lombok.AllArgsConstructor;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
+import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.User;
+import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.mapper.EntryMapper;
 import org.example.mealplannerapp.repository.DayRepository;
 import org.example.mealplannerapp.repository.EntryRepository;
 import org.springframework.stereotype.Service;
 
-import lombok.AllArgsConstructor;
+import java.util.List;
 
 /**
  * <p>A service that handles operations on individual {@link Day} entities, as well as
@@ -25,31 +26,15 @@ public class DayService {
     private final EntryRepository entryRepository;
     private final EntryMapper entryMapper;
 
-    // DELETE("/days/{dayId}/entries")
-    public void deleteAllEntries(User user, Long dayId) {
-        if (!dayRepository.existsByIdVerified(user.getId(), dayId)) {
-            throw new ResourceNotFoundException("The requested day (id: " + dayId + ") was not found.");
-        }
+    // duplicateAllEntries
 
-        if (entryRepository.deleteAllInDay(dayId) == 0) {
-            throw new ResourceNotFoundException("The requested day (id: " + dayId + ") is already empty.");
-        }
-    }
+    // deleteAllEntries
 
-    // GET("/days/{dayId}/entries")
-    public List<EntryResponse> retrieveAllEntries(User user, Long dayId) {
-        if (!dayRepository.existsByIdVerified(user.getId(), dayId)) {
-            throw new ResourceNotFoundException("The requested day (id: " + dayId + ") was not found.");
-        }
+    // retrieveAllEntries
 
-        return entryRepository.findAllInDayOrdered(dayId).stream()
-            .map(entryMapper::generateResponse)
-            .toList();
-    }
-
-    // summarizeDay
+    // summarizeDay (includes category and day sum)
 
     // retrieveDayGoals
-    
-    
+
+
 }

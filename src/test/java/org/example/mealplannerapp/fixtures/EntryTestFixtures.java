@@ -1,7 +1,5 @@
 package org.example.mealplannerapp.fixtures;
 
-import java.util.Set;
-
 import org.example.mealplannerapp.constants.Category;
 import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateRequest;
 import org.example.mealplannerapp.dto.entry.response.FoodEntryResponse;
@@ -19,6 +17,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link FoodEntry} entities.
+     *
      * @return a FoodEntry builder with default values in all fields except {@code day} and {@code food}
      */
     public static FoodEntry.FoodEntryBuilder<?, ?> defaultFoodEntryBuilder() {
@@ -33,6 +32,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link FoodEntryCreateRequest} DTOs.
+     *
      * @return a FoodEntryCreateRequest builder with default values in all fields except {@code foodId}
      */
     public static FoodEntryCreateRequest.FoodEntryCreateRequestBuilder defaultFoodEntryCreateRequestBuilder() {
@@ -45,6 +45,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link FoodEntryResponse} DTOs.
+     *
      * @return a FoodEntryResponse builder with default values in all fields except {@code foodResponse}
      */
     public static FoodEntryResponse.FoodEntryResponseBuilder defaultFoodEntryResponseBuilder() {

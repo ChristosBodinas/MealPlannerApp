@@ -6,12 +6,12 @@ import org.example.mealplannerapp.dto.food.response.FoodResponse;
 
 @Builder
 public record FoodEntryResponse(
-    Long id,
-    Category category,
-    int position,
-    FoodResponse foodResponse,
-    double grams,
-    String displayUnit,
-    String displayMerchant
+        Long id,
+        Category category,
+        int position,
+        FoodResponse foodResponse,
+        double grams,
+        String displayUnit,
+        String displayMerchant
 ) implements EntryResponse {
 }

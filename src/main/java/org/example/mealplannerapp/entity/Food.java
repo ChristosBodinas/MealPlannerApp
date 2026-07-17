@@ -20,8 +20,11 @@ import java.util.stream.Collectors;
  * empty — see field-level notes for details, including why the uniqueness check depends on this.
  */
 @Entity
-@Getter @Setter @NoArgsConstructor
-@AllArgsConstructor @Builder    // for testing
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder    // for testing
 public class Food {
 
     @Id
@@ -29,7 +32,7 @@ public class Food {
     @Setter(AccessLevel.NONE)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
@@ -69,7 +72,7 @@ public class Food {
     support the validation of individual elements and fields within a map.
      */
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "food_unit",
             joinColumns = @JoinColumn(name = "food_id"),
@@ -78,7 +81,7 @@ public class Food {
     @AttributeOverride(name = "grams", column = @Column(nullable = false))
     private Set<FoodUnit> units = new HashSet<>();
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "food_price",
             joinColumns = @JoinColumn(name = "food_id"),
@@ -91,6 +94,7 @@ public class Food {
     /**
      * <p>Calculates the price per 100 grams of edible product for each merchant.
      * </p>
+     *
      * @return all the merchant names and the corresponding calculated prices
      */
     public Map<String, Double> derivePricesPer100g() {

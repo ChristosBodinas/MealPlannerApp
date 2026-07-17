@@ -11,10 +11,13 @@ import org.example.mealplannerapp.constants.Sex;
 import java.time.LocalDate;
 
 @Entity
-@Getter @Setter @NoArgsConstructor
+@Getter
+@Setter
+@NoArgsConstructor
 public class User {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
     private Long id;
 
@@ -28,14 +31,16 @@ public class User {
     @Column(nullable = false, length = 25)
     private String nickname;
 
-    @Column(nullable = false) @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Gender gender;
 
     // These fields are used to calculate the user's calorie budget.
     @Column(nullable = false)
     private LocalDate birthDate;
 
-    @Column(nullable = false) @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Sex sex;
 
     @Column(nullable = false)

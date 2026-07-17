@@ -11,10 +11,10 @@ import java.util.Optional;
 
 public interface FoodRepository extends JpaRepository<Food, Long> {
 
-    @Query("SELECT f FROM Food f " + 
-        "LEFT JOIN FETCH f.units u " +
-        "LEFT JOIN FETCH f.prices p " +
-        "WHERE f.user.id = :userId AND f.id = :foodId")
+    @Query("SELECT f FROM Food f " +
+            "LEFT JOIN FETCH f.units u " +
+            "LEFT JOIN FETCH f.prices p " +
+            "WHERE f.user.id = :userId AND f.id = :foodId")
     Optional<Food> findByIdVerified(
             @Param("userId") Long userId,
             @Param("foodId") Long foodId
@@ -28,8 +28,8 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     );
 
     @Query("SELECT f FROM Food f WHERE f.user.id = :userId AND " +
-        "(LOWER(f.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-        "LOWER(f.brand) LIKE LOWER(CONCAT('%', :search, '%')))")
+            "(LOWER(f.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(f.brand) LIKE LOWER(CONCAT('%', :search, '%')))")
     List<Food> searchByText(
             @Param("userId") Long userId,
             @Param("search") String search
