@@ -6,6 +6,7 @@ import org.example.mealplannerapp.dto.day.DayGoalsResponse;
 import org.example.mealplannerapp.dto.day.DaySumResponse;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
 import org.example.mealplannerapp.entity.Day;
+import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;

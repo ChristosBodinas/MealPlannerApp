@@ -102,6 +102,7 @@ public class DayServiceUnitTests {
             );
         }
 
+        @BeforeEach
         void prepareTests() {
             user = mock(User.class);
             when(user.getId()).thenReturn(USER_ID);
@@ -148,7 +149,7 @@ public class DayServiceUnitTests {
         @BeforeEach
         void prepareTests() {
             user = mock(User.class);
-            when(user.getId()).thenReturn(USER_ID);
+            //when(user.getId()).thenReturn(USER_ID);
         }
 
         @Test
