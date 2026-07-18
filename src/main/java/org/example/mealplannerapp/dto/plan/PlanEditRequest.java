@@ -8,26 +8,21 @@ import jakarta.validation.constraints.Positive;
 import lombok.Builder;
 
 @Builder
-public record PlanCreateRequest(
-
-    @NotBlank(message = "Plan name cannot be blank.")
-    @Length(max = 45, message = "Plan name cannot exceed 45 characters.")
+public record PlanEditRequest(
+    
+    @Length(min = 1, max = 45, message = "Plan name must be between 1 and 45 characters.")
     String name,
 
     @Positive(message = "Starting weight must be a positive number.")
-    double startWeight,
+    Double startWeight,
 
     // NOTE: Might want to gain, lose, or maintain weight.
-    double desiredChange,
-
-    @Positive(message = "A plan must have at least 1 day.")
-    @Min(value = 14, message = "A plan cannot have more than 14 days.")
-    int numberOfDays,
+    Double desiredChange,
 
     @Positive(message = "Protein ratio must be a positive number.")
-    double proteinRatio,
+    Double proteinRatio,
 
     @Positive(message = "Carbs ratio must be a positive number.")
-    double carbsRatio
+    Double carbsRatio
 ) {
 }

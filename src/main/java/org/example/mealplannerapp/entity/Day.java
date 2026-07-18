@@ -3,7 +3,6 @@ package org.example.mealplannerapp.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import org.example.mealplannerapp.dto.day.DayGoalsResponse;
 import org.example.mealplannerapp.entity.entry.Entry;
 
 import java.util.Set;

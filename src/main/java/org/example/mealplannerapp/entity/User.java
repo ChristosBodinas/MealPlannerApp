@@ -2,6 +2,8 @@ package org.example.mealplannerapp.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,6 +16,8 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
 
     @Id
@@ -43,6 +47,13 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Sex sex;
 
+    /**
+     * The user's height expressed in centimeters.
+     */
     @Column(nullable = false)
     private double height;
+
+    public double deriveAgeInYears() {
+        return LocalDate.now().getYear() - birthDate.getYear();
+    }
 }
