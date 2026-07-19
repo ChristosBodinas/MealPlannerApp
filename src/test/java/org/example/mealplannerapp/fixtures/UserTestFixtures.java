@@ -13,14 +13,14 @@ public class UserTestFixtures {
     private static final String DEFAULT_PASSWORD = "password123";
     private static final String DEFAULT_NICKNAME = "Billy";
     private static final Gender DEFAULT_GENDER = Gender.MALE;
-    private static final LocalDate DEFAULT_BIRTH_DATE = LocalDate.of(2000, 5, 12)
+    private static final LocalDate DEFAULT_BIRTH_DATE = LocalDate.of(2000, 5, 12);
     private static final Sex DEFAULT_SEX = Sex.MALE;
     private static final double DEFAULT_HEIGHT = 180.0;
 
 
     public static User.UserBuilder defaultUserBuilder() {
         return User.builder()
-            .id(1L)
+            .id(DEFAULT_ID)
             .username(DEFAULT_USERNAME)
             .password(DEFAULT_PASSWORD)
             .nickname(DEFAULT_NICKNAME)

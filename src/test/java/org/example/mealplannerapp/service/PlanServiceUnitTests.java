@@ -10,6 +10,7 @@ import org.example.mealplannerapp.entity.Plan;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.mapper.PlanMapper;
 import org.example.mealplannerapp.repository.PlanRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,7 @@ public class PlanServiceUnitTests {
 
         private PlanCreateRequest request;
 
+        @BeforeEach
         void prepareTests() {
             user = defaultUserBuilder().build();
         }
@@ -49,7 +51,7 @@ public class PlanServiceUnitTests {
         void happyFlow() {
             // Arrange
             request = defaultPlanCreateRequestBuilder().build();
-            Plan created = defaultPlanBuilder().build();
+            Plan created = defaultPlanBuilder().user(user).build();
             Plan saved = new Plan();
             PlanInfoResponse expected = defaultPlanInfoResponseBuilder().build();
 
@@ -84,6 +86,23 @@ public class PlanServiceUnitTests {
 
     @Nested
     class editPlan {
+
+        @BeforeEach
+        void prepareTests() {
+
+        }
+
+        @Test
+        @DisplayName("Given a valid entryId and request, updates the requested Plan's parameters and recalculates daily goals.")
+        void happyFlow() {
+
+        }
+
+        @Test
+        @DisplayName("Given an invalid entryId, throws a ResourceNotFoundException. ")
+        void planNotFound() {
+
+        }
         
     }
 
