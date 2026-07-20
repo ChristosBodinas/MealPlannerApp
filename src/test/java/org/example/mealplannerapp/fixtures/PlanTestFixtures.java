@@ -1,6 +1,7 @@
 package org.example.mealplannerapp.fixtures;
 
 import org.example.mealplannerapp.dto.plan.PlanCreateRequest;
+import org.example.mealplannerapp.dto.plan.PlanEditRequest;
 import org.example.mealplannerapp.dto.plan.PlanInfoResponse;
 import org.example.mealplannerapp.entity.Plan;
 
@@ -37,6 +38,19 @@ public class PlanTestFixtures {
             .startWeight(DEFAULT_START_WEIGHT)
             .desiredChange(DEFAULT_DESIRED_CHANGE)
             .numberOfDays(DEFAULT_NUMBER_OF_DAYS)
+            .proteinRatio(DEFAULT_PROTEIN_RATIO)
+            .carbsRatio(DEFAULT_CARBS_RATIO);
+    }
+
+    /**
+     * Method for building {@link PlanEditRequest} DTOs.
+     * @return a PlanEditRequest builder with default values for all fields
+     */
+    public static PlanEditRequest.PlanEditRequestBuilder defaultPlanEditRequestBuilder() {
+        return PlanEditRequest.builder()
+            .name(DEFAULT_NAME)
+            .startWeight(DEFAULT_START_WEIGHT)
+            .desiredChange(DEFAULT_DESIRED_CHANGE)
             .proteinRatio(DEFAULT_PROTEIN_RATIO)
             .carbsRatio(DEFAULT_CARBS_RATIO);
     }

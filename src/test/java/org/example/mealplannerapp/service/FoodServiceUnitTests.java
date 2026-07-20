@@ -7,7 +7,6 @@ import org.example.mealplannerapp.dto.food.response.FoodResponse;
 import org.example.mealplannerapp.dto.food.response.ListedFoodResponse;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
-import org.example.mealplannerapp.exception.IllegalDuplicateValueException;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.mapper.FoodMapper;
 import org.example.mealplannerapp.repository.FoodRepository;
@@ -29,6 +28,8 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.example.mealplannerapp.fixtures.FoodTestFixtures.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -100,7 +101,7 @@ class FoodServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> foodService.createFood(user, request))
-                    .isInstanceOf(IllegalDuplicateValueException.class);
+                    .isInstanceOf(IllegalArgumentException.class);
             verify(foodMapper, never()).updateFromRequest(any(), any());
         }
 
@@ -153,7 +154,7 @@ class FoodServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> foodService.updateFood(user, FOOD_ID, request))
-                    .isInstanceOf(IllegalDuplicateValueException.class);
+                    .isInstanceOf(IllegalArgumentException.class);
             verify(foodRepository, never()).findByIdVerified(anyLong(), anyLong());
             verify(foodMapper, never()).updateFromRequest(any(), any());
         }

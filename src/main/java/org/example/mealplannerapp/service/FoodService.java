@@ -42,12 +42,12 @@ public class FoodService {
     private void verifyUniqueUnitsAndPrices(Set<UnitRequest> units, Set<PriceRequest> prices) {
         if (units != null
                 && units.size() > units.stream().map(UnitRequest::name).distinct().count()) {
-            throw new IllegalDuplicateValueException("A food can't have duplicates of the same unit.");
+            throw new IllegalArgumentException("A food can't have duplicates of the same unit.");
         }
 
         if (prices != null
                 && prices.size() > prices.stream().map(PriceRequest::merchant).distinct().count()) {
-            throw new IllegalDuplicateValueException("A food can't have duplicates of the same merchant.");
+            throw new IllegalArgumentException("A food can't have duplicates of the same merchant.");
         }
     }
 

@@ -3,6 +3,7 @@ package org.example.mealplannerapp.repository;
 import org.example.mealplannerapp.constants.Category;
 import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.projection.CategorySummary;
+import org.example.mealplannerapp.projection.PlanNutrients;
 import org.example.mealplannerapp.projection.PositionData;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -62,6 +63,13 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
         @Param("dayId") Long dayId
     );
 
+    @Query("SELECT SUM(e.calories) AS calories, SUM(e.protein) AS protein, " +
+        "SUM(e.carbs) AS carbs, SUM(e.fat) AS fat, SUM(e.fiber) AS fiber " +
+        "FROM Entry e WHERE e.day.plan.id = :planId")
+    PlanNutrients summarizeByPlan(
+        @Param("planId") Long planId
+    );
+
     @Modifying
     @Query("UPDATE Entry e SET e.position = e.position + 1 " +
             "WHERE e.day.id = :dayId AND e.category = :category " +
@@ -96,5 +104,10 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
     @Query("DELETE FROM Entry e WHERE e.day.id = :dayId")
     int deleteAllInDay(
             @Param("dayId") Long dayId
+    );
+
+    @Query("DELETE FROM Entry e WHERE e.day.plan.id = :planId")
+    int deleteAllInPlan(
+        @Param("planId") Long planId
     );
 }

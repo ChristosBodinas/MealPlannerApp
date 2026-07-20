@@ -19,8 +19,15 @@ public interface PlanRepository extends JpaRepository<Plan, Long> {
         @Param("planId") Long planId
     );
 
+    @Query("SELECT COUNT(p) > 0 FROM Plan p WHERE p.user.id = :userId AND p.id = :planId")
+    boolean existsByIdVerified(
+        @Param("userId") Long userId,
+        @Param("planId") Long planId
+    );
+
     @Query("SELECT p FROM Plan p WHERE p.user.id = :userId")
     List<Plan> findAllShallowByUserId(
         @Param("userId") Long userId
     );
+
 }
