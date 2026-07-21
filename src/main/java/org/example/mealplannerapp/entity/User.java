@@ -51,9 +51,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
-    /**
-     * Date of birth.
-     */
     @Column(nullable = false)
     private LocalDate birthDate;
 
