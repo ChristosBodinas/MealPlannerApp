@@ -32,7 +32,7 @@ public class Food {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User owner;
+    private User user;
 
     @Column(nullable = false, length = 45)
     private String name;

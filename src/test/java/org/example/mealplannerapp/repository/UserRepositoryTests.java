@@ -19,6 +19,7 @@ import static org.example.mealplannerapp.fixture.UserTestFixtures.*;
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.sql.init.mode=never",
+        "spring.jpa.properties.hibernate.globally_quoted_identifiers=true"
 })
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 public class UserRepositoryTests {
