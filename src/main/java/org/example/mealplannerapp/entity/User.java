@@ -30,7 +30,7 @@ public class User {
     private Long id;
 
     /**
-     * Internal name. For authentication.
+     * Internal name. Used for authentication.
      */
     @Column(nullable = false, unique = true, length = 40)
     private String username;
@@ -39,23 +39,26 @@ public class User {
     private String password;
 
     /**
-     * Preferred name. For addressing the user.
+     * Preferred name. USed when addressing the user.
      */
     @Column(nullable = false, length = 25)
     private String nickname;
 
     /**
-     * Gender identity. For addressing the user.
+     * Gender identity. Used when addressing the user.
      */
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
+    /**
+     * Date of birth.
+     */
     @Column(nullable = false)
     private LocalDate birthDate;
 
     /**
-     * Biological sex. For estimating energy expenditure.
+     * Biological sex. Used to estimate energy expenditure.
      */
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

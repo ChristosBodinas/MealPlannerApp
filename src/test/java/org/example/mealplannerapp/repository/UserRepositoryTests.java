@@ -2,6 +2,7 @@ package org.example.mealplannerapp.repository;
 
 import org.example.mealplannerapp.entity.User;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,29 +37,31 @@ public class UserRepositoryTests {
     @Nested
     class findByUsername {
 
-        private final String RIGHT_USERNAME = "william5";
+        private final String USERNAME = "william59";
+        private final String WRONG_USERNAME = "willy5";
 
         @BeforeEach
         void prepareTests() {
-            User user = defaultUserBuilder().username(RIGHT_USERNAME).build();
+            User user = defaultUserBuilder().username(USERNAME).build();
             entityManager.persist(user);
             flushAndClear();
         }
 
         @Test
-        void happyFlow() {
+        @DisplayName("Given a valid username, fetches the matching user.")
+        void happyFlow() {      
             // Act
-            Optional<User> result = userRepository.findByUsername(RIGHT_USERNAME);
+            Optional<User> result = userRepository.findByUsername(USERNAME);
 
-            // Assert
+            // Arrange
             assertThat(result).isPresent();
-            assertThat(result.get().getUsername()).isEqualTo(RIGHT_USERNAME);
+            assertThat(result.get().getUsername()).isEqualTo(USERNAME);
         }
 
         @Test
+        @DisplayName("Given an invalid username, returns empty.")
         void userNotFound() {
             // Act
-            String WRONG_USERNAME = "willy";
             Optional<User> result = userRepository.findByUsername(WRONG_USERNAME);
 
             // Assert
