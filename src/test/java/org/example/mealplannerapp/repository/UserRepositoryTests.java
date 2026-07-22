@@ -36,7 +36,7 @@ public class UserRepositoryTests {
     }
 
     @Nested
-    class findByUsername {
+    class fetchByUsername {
 
         private final String USERNAME = "william59";
         private final String WRONG_USERNAME = "willy5";
@@ -52,7 +52,7 @@ public class UserRepositoryTests {
         @DisplayName("Given a valid username, fetches the matching user.")
         void happyFlow() {      
             // Act
-            Optional<User> result = userRepository.findByUsername(USERNAME);
+            Optional<User> result = userRepository.fetchByUsername(USERNAME);
 
             // Arrange
             assertThat(result).isPresent();
@@ -63,7 +63,7 @@ public class UserRepositoryTests {
         @DisplayName("Given an invalid username, returns empty.")
         void userNotFound() {
             // Act
-            Optional<User> result = userRepository.findByUsername(WRONG_USERNAME);
+            Optional<User> result = userRepository.fetchByUsername(WRONG_USERNAME);
 
             // Assert
             assertThat(result).isEmpty();
