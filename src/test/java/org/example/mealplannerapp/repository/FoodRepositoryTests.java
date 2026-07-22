@@ -12,6 +12,7 @@ import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -100,6 +101,63 @@ public class FoodRepositoryTests {
 
     @Nested
     class fetchShallowByTextVerified {
+
+        @Test
+        @DisplayName("Given a partial match on food name, returns only the matching foods.")
+        void foodOwnedAndNameMatches() {
+            // Arrange
+            Food match = defaultFoodBuilder().name("black beans").brand("generic").user(owner).build();
+            Food noMatch = defaultFoodBuilder().name("black buns").brand("generic").user(owner).build();
+
+            entityManager.persist(match);
+            entityManager.persist(noMatch);
+            flushAndClear();
+
+            // Act
+            List<Food> results = foodRepository.fetchShallowByTextVerified(owner.getId(), "bean");
+
+            // Assert
+            assertThat(results).containsExactly(match);
+        }
+
+        @Test
+        @DisplayName("Given a partial match on food brand, returns only the matching foods.")
+        void foodOwnedAndBrandMatches() {
+            // Arrange
+            Food match = defaultFoodBuilder().name("generic").brand("black beans").user(owner).build();
+            Food noMatch = defaultFoodBuilder().name("generic").brand("black buns").user(owner).build();
+
+            entityManager.persist(match);
+            entityManager.persist(noMatch);
+            flushAndClear();
+
+            // Act
+            List<Food> results = foodRepository.fetchShallowByTextVerified(owner.getId(), "bean");
+
+            // Assert
+            assertThat(results).containsExactly(match);
+        }
+
+        @Test
+        @DisplayName("Given an empty search string, returns all foods owned by the given user.")
+        void foodOwnedAndEmptyText() {
+            // Arrange
+            Food owned1 = defaultFoodBuilder().name("a").brand("b").user(owner).build();
+            Food owned2 = defaultFoodBuilder().name("c").brand("d").user(owner).build();
+            Food notOwned = defaultFoodBuilder().name("a").brand("d").user(stranger).build();
+
+            entityManager.persist(owned1);
+            entityManager.persist(owned2);
+            entityManager.persist(notOwned);
+            flushAndClear();
+
+            // Act
+            List<Food> results = foodRepository.fetchShallowByTextVerified(owner.getId(), "");
+
+            // Assert
+            assertThat(results).containsExactlyInAnyOrder(owned1, owned2);
+
+        }
 
     }
 
