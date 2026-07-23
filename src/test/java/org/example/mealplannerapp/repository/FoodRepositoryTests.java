@@ -103,44 +103,50 @@ public class FoodRepositoryTests {
     class fetchShallowByTextVerified {
 
         @Test
-        @DisplayName("Given a partial match on food name, returns only the matching foods.")
-        void foodOwnedAndNameMatches() {
+        @DisplayName("Given a non-empty string, return owned foods with at least a partial match in their names.")
+        void ownedFoodNameMatches() {
             // Arrange
             Food match = defaultFoodBuilder().name("black beans").brand("generic").user(owner).build();
             Food noMatch = defaultFoodBuilder().name("black buns").brand("generic").user(owner).build();
+            Food notOwned = defaultFoodBuilder().name("black beans").brand("generic").user(stranger).build();
 
             entityManager.persist(match);
             entityManager.persist(noMatch);
+            entityManager.persist(notOwned);
             flushAndClear();
 
             // Act
             List<Food> results = foodRepository.fetchShallowByTextVerified(owner.getId(), "bean");
 
             // Assert
-            assertThat(results).containsExactly(match);
+            assertThat(results)
+                    .extracting(Food::getId)
+                    .containsExactly(match.getId());
         }
 
         @Test
-        @DisplayName("Given a partial match on food brand, returns only the matching foods.")
-        void foodOwnedAndBrandMatches() {
+        @DisplayName("Given a non-empty string, return owned foods with at least a partial match in their names.")
+        void ownedFoodBrandMatches() {
             // Arrange
             Food match = defaultFoodBuilder().name("generic").brand("black beans").user(owner).build();
             Food noMatch = defaultFoodBuilder().name("generic").brand("black buns").user(owner).build();
+            Food notOwned = defaultFoodBuilder().name("generic").brand("black beans").user(stranger).build();
 
             entityManager.persist(match);
             entityManager.persist(noMatch);
+            entityManager.persist(notOwned);
             flushAndClear();
 
             // Act
             List<Food> results = foodRepository.fetchShallowByTextVerified(owner.getId(), "bean");
 
             // Assert
-            assertThat(results).containsExactly(match);
+            assertThat(results).extracting(Food::getId).containsExactly(match.getId());
         }
 
         @Test
         @DisplayName("Given an empty search string, returns all foods owned by the given user.")
-        void foodOwnedAndEmptyText() {
+        void ownedFoodEmptyText() {
             // Arrange
             Food owned1 = defaultFoodBuilder().name("a").brand("b").user(owner).build();
             Food owned2 = defaultFoodBuilder().name("c").brand("d").user(owner).build();
@@ -155,7 +161,9 @@ public class FoodRepositoryTests {
             List<Food> results = foodRepository.fetchShallowByTextVerified(owner.getId(), "");
 
             // Assert
-            assertThat(results).containsExactlyInAnyOrder(owned1, owned2);
+            assertThat(results)
+                    .extracting(Food::getId)
+                    .containsExactlyInAnyOrder(owned1.getId(), owned2.getId());
 
         }
 

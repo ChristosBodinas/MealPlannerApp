@@ -18,7 +18,7 @@ public class AuthManagementService implements UserDetailsService {
     // HARDCODED
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername("TestUser")
+        User user = userRepository.fetchByUsername("TestUser")
                 .orElseThrow(() -> new ResourceNotFoundException("No user found with the submitted username."));
         return new AuthUser(user);
     }

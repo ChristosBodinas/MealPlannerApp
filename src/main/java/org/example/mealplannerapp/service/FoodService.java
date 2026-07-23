@@ -9,6 +9,7 @@ import org.example.mealplannerapp.dto.food.response.ListedFoodResponse;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
+import org.example.mealplannerapp.exception.ServiceValidationErrorException;
 import org.example.mealplannerapp.mapper.FoodMapper;
 import org.example.mealplannerapp.repository.FoodRepository;
 import org.springframework.stereotype.Service;
@@ -27,37 +28,31 @@ public class FoodService {
     private final FoodRepository foodRepository;
     private final FoodMapper foodMapper;
 
-    /**
-     * <p>Verifies that the submitted {@code units} and {@code prices} have unique unit names and merchants, respectively.
-     * </p>
-     *
-     * @param units  A set of submitted reference unit data.
-     * @param prices A set of submitted pricing data.
-     * @throws IllegalDuplicateValueException if there are multiple {@code units} with the same name or multiple
-     *                                        {@code prices} with the same merchant
-     */
-    private void verifyUniqueUnitsAndPrices(Set<UnitRequest> units, Set<PriceRequest> prices) {
+    private void verifyUniqueUnitsAndPrices(FoodRequest request) {
+        Set<UnitRequest> units = request.units();
+        Set<PriceRequest> prices = request.prices();
+
         if (units != null
                 && units.size() > units.stream().map(UnitRequest::name).distinct().count()) {
-            throw new IllegalArgumentException("A food can't have duplicates of the same unit.");
+            throw new ServiceValidationErrorException("A food can't have duplicates of the same unit.");
         }
 
         if (prices != null
                 && prices.size() > prices.stream().map(PriceRequest::vendor).distinct().count()) {
-            throw new IllegalArgumentException("A food can't have duplicates of the same merchant.");
+            throw new ServiceValidationErrorException("A food can't have duplicates of the same merchant.");
         }
     }
 
     /**
      * Creates a new {@link Food} entity using data from {@code request} and owned by {@code user},
      * then saves it to the database.
-     * @param user the requesting user
+     * @param user the owner of the food that will be created
      * @param request the submitted food data
-     * @return a response containing the full data (units and prices included) of the newly created Food
-     * @throws IllegalArgumentException if the submitted data contains duplicate unit or vendor names
+     * @return a response containing the new food's full data, units and prices included
+     * @throws ServiceValidationErrorException if the submitted data contains duplicate unit or vendor names
      */
     public FoodResponse createFood(User user, FoodRequest request) {
-        verifyUniqueUnitsAndPrices(request.units(), request.prices());
+        verifyUniqueUnitsAndPrices(request);
 
         Food food = foodMapper.createFromRequest(request);
         food.setUser(user);
@@ -67,21 +62,18 @@ public class FoodService {
     }
 
     /**
-     * <p> Overwrites the data of the {@link Food} entity identified by {@code foodId} and owned by {@code user}
-     * with the submitted {@code request} data.
-     * </p>
-     *
-     * @param user    the requesting user
-     * @param foodId  the identifier of the requested food
+     * Finds the {@link Food} entity identified by {@code foodId} and owned by {@code user}, and overwrites
+     * its data with the submitted {@code request} data.
+     * @param user the owner of the food to be updated
+     * @param foodId the identifier of the food to be updated
      * @param request the submitted food data
-     * @return the full data (incl. units and prices) of the updated food
-     * @throws IllegalDuplicateValueException if the submitted data contains multiple units with the same
-     *                                        name or multiple prices with the same merchant
-     * @throws ResourceNotFoundException      if the requested food isn't found or doesn't belong to {@code user}
+     * @return a response containing the updated food's full data, units and prices included
+     * @throws ResourceNotFoundException if the food does not exist or belongs to another user
+     * @throws ServiceValidationErrorException if the submitted data contains duplicate unit or vendor names
      */
     @Transactional
     public FoodResponse updateFood(User user, Long foodId, FoodRequest request) {
-        verifyUniqueUnitsAndPrices(request.units(), request.prices());
+        verifyUniqueUnitsAndPrices(request);
 
         Food food = foodRepository.fetchByIdVerified(user.getId(), foodId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -93,12 +85,11 @@ public class FoodService {
     }
 
     /**
-     * <p>Deletes the {@link Food entity} identified by {@code foodId} and owned by {@code user}.
-     * </p>
-     *
-     * @param user   the requesting user
-     * @param foodId the identifier of the requested food
-     * @throws ResourceNotFoundException if the requested food isn't found or doesn't belong to {@code user}
+     * Deletes the {@link Food} entity identified by {@code foodId} and owned by {@code user}
+     * from the database, along with its associated units and prices.
+     * @param user the owner of the food to be deleted
+     * @param foodId the identifier of the food to be deleted
+     * @throws ResourceNotFoundException if the food does not exist or belongs to another user
      */
     @Transactional
     public void deleteFood(User user, Long foodId) {
@@ -109,13 +100,12 @@ public class FoodService {
     }
 
     /**
-     * <p>Retrieves the {@link Food} entity identified by {@code foodId} and owned by {@code user}.
-     * </p>
-     *
-     * @param user   the requesting user
-     * @param foodId the identifier of the requested food
-     * @return the full data (units and prices included) of the requested food
-     * @throws ResourceNotFoundException if the requested food isn't found or doesn't belong to {@code user}
+     * Retrieves the full data of the {@link Food} entity identified by {@code foodId} and owned by
+     * {@code user}, including its associated units and prices.
+     * @param user the owner of the food to be retrieved
+     * @param foodId the identifier of the food to be retrieved
+     * @return a response containing the full data (units and prices included) of the requested food
+     * @throws ResourceNotFoundException if the food does not exist or belongs to another user
      */
     public FoodResponse retrieveFood(User user, Long foodId) {
         Food food = foodRepository.fetchByIdVerified(user.getId(), foodId)
@@ -126,14 +116,12 @@ public class FoodService {
     }
 
     /**
-     * <p>Retrieves all {@link Food} entities owned by {@code user} and whose name or brand contain
-     * {@code search}. If {@code search} is an empty String, the method retrieves all {@link Food} entities
-     * owned by {@code user}, regardless of name of brand.
-     * </p>
-     *
-     * @param user   the requesting user
+     * Retrieves all {@link Food} entities owned by {@code user} that contain {@code search} in their
+     * names or brands. If {@code search} is an empty string, retrieves all {@link Food} entities owned
+     * by {@code user}, regardless of their names or brands.
+     * @param user the owner of the foods to be searched
      * @param search the submitted search text
-     * @return the identifiers, names, brands, and nutritional data of the matching foods
+     * @return the core data (units and prices excluded) of all the matching foods
      */
     public List<ListedFoodResponse> searchFoods(User user, String search) {
         return foodRepository.fetchShallowByTextVerified(user.getId(), search)
