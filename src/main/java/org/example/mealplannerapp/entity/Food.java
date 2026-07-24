@@ -54,7 +54,7 @@ public class Food {
     private double proteinPer100g;
 
     /**
-     * Carbonhydrate amount (in grams) per 100 grams of food.
+     * Carbohydrate amount (in grams) per 100 grams of food.
      */
     @Column(nullable = false)
     private double carbsPer100g;
