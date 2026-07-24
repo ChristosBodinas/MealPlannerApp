@@ -100,7 +100,7 @@ public class FoodRepositoryTests {
     }
 
     @Nested
-    class fetchShallowByTextVerified {
+    class fetchShallowByUserAndText {
 
         @Test
         @DisplayName("Given a non-empty string, return owned foods with at least a partial match in their names.")
@@ -116,7 +116,7 @@ public class FoodRepositoryTests {
             flushAndClear();
 
             // Act
-            List<Food> results = foodRepository.fetchShallowByTextVerified(owner.getId(), "bean");
+            List<Food> results = foodRepository.fetchShallowByUserAndText(owner.getId(), "bean");
 
             // Assert
             assertThat(results)
@@ -138,7 +138,7 @@ public class FoodRepositoryTests {
             flushAndClear();
 
             // Act
-            List<Food> results = foodRepository.fetchShallowByTextVerified(owner.getId(), "bean");
+            List<Food> results = foodRepository.fetchShallowByUserAndText(owner.getId(), "bean");
 
             // Assert
             assertThat(results).extracting(Food::getId).containsExactly(match.getId());
@@ -158,7 +158,7 @@ public class FoodRepositoryTests {
             flushAndClear();
 
             // Act
-            List<Food> results = foodRepository.fetchShallowByTextVerified(owner.getId(), "");
+            List<Food> results = foodRepository.fetchShallowByUserAndText(owner.getId(), "");
 
             // Assert
             assertThat(results)

@@ -54,7 +54,7 @@ public class UserRepositoryTests {
             // Act
             Optional<User> result = userRepository.fetchByUsername(USERNAME);
 
-            // Arrange
+            // Assert
             assertThat(result).isPresent();
             assertThat(result.get().getUsername()).isEqualTo(USERNAME);
         }

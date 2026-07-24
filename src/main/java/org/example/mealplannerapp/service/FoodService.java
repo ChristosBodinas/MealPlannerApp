@@ -45,10 +45,10 @@ public class FoodService {
 
     /**
      * Creates a new {@link Food} entity using data from {@code request} and owned by {@code user},
-     * then saves it to the database.
-     * @param user the owner of the food that will be created
+     * then saves it to the database
+     * @param user the user making the request
      * @param request the submitted food data
-     * @return a response containing the new food's full data, units and prices included
+     * @return a response containing the new food's full data (units and prices included)
      * @throws ServiceValidationErrorException if the submitted data contains duplicate unit or vendor names
      */
     public FoodResponse createFood(User user, FoodRequest request) {
@@ -64,10 +64,10 @@ public class FoodService {
     /**
      * Finds the {@link Food} entity identified by {@code foodId} and owned by {@code user}, and overwrites
      * its data with the submitted {@code request} data.
-     * @param user the owner of the food to be updated
+     * @param user the user making the request
      * @param foodId the identifier of the food to be updated
      * @param request the submitted food data
-     * @return a response containing the updated food's full data, units and prices included
+     * @return a response containing the updated food's full data (units and prices included)
      * @throws ResourceNotFoundException if the food does not exist or belongs to another user
      * @throws ServiceValidationErrorException if the submitted data contains duplicate unit or vendor names
      */
@@ -87,7 +87,7 @@ public class FoodService {
     /**
      * Deletes the {@link Food} entity identified by {@code foodId} and owned by {@code user}
      * from the database, along with its associated units and prices.
-     * @param user the owner of the food to be deleted
+     * @param user the user making the request
      * @param foodId the identifier of the food to be deleted
      * @throws ResourceNotFoundException if the food does not exist or belongs to another user
      */
@@ -102,9 +102,9 @@ public class FoodService {
     /**
      * Retrieves the full data of the {@link Food} entity identified by {@code foodId} and owned by
      * {@code user}, including its associated units and prices.
-     * @param user the owner of the food to be retrieved
+     * @param user the user making the request
      * @param foodId the identifier of the food to be retrieved
-     * @return a response containing the full data (units and prices included) of the requested food
+     * @return a response containing the requested food's full data (units and prices included)
      * @throws ResourceNotFoundException if the food does not exist or belongs to another user
      */
     public FoodResponse retrieveFood(User user, Long foodId) {
@@ -119,12 +119,12 @@ public class FoodService {
      * Retrieves all {@link Food} entities owned by {@code user} that contain {@code search} in their
      * names or brands. If {@code search} is an empty string, retrieves all {@link Food} entities owned
      * by {@code user}, regardless of their names or brands.
-     * @param user the owner of the foods to be searched
+     * @param user the user making the request
      * @param search the submitted search text
      * @return the core data (units and prices excluded) of all the matching foods
      */
     public List<ListedFoodResponse> searchFoods(User user, String search) {
-        return foodRepository.fetchShallowByTextVerified(user.getId(), search)
+        return foodRepository.fetchShallowByUserAndText(user.getId(), search)
                 .stream()
                 .map(foodMapper::generateListedResponse)
                 .toList();

@@ -18,7 +18,7 @@ public class UserTestFixtures {
 
     /**
      * Method for building {@link User} entities.
-     * @return a User builder with default values for all fields except {@code id}
+     * @return a User builder with all fields except {@code id} filled out
      */
     public static User.UserBuilder defaultUserBuilder() {
         return User.builder()

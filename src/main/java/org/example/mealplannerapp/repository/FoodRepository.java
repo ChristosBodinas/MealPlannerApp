@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.example.mealplannerapp.entity.Food;
+import org.example.mealplannerapp.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +12,15 @@ import org.springframework.data.repository.query.Param;
 
 public interface FoodRepository extends JpaRepository<Food, Long> {
 
+    /**
+     * Verifies that the {@link Food} with identifier {@code foodId} is owned by the {@link User}
+     * with identifier {@code userId}, and if so, fetches it and eagerly loads its associated units
+     * and prices.
+     * @param userId the identifier of the food's owner
+     * @param foodId the identifier of the requested food
+     * @return the requested food with its associated units and prices, or empty if no such food
+     * is owned by the given user
+     */
     @Query("SELECT f FROM Food f " +
             "LEFT JOIN FETCH f.units u " +
             "LEFT JOIN FETCH f.prices p " +
@@ -20,14 +30,30 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
         @Param("foodId") Long foodId
     );
 
+    /**
+     * Fetches every {@code Food} that is owned by the {@link User} with identifier {@code userId}
+     * whose name or brand contains the given {@code text}. Case-insensitive. Does not fetch the
+     * associated units and prices.
+     * @param userId the identifier of the foods' owner
+     * @param text the text to search for
+     * @return a list of matching foods, or an empty list if none match
+     */
     @Query("SELECT f FROM Food f WHERE f.user.id = :userId AND " +
             "(LOWER(f.name) LIKE LOWER(CONCAT('%', :text, '%')) OR " +
             "LOWER(f.brand) LIKE LOWER(CONCAT('%', :text, '%')))")
-    List<Food> fetchShallowByTextVerified(
+    List<Food> fetchShallowByUserAndText(
         @Param("userId") Long userId,
         @Param("text") String text
     );
 
+    /**
+     * Verifies that the {@link Food} with identifier {@code foodId} is owned by the {@link User}
+     * with identifier {@code userId}, and if so, deletes it along with its associated units
+     * and prices.
+     * @param userId the identifier of the food's owner
+     * @param foodId the identifier of the requested food
+     * @return the number of rows deleted (0 if no matching food was found, 1 otherwise)
+     */
     @Modifying
     @Query("DELETE FROM Food f WHERE f.user.id = :userId AND f.id = :foodId")
     int deleteByIdVerified(

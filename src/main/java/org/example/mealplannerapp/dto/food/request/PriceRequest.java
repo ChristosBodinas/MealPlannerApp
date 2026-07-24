@@ -10,8 +10,8 @@ import org.hibernate.validator.constraints.Length;
  */
 public record PriceRequest(
 
-        @NotBlank(message = "A merchant's name cannot be blank.")
-        @Length(max = 20, message = "A merchant's name cannot exceed 20 characters.")
+        @NotBlank(message = "A vendor's name cannot be blank.")
+        @Length(max = 20, message = "A vendor's name cannot exceed 20 characters.")
         String vendor,
 
         @PositiveOrZero(message = "Purchase price cannot be a negative number.")
