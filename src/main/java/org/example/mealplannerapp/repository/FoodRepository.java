@@ -48,10 +48,10 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
 
     /**
      * Verifies that the {@link Food} with identifier {@code foodId} is owned by the {@link User}
-     * with identifier {@code userId}, and if so, deletes it along with its associated units
-     * and prices.
+     * with identifier {@code userId}, and if so, deletes it from the database along with its 
+     * associated units and prices.
      * @param userId the identifier of the food's owner
-     * @param foodId the identifier of the requested food
+     * @param foodId the identifier of the food to be deleted
      * @return the number of rows deleted (0 if no matching food was found, 1 otherwise)
      */
     @Modifying
