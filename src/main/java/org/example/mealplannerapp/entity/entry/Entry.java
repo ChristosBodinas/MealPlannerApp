@@ -29,7 +29,7 @@ public abstract class Entry {
      * Day to which the entry belongs.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "day_id")
+    @JoinColumn(name = "day_id", nullable = false)
     private Day day;
 
     /**

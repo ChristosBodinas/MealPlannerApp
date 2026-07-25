@@ -27,7 +27,7 @@ public class FoodEntry extends Entry {
      * Food referenced by this entry.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "food_id")
+    @JoinColumn(name = "food_id", nullable = false)
     private Food food;
 
     /**

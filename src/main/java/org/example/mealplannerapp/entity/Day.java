@@ -24,7 +24,7 @@ public class Day {
      * Plan to which the day belongs.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "plan_id")
+    @JoinColumn(name = "plan_id", nullable = false)
     private Plan plan;
 
     /**

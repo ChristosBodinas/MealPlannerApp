@@ -48,7 +48,7 @@ public class FoodController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/foods/{foodId")
+    @GetMapping("/foods/{foodId}")
     public ResponseEntity<FoodResponse> retrieveFood(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long foodId

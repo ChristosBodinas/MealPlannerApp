@@ -27,14 +27,14 @@ public class Plan {
      * User who owns the plan.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     /**
      * Days that comprise the plan.
      */
     @OneToMany(mappedBy = "plan", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-    @OrderColumn(name = "order")
+    @OrderColumn(name = "day_index", nullable = false)
     private List<Day> days;
 
     /**
