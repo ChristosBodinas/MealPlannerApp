@@ -2,6 +2,7 @@ package org.example.mealplannerapp.repository;
 
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,8 +17,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.example.mealplannerapp.fixture.UserTestFixtures.*;
-import static org.example.mealplannerapp.fixture.FoodTestFixtures.*;
+import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBuilder;
+import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
 
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop",
@@ -50,11 +51,13 @@ public class FoodRepositoryTests {
         entityManager.persist(stranger);
     }
 
+    // TODO: Improve display names for all tests.
+
     @Nested
     class fetchByIdVerified {
 
         @Test
-        @DisplayName("Given a valid userId and foodId, returns the Food and its associated units/prices.")
+        @DisplayName("Returns the requested food and its associated units/prices if it exists and belongs to the given user.")
         void foodFetched() {
             // Arrange
             Food food = defaultFoodBuilder().user(owner).build();
@@ -67,12 +70,12 @@ public class FoodRepositoryTests {
             // Assert
             assertThat(result).isPresent();
             assertThat(result.get().getId()).isEqualTo(food.getId());
-            assertThat(result.get().getUnits()).isNotEmpty();
-            assertThat(result.get().getPrices()).isNotEmpty();
+            assertThat(Hibernate.isInitialized(result.get().getUnits())).isTrue();
+            assertThat(Hibernate.isInitialized(result.get().getPrices())).isTrue();
         }
 
         @Test
-        @DisplayName("Given an invalid foodId, returns empty.")
+        @DisplayName("Returns empty if the requested food does not exist.")
         void foodNotFound() {
             // Act
             Optional<Food> result = foodRepository.fetchByIdVerified(owner.getId(), 999L);
@@ -82,7 +85,7 @@ public class FoodRepositoryTests {
         }
 
         @Test
-        @DisplayName("Given a valid foodId but the wrong userId, returns empty.")
+        @DisplayName("Returns empty if the requested food exists but does not belong to the given user.")
         void foodNotOwned() {
             // Arrange
             Food food = defaultFoodBuilder().user(owner).build();
@@ -103,7 +106,7 @@ public class FoodRepositoryTests {
     class fetchShallowByUserAndText {
 
         @Test
-        @DisplayName("Given a non-empty string, return owned foods with at least a partial match in their names.")
+        @DisplayName("Given a non-empty string, returns owned foods with at least a partial match in their names.")
         void ownedFoodNameMatches() {
             // Arrange
             Food match = defaultFoodBuilder().name("black beans").brand("generic").user(owner).build();
@@ -119,9 +122,9 @@ public class FoodRepositoryTests {
             List<Food> results = foodRepository.fetchShallowByUserAndText(owner.getId(), "bean");
 
             // Assert
-            assertThat(results)
-                    .extracting(Food::getId)
-                    .containsExactly(match.getId());
+            assertThat(results).extracting(Food::getId).containsExactly(match.getId());
+            assertThat(Hibernate.isInitialized(results.get(0).getUnits())).isFalse();
+            assertThat(Hibernate.isInitialized(results.get(0).getPrices())).isFalse();
         }
 
         @Test
@@ -142,6 +145,8 @@ public class FoodRepositoryTests {
 
             // Assert
             assertThat(results).extracting(Food::getId).containsExactly(match.getId());
+            assertThat(Hibernate.isInitialized(results.get(0).getUnits())).isFalse();
+            assertThat(Hibernate.isInitialized(results.get(0).getPrices())).isFalse();
         }
 
         @Test
@@ -164,6 +169,10 @@ public class FoodRepositoryTests {
             assertThat(results)
                     .extracting(Food::getId)
                     .containsExactlyInAnyOrder(owned1.getId(), owned2.getId());
+            assertThat(Hibernate.isInitialized(results.get(0).getUnits())).isFalse();
+            assertThat(Hibernate.isInitialized(results.get(0).getPrices())).isFalse();
+            assertThat(Hibernate.isInitialized(results.get(1).getUnits())).isFalse();
+            assertThat(Hibernate.isInitialized(results.get(1).getPrices())).isFalse();
 
         }
 

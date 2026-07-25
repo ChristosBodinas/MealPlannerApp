@@ -28,6 +28,12 @@ public class Day {
     private Plan plan;
 
     /**
+     * Position among the parent plan's days.
+     */
+    @Column(nullable = false)
+    private int position;
+
+    /**
      * Target energy amount (in Kcal) for the day.
      */
     private double targetCalories;

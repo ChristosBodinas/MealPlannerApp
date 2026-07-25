@@ -14,7 +14,7 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.example.mealplannerapp.fixture.UserTestFixtures.*;
+import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
 
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop",
@@ -50,7 +50,7 @@ public class UserRepositoryTests {
 
         @Test
         @DisplayName("Given a valid username, fetches the matching user.")
-        void happyFlow() {      
+        void happyFlow() {
             // Act
             Optional<User> result = userRepository.fetchByUsername(USERNAME);
 

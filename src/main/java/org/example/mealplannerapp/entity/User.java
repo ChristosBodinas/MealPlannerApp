@@ -1,12 +1,7 @@
 package org.example.mealplannerapp.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.example.mealplannerapp.constants.Gender;
 import org.example.mealplannerapp.constants.Sex;
 

@@ -98,6 +98,7 @@ public class Food {
 
     /**
      * Calculates the price per 100 grams of edible product for each vendor.
+     *
      * @return all the vendor names along with the corresponding prices
      */
     public Map<String, Double> derivePricesPer100g() {

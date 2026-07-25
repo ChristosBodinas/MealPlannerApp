@@ -1,7 +1,5 @@
 package org.example.mealplannerapp.fixture;
 
-import java.util.Set;
-
 import org.example.mealplannerapp.dto.food.request.FoodRequest;
 import org.example.mealplannerapp.dto.food.request.PriceRequest;
 import org.example.mealplannerapp.dto.food.request.UnitRequest;
@@ -13,6 +11,8 @@ import org.example.mealplannerapp.embeddable.FoodPrice;
 import org.example.mealplannerapp.embeddable.FoodUnit;
 import org.example.mealplannerapp.entity.Food;
 
+import java.util.Set;
+
 public class FoodTestFixtures {
 
     private static final String DEFAULT_NAME = "Chicken Breast";
@@ -23,10 +23,11 @@ public class FoodTestFixtures {
     private static final double DEFAULT_FAT_PER_100G = 4.5;
     private static final double DEFAULT_FIBER_PER_100G = 6.0;
     private static final double DEFAULT_EDIBLE_RATIO = 1.0;
-    
+
     /**
      * Method for building {@link Food} entities.
-     * @return a Food builder with all fields except {@code id} filled out
+     *
+     * @return a Food builder with all fields except {@code id} and {@code user} filled out
      */
     public static Food.FoodBuilder defaultFoodBuilder() {
         return Food.builder()
@@ -48,6 +49,7 @@ public class FoodTestFixtures {
 
     /**
      * Method for building {@link FoodRequest} DTOs.
+     *
      * @return a FoodRequest builder with all fields filled out
      */
     public static FoodRequest.FoodRequestBuilder defaultFoodRequestBuilder() {
@@ -70,6 +72,7 @@ public class FoodTestFixtures {
 
     /**
      * Method for building {@link FoodResponse} DTOs.
+     *
      * @return a FoodResponse builder with all fields except {@code id} filled out
      */
     public static FoodResponse.FoodResponseBuilder defaultFoodResponseBuilder() {
@@ -92,6 +95,7 @@ public class FoodTestFixtures {
 
     /**
      * Method for building {@link ListedFoodResponse} DTOs.
+     *
      * @return a ListedFoodResponse builder with all fields except {@code id} filled out
      */
     public static ListedFoodResponse.ListedFoodResponseBuilder defaultListedFoodResponseBuilder() {
@@ -104,5 +108,5 @@ public class FoodTestFixtures {
                 .fatPer100g(DEFAULT_FAT_PER_100G)
                 .fiberPer100g(DEFAULT_FIBER_PER_100G);
     }
-    
+
 }

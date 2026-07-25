@@ -1,18 +1,18 @@
 package org.example.mealplannerapp.entity;
 
+import org.example.mealplannerapp.embeddable.FoodPrice;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.example.mealplannerapp.fixture.EntryTestFixtures.*;
-import static org.example.mealplannerapp.fixture.FoodTestFixtures.*;
-
 import java.util.Set;
 
-import org.example.mealplannerapp.embeddable.FoodPrice;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultFoodEntryBuilder;
+import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBuilder;
 
 public class FoodEntryUnitTests {
 
@@ -23,7 +23,7 @@ public class FoodEntryUnitTests {
     class snapshotNutritionAndPriceInfo {
 
         private final double GRAMS = 150.0;
-        
+
         private final String VALID_VENDOR = "MyMarket";
         private final String INVALID_VENDOR = "Masoutis";
 
@@ -136,7 +136,7 @@ public class FoodEntryUnitTests {
             assertThat(copy.getGrams()).isEqualTo(entry.getGrams());
             assertThat(copy.getDisplayUnit()).isEqualTo(entry.getDisplayUnit());
             assertThat(copy.getSelectedVendor()).isEqualTo(entry.getSelectedVendor());
-            
+
             // NOTE: entry's calories have manually been set to 0.00, so the following assert
             // also tests that copy has properly calculated its own snapshot values and not
             // merely duplicated them from the original.

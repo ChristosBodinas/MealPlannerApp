@@ -14,6 +14,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link FoodEntry} entities.
+     *
      * @return a FoodEntry builder with {@code category}, {@code position}, {@code grams},
      * {@code displayUnit}, and {@code selectedVendor} filled out
      */

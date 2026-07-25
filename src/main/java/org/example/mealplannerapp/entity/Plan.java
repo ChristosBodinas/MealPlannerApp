@@ -34,7 +34,7 @@ public class Plan {
      * Days that comprise the plan.
      */
     @OneToMany(mappedBy = "plan", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-    @OrderColumn(name = "day_index", nullable = false)
+    @OrderBy("index ASC")
     private List<Day> days;
 
     /**

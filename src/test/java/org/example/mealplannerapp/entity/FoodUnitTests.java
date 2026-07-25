@@ -8,7 +8,8 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBuilder;
 
 public class FoodUnitTests {
