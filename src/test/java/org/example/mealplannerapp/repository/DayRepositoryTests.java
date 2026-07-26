@@ -28,102 +28,130 @@ import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBui
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 public class DayRepositoryTests {
 
+    // BEANS
     @Autowired
     private DayRepository dayRepository;
 
     @Autowired
     private TestEntityManager entityManager;
 
+    // VARIABLES
+    private User myUser;
+    private User otherUser;
+    private Plan myPlan;
+    private Plan otherPlan;
+
+    // CONSTANTS
+    private final String MY_USERNAME = "alice1";
+    private final String OTHER_USERNAME = "bob2";
+
+    // HELPER METHODS
     private void flushAndClear() {
         entityManager.flush();
         entityManager.clear();
     }
 
-    private User currentUser;
-    private User otherUser;
-    private Plan currentUserPlan;
-    private Plan otherUserPlan;
+    private void prepareMyUser() {
+        myUser = defaultUserBuilder().username(MY_USERNAME).build();
+        myPlan = defaultPlanBuilder().user(myUser).build();
 
-    @BeforeEach
-    void prepareAllTests() {
-        currentUser = defaultUserBuilder().username("alice").build();
-        otherUser = defaultUserBuilder().username("bob").build();
-
-        currentUserPlan = defaultPlanBuilder().user(currentUser).build();
-        otherUserPlan = defaultPlanBuilder().user(otherUser).build();
-
-        entityManager.persist(currentUser);
-        entityManager.persist(otherUser);
-        entityManager.persist(currentUserPlan);
-        entityManager.persist(otherUserPlan);
+        entityManager.persist(myUser);
+        entityManager.persist(myPlan);
     }
 
+    private void prepareOtherUser() {
+        otherUser = defaultUserBuilder().username(OTHER_USERNAME).build();
+        otherPlan = defaultPlanBuilder().user(otherUser).build();
+
+        entityManager.persist(otherUser);
+        entityManager.persist(otherPlan);
+    }
+
+    private Day prepareDay(Plan ownerPlan) {
+        Day day = defaultDayBuilder().plan(ownerPlan).build();
+        ownerPlan.getDays().add(day);
+        return day;
+    }
+
+    // TESTS PROPER
+
     @Nested
-    class fetchByIdVerified {
+    @DisplayName("fetchByIdVerified")
+    class FetchByIdVerified {
+
+        @BeforeEach
+        void prepareTests() {
+            prepareMyUser();
+        }
 
         @Test
         @DisplayName("Returns the requested day when it exists and belongs to the given user.")
         void dayFetched() {
             // Arrange
-            Day day = defaultDayBuilder().plan(currentUserPlan).build();
-            currentUserPlan.getDays().add(day);
+            Day day = prepareDay(myPlan);
             flushAndClear();
 
             // Act
-            Optional<Day> result = dayRepository.fetchByIdVerified(currentUser.getId(), day.getId());
+            Optional<Day> result = dayRepository.fetchByIdVerified(myUser.getId(), day.getId());
 
             // Assert
             assertThat(result).isPresent();
-            Day found = result.get();
-            assertThat(found.getId()).isEqualTo(day.getId());
-            assertThat(found.getPlan().getUser().getId()).isEqualTo(currentUser.getId());
+            Day fetched = result.get();
+            
+            assertThat(fetched.getId()).isEqualTo(day.getId());
+            assertThat(fetched.getUser().getId()).isEqualTo(myUser.getId());
         }
 
         @Test
-        @DisplayName("Returns empty if the requested day does not exist.")
+        @DisplayName("Returns empty when the requested day does not exist.")
         void dayNotFound() {
             // Arrange
             flushAndClear();
 
             // Act
-            Optional<Day> result = dayRepository.fetchByIdVerified(currentUser.getId(), 999L);
+            Optional<Day> result = dayRepository.fetchByIdVerified(myUser.getId(), 999L);
 
             // Assert
             assertThat(result).isEmpty();
-            assertThat(dayRepository.findById(999L)).isEmpty();
+            assertThat(dayRepository.existsById(999L)).isFalse();
         }
 
         @Test
-        @DisplayName("Returns empty if the requested day exists but does not belong to the given user.")
+        @DisplayName("Returns empty when the requested day exists but belongs to a different user.")
         void dayNotOwned() {
             // Arrange
-            Day day = defaultDayBuilder().plan(otherUserPlan).build();
-            otherUserPlan.getDays().add(day);
+            prepareOtherUser();
+            Day day = prepareDay(otherPlan);
             flushAndClear();
 
             // Act
-            Optional<Day> result = dayRepository.fetchByIdVerified(currentUser.getId(), day.getId());
+            Optional<Day> result = dayRepository.fetchByIdVerified(myUser.getId(), day.getId());
 
             // Assert
             assertThat(result).isEmpty();
-            assertThat(dayRepository.findById(day.getId())).isPresent();
+            assertThat(dayRepository.existsById(day.getId())).isTrue();
         }
 
     }
 
     @Nested
-    class existsByIdVerified {
+    @DisplayName("existsByIdVerified")
+    class ExistsByIdVerified {
+
+        @BeforeEach
+        void prepareTests() {
+            prepareMyUser();
+        }
 
         @Test
-        @DisplayName("Returns true if the requested day exists and belongs to the given user.")
+        @DisplayName("Returns true when the requested day exists and belongs to the given user.")
         void dayExists() {
             // Arrange
-            Day day = defaultDayBuilder().plan(currentUserPlan).build();
-            currentUserPlan.getDays().add(day);
+            Day day = prepareDay(myPlan);
             flushAndClear();
 
             // Act
-            boolean result = dayRepository.existsByIdVerified(currentUser.getId(), day.getId());
+            boolean result = dayRepository.existsByIdVerified(myUser.getId(), day.getId());
 
             // Assert
             assertThat(result).isTrue();
@@ -131,13 +159,13 @@ public class DayRepositoryTests {
         }
 
         @Test
-        @DisplayName("Returns false if the requested day does not exist.")
+        @DisplayName("Returns false when the requested day does not exist.")
         void dayNotFound() {
             // Arrange
             flushAndClear();
 
             // Act
-            boolean result = dayRepository.existsByIdVerified(currentUser.getId(), 999L);
+            boolean result = dayRepository.existsByIdVerified(myUser.getId(), 999L);
 
             // Assert
             assertThat(result).isFalse();
@@ -145,20 +173,21 @@ public class DayRepositoryTests {
         }
 
         @Test
-        @DisplayName("Returns false if the requested day exists but does not belong to the given user.")
+        @DisplayName("Returns false when the requested day exists but belongs to a different user.")
         void dayNotOwned() {
             // Arrange
-            Day day = defaultDayBuilder().plan(otherUserPlan).build();
-            otherUserPlan.getDays().add(day);
+            prepareOtherUser();
+            Day day = prepareDay(otherPlan);
             flushAndClear();
 
             // Act
-            boolean result = dayRepository.existsByIdVerified(currentUser.getId(), day.getId());
+            boolean result = dayRepository.existsByIdVerified(myUser.getId(), day.getId());
 
             // Assert
             assertThat(result).isFalse();
             assertThat(dayRepository.existsById(day.getId())).isTrue();
         }
-
+        
     }
+
 }

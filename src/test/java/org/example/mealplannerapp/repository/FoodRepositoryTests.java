@@ -28,223 +28,261 @@ import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBui
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 public class FoodRepositoryTests {
 
+    // BEANS
     @Autowired
     private TestEntityManager entityManager;
 
     @Autowired
     private FoodRepository foodRepository;
 
-    private User owner;
-    private User stranger;
+    // VARIABLES
+    private User myUser;
+    private User otherUser;
 
+    // CONSTANTS
+    private final String MY_USERNAME = "alice1";
+    private final String OTHER_USERNAME = "bob2";
+
+    // HELPER METHODS
     private void flushAndClear() {
         entityManager.flush();
         entityManager.clear();
     }
 
-    @BeforeEach
-    void prepareAllTests() {
-        owner = defaultUserBuilder().username("William59").build();
-        stranger = defaultUserBuilder().username("Jack37").build();
-
-        entityManager.persist(owner);
-        entityManager.persist(stranger);
+    private void prepareMyUser() {
+        myUser = defaultUserBuilder().username(MY_USERNAME).build();
+        entityManager.persist(myUser);
     }
 
-    // TODO: Improve display names for all tests.
+    private void prepareOtherUser() {
+        otherUser = defaultUserBuilder().username(OTHER_USERNAME).build();
+        entityManager.persist(otherUser);
+    }
+
+    private Food prepareFood(User owner) {
+        Food food = defaultFoodBuilder().user(owner).build();
+        entityManager.persist(food);
+        return food;
+    }
+
+    // TESTS PROPER
 
     @Nested
-    class fetchByIdVerified {
+    @DisplayName("fetchByIdVerified")
+    class FetchByIdVerified {
+
+        @BeforeEach
+        void prepareTests() {
+            prepareMyUser();
+        }
 
         @Test
-        @DisplayName("Returns the requested food and its associated units/prices if it exists and belongs to the given user.")
+        @DisplayName("Returns the requested food and eagerly loads its units/prices when it exists and belongs to the given user.")
         void foodFetched() {
             // Arrange
-            Food food = defaultFoodBuilder().user(owner).build();
-            entityManager.persist(food);
+            Food food = prepareFood(myUser);
             flushAndClear();
 
             // Act
-            Optional<Food> result = foodRepository.fetchByIdVerified(owner.getId(), food.getId());
+            Optional<Food> result = foodRepository.fetchByIdVerified(myUser.getId(), food.getId());
 
             // Assert
             assertThat(result).isPresent();
-            assertThat(result.get().getId()).isEqualTo(food.getId());
-            assertThat(Hibernate.isInitialized(result.get().getUnits())).isTrue();
-            assertThat(Hibernate.isInitialized(result.get().getPrices())).isTrue();
+            Food fetched = result.get();
+
+            assertThat(fetched.getId()).isEqualTo(food.getId());
+            assertThat(fetched.getUser()).isSameAs(myUser);
+            assertThat(Hibernate.isInitialized(fetched.getUnits())).isTrue();
+            assertThat(Hibernate.isInitialized(fetched.getPrices())).isTrue();
         }
 
         @Test
-        @DisplayName("Returns empty if the requested food does not exist.")
+        @DisplayName("Returns empty when the requested food does not exist.")
         void foodNotFound() {
-            // Act
-            Optional<Food> result = foodRepository.fetchByIdVerified(owner.getId(), 999L);
-
-            // Assert
-            assertThat(result).isEmpty();
-        }
-
-        @Test
-        @DisplayName("Returns empty if the requested food exists but does not belong to the given user.")
-        void foodNotOwned() {
             // Arrange
-            Food food = defaultFoodBuilder().user(owner).build();
-            entityManager.persist(food);
             flushAndClear();
 
             // Act
-            Optional<Food> result = foodRepository.fetchByIdVerified(stranger.getId(), food.getId());
+            Optional<Food> result = foodRepository.fetchByIdVerified(myUser.getId(), 999L);
 
             // Assert
             assertThat(result).isEmpty();
-            assertThat(foodRepository.findById(food.getId())).isPresent();
+            assertThat(foodRepository.existsById(999L)).isFalse();
+        }
+
+        @Test
+        @DisplayName("Returns empty when the requested food exists but belongs to a different user.")
+        void foodNotOwned() {
+            // Arrange
+            prepareOtherUser();
+            Food food = prepareFood(otherUser);
+            flushAndClear();
+
+            // Act
+            Optional<Food> result = foodRepository.fetchByIdVerified(myUser.getId(), food.getId());
+
+            // Assert
+            assertThat(result).isEmpty();
+            assertThat(foodRepository.existsById(food.getId())).isTrue();
         }
 
     }
-
+    
+    
     @Nested
-    class fetchShallowByUserAndText {
+    @DisplayName("fetchShallowByUserAndText")
+    class FetchShallowByUserAndText {
+
+        private Food prepareFoodWithText(User owner, String name, String brand) {
+            Food food = defaultFoodBuilder().user(owner).name(name).brand(brand).build();
+            entityManager.persist(food);
+            return food;
+        }
+
+        @BeforeEach
+        void prepareTests() {
+            prepareMyUser();
+            prepareOtherUser();
+        }
 
         @Test
-        @DisplayName("Given a non-empty string, returns owned foods with at least a partial match in their names.")
+        @DisplayName("Returns owned foods with at least a partial name match when given a non-empty string.")
         void ownedFoodNameMatches() {
             // Arrange
-            Food match = defaultFoodBuilder().name("black beans").brand("generic").user(owner).build();
-            Food noMatch = defaultFoodBuilder().name("black buns").brand("generic").user(owner).build();
-            Food notOwned = defaultFoodBuilder().name("black beans").brand("generic").user(stranger).build();
-
-            entityManager.persist(match);
-            entityManager.persist(noMatch);
-            entityManager.persist(notOwned);
+            Food match = prepareFoodWithText(myUser, "black beans", "generic");
+            Food noMatch = prepareFoodWithText(myUser, "black buns", "generic");
+            Food notOwned = prepareFoodWithText(otherUser, "white beans", "generic");
             flushAndClear();
 
             // Act
-            List<Food> results = foodRepository.fetchShallowByUserAndText(owner.getId(), "bean");
+            List<Food> results = foodRepository .fetchShallowByUserAndText(myUser.getId(), "bean");
 
             // Assert
             assertThat(results).extracting(Food::getId).containsExactly(match.getId());
-            assertThat(Hibernate.isInitialized(results.get(0).getUnits())).isFalse();
-            assertThat(Hibernate.isInitialized(results.get(0).getPrices())).isFalse();
+            Food fetched = results.get(0);
+
+            assertThat(Hibernate.isInitialized(fetched.getUnits())).isFalse();
+            assertThat(Hibernate.isInitialized(fetched.getPrices())).isFalse();
         }
 
         @Test
-        @DisplayName("Given a non-empty string, return owned foods with at least a partial match in their names.")
+        @DisplayName("Returns owned food with at least a partial brand match when given a non-empty string.")
         void ownedFoodBrandMatches() {
             // Arrange
-            Food match = defaultFoodBuilder().name("generic").brand("black beans").user(owner).build();
-            Food noMatch = defaultFoodBuilder().name("generic").brand("black buns").user(owner).build();
-            Food notOwned = defaultFoodBuilder().name("generic").brand("black beans").user(stranger).build();
-
-            entityManager.persist(match);
-            entityManager.persist(noMatch);
-            entityManager.persist(notOwned);
+            Food match = prepareFoodWithText(myUser, "generic", "black beans");
+            Food noMatch = prepareFoodWithText(myUser, "generic", "black buns");
+            Food notOwned = prepareFoodWithText(otherUser, "generic", "white beans");
             flushAndClear();
 
             // Act
-            List<Food> results = foodRepository.fetchShallowByUserAndText(owner.getId(), "bean");
+            List<Food> results = foodRepository.fetchShallowByUserAndText(myUser.getId(), "bean");
 
             // Assert
             assertThat(results).extracting(Food::getId).containsExactly(match.getId());
-            assertThat(Hibernate.isInitialized(results.get(0).getUnits())).isFalse();
-            assertThat(Hibernate.isInitialized(results.get(0).getPrices())).isFalse();
+            Food fetched = results.get(0);
+
+            assertThat(Hibernate.isInitialized(fetched.getUnits())).isFalse();
+            assertThat(Hibernate.isInitialized(fetched.getPrices())).isFalse();
         }
 
         @Test
-        @DisplayName("Given an empty search string, returns all foods owned by the given user.")
-        void ownedFoodEmptyText() {
+        @DisplayName("Returns all owned foods when given an empty string.")
+        void ownedFoodEmptyString() {
             // Arrange
-            Food owned1 = defaultFoodBuilder().name("a").brand("b").user(owner).build();
-            Food owned2 = defaultFoodBuilder().name("c").brand("d").user(owner).build();
-            Food notOwned = defaultFoodBuilder().name("a").brand("d").user(stranger).build();
-
-            entityManager.persist(owned1);
-            entityManager.persist(owned2);
-            entityManager.persist(notOwned);
+            Food owned1 = prepareFoodWithText(myUser, "a", "b");
+            Food owned2 = prepareFoodWithText(myUser, "c", "d");
+            Food notOwned = prepareFoodWithText(otherUser, "e", "f");
             flushAndClear();
 
             // Act
-            List<Food> results = foodRepository.fetchShallowByUserAndText(owner.getId(), "");
+            List<Food> results = foodRepository.fetchShallowByUserAndText(myUser.getId(), "");
 
             // Assert
-            assertThat(results)
-                    .extracting(Food::getId)
-                    .containsExactlyInAnyOrder(owned1.getId(), owned2.getId());
+            assertThat(results).extracting(Food::getId).containsExactlyInAnyOrder(owned1.getId(), owned2.getId());
             assertThat(Hibernate.isInitialized(results.get(0).getUnits())).isFalse();
             assertThat(Hibernate.isInitialized(results.get(0).getPrices())).isFalse();
             assertThat(Hibernate.isInitialized(results.get(1).getUnits())).isFalse();
             assertThat(Hibernate.isInitialized(results.get(1).getPrices())).isFalse();
-
         }
 
     }
 
     @Nested
-    class deleteByIdVerified {
+    @DisplayName("deleteByIdVerified")
+    class DeleteByIdVerified {
+
+        @BeforeEach
+        void prepareTests() {
+            prepareMyUser();
+        }
 
         @Test
-        @DisplayName("Given a valid userId and foodId, deletes the Food and its associated units/prices.")
+        @DisplayName("Deletes the requested food and its associated units/prices when it exists and belongs to the given user.")
         void foodDeleted() {
             // Arrange
-            Food food = defaultFoodBuilder().user(owner).build();
-            entityManager.persist(food);
+            Food food = prepareFood(myUser);
             flushAndClear();
 
             // Act
-            int rowsDeleted = foodRepository.deleteByIdVerified(owner.getId(), food.getId());
+            int result = foodRepository.deleteByIdVerified(myUser.getId(), food.getId());
 
             // Assert
-            assertThat(rowsDeleted).isEqualTo(1);
-            assertThat(foodRepository.findById(food.getId())).isEmpty();
+            assertThat(result).isOne();
+            assertThat(foodRepository.existsById(food.getId())).isFalse();
 
             Long unitsCount = (Long) entityManager.getEntityManager()
                     .createNativeQuery("SELECT COUNT(*) FROM \"food_unit\" WHERE \"food_id\" = :foodId")
                     .setParameter("foodId", food.getId())
                     .getSingleResult();
-            assertThat(unitsCount).isEqualTo(0);
+            assertThat(unitsCount).isZero();
 
             Long pricesCount = (Long) entityManager.getEntityManager()
                     .createNativeQuery("SELECT COUNT(*) FROM \"food_price\" WHERE \"food_id\" = :foodId")
                     .setParameter("foodId", food.getId())
                     .getSingleResult();
-            assertThat(pricesCount).isEqualTo(0);
+            assertThat(pricesCount).isZero();
         }
 
         @Test
-        @DisplayName("Given an invalid foodId, deletes no rows.")
+        @DisplayName("Deletes nothing when the requested food does not exist.")
         void foodNotFound() {
+            // Arrange
+            flushAndClear();
+
             // Act
-            int result = foodRepository.deleteByIdVerified(owner.getId(), 999L);
+            int result = foodRepository.deleteByIdVerified(myUser.getId(), 999L);
 
             // Assert
-            assertThat(result).isEqualTo(0);
+            assertThat(result).isZero();
+            assertThat(foodRepository.existsById(999L)).isFalse();
         }
 
         @Test
-        @DisplayName("Given a valid foodId but the wrong userId, deletes no rows.")
+        @DisplayName("Deletes nothing when the requested food exists but belongs to a different user.")
         void foodNotOwned() {
             // Arrange
-            Food food = defaultFoodBuilder().user(owner).build();
-            entityManager.persist(food);
+            prepareOtherUser();
+            Food food = prepareFood(otherUser);
             flushAndClear();
 
             // Act
-            int result = foodRepository.deleteByIdVerified(stranger.getId(), food.getId());
+            int result = foodRepository.deleteByIdVerified(myUser.getId(), food.getId());
 
             // Assert
-            assertThat(result).isEqualTo(0);
-            assertThat(foodRepository.findById(food.getId())).isPresent();
+            assertThat(result).isZero();
+            assertThat(foodRepository.existsById(food.getId())).isTrue();
 
             Long unitsCount = (Long) entityManager.getEntityManager()
                     .createNativeQuery("SELECT COUNT(*) FROM \"food_unit\" WHERE \"food_id\" = :foodId")
                     .setParameter("foodId", food.getId())
                     .getSingleResult();
-            assertThat(unitsCount).isNotEqualTo(0);
+            assertThat(unitsCount).isNotZero();
 
             Long pricesCount = (Long) entityManager.getEntityManager()
                     .createNativeQuery("SELECT COUNT(*) FROM \"food_price\" WHERE \"food_id\" = :foodId")
                     .setParameter("foodId", food.getId())
                     .getSingleResult();
-            assertThat(pricesCount).isNotEqualTo(0);
+            assertThat(pricesCount).isNotZero();
         }
 
     }

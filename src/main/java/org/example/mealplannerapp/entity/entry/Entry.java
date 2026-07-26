@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.example.mealplannerapp.constants.Category;
 import org.example.mealplannerapp.entity.Day;
+import org.example.mealplannerapp.entity.User;
 
 /**
  * Base class for all entry entities. Implemented via joined inheritance.
@@ -95,5 +96,9 @@ public abstract class Entry {
      * and position
      */
     public abstract Entry createDuplicate();
-
+    
+    // TODO: Double check method name.
+    public User getUser() {
+        return day.getPlan().getUser();
+    }
 }

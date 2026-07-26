@@ -57,4 +57,9 @@ public class Day {
      * Target fiber amount (in grams) for the day.
      */
     private double targetFiber;
+
+    // TODO: Double check method name.
+    public User getUser() {
+        return plan.getUser();
+    }
 }
