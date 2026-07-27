@@ -82,7 +82,7 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
             "WHERE e.day.id = :dayId AND e.category = :category " +
             "AND (:minPosition IS NULL OR e.position >= :minPosition) " +
             "AND (:maxPosition IS NULL OR e.position < :maxPosition)")
-    void shiftUpByDayAndCategory(
+    int shiftUpByDayAndCategory(
             @Param("dayId") Long dayId,
             @Param("category") Category category,
             @Param("minPosition") Integer minPosition,
@@ -105,7 +105,7 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
             "WHERE e.day.id = :dayId AND e.category = :category " +
             "AND (:minPosition IS NULL OR e.position > :minPosition) " +
             "AND (:maxPosition IS NULL OR e.position <= :maxPosition)")
-    void shiftDownByDayAndCategory(
+    int shiftDownByDayAndCategory(
             @Param("dayId") Long dayId,
             @Param("category") Category category,
             @Param("minPosition") Integer minPosition,

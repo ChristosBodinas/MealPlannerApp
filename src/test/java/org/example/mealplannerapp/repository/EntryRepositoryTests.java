@@ -1,5 +1,6 @@
 package org.example.mealplannerapp.repository;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.mealplannerapp.constants.Category;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Food;
@@ -13,18 +14,26 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.data.repository.query.Param;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
 import static org.example.mealplannerapp.fixture.EntryTestFixtures.DEFAULT_CATEGORY;
 import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultFoodEntryBuilder;
@@ -32,6 +41,7 @@ import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBui
 import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
 
+@Slf4j
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.sql.init.mode=never",
@@ -235,7 +245,7 @@ public class EntryRepositoryTests {
         private final Category EXCLUDED_CATEGORY = Category.SNACK;
 
         List<FoodEntry> prepareEntriesToCount(int amount, User owner, Day ownerDay) {
-            List<FoodEntry> entries = new ArrayList<>();
+            List<FoodEntry> entries = new ArrayList<>(amount);
 
             for (int i = 0; i < amount; i++) {
                 FoodEntry entry = prepareFoodEntry(owner, ownerDay);
@@ -257,6 +267,7 @@ public class EntryRepositoryTests {
             // Arrange
             Day excludedDay = defaultDayBuilder().plan(myPlan).position(2).build();
             myPlan.getDays().add(excludedDay);
+            entityManager.persist(excludedDay);
 
             List<FoodEntry> entries = prepareEntriesToCount(TOTAL_COUNT, myUser, myDay);
             entries.getLast().setDay(excludedDay);
@@ -293,6 +304,118 @@ public class EntryRepositoryTests {
     @Nested
     @DisplayName("shiftUpByDayAndCategory")
     class ShiftUpByDayAndCategory {
+
+        private List<FoodEntry> entries;
+
+        private final int TEST_COUNT = 10;
+        private final Category TEST_CATEGORY = Category.SNACK;
+        private final Category EXCLUDED_CATEGORY = Category.UNSORTED;
+
+        private static Stream<Arguments> provideBounds() {
+            return Stream.of(
+                    Arguments.of(4, 8),             // both sides bounded
+                    Arguments.of(null, 8),          // only upper side bounded
+                    Arguments.of(4, null),          // only lower side bounded
+                    Arguments.of(null, null),       // neither side bounded
+                    Arguments.of(4, 4),             // edge case: minPosition = maxPosition
+                    Arguments.of(8, 4),             // edge case: minPosition > maxPosition
+                    Arguments.of(100, 200)          // edge case: both "sides" are out of range
+            );
+        }
+
+        @BeforeEach
+        void prepareTests() {
+            prepareMyUser();
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideBounds")
+        @DisplayName("Only increments the position of entries within range.")
+        void onlyEntriesWithinBoundsShifted(Integer minPosition, Integer maxPosition) {
+            // Arrange
+            List<FoodEntry> entries = new ArrayList<>(TEST_COUNT);
+
+            for (int i = 1; i <= TEST_COUNT; i++) {
+                FoodEntry entry = prepareFoodEntry(myUser, myDay);
+                entry.setCategory(TEST_CATEGORY);
+                entry.setPosition(i);
+                entries.add(entry);
+            }
+
+            flushAndClear();
+
+            // Act
+            int result = entryRepository.shiftUpByDayAndCategory(myDay.getId(), TEST_CATEGORY, minPosition, maxPosition);
+
+            // Assert
+            int expected = (int) entries.stream()
+                    .filter(e -> minPosition == null || e.getPosition() >= minPosition)
+                    .filter(e -> maxPosition == null || e.getPosition() < maxPosition)
+                    .count();
+            assertThat(result).isEqualTo(expected);
+
+            assertSoftly(softly -> {
+                List<Long> ids = entries.stream().map(Entry::getId).toList();
+                Map<Long, FoodEntry> fetchedEntries = entryRepository.findAllById(ids).stream()
+                        .map(e -> (FoodEntry) e)
+                        .collect(Collectors.toMap(FoodEntry::getId, Function.identity()));
+
+                for (FoodEntry entry : entries) {
+                    FoodEntry fetched = fetchedEntries.get(entry.getId());
+                    int initialPosition = entry.getPosition();
+                    if ((minPosition == null || initialPosition >= minPosition) &&
+                            (maxPosition == null || initialPosition < maxPosition)) {
+                        softly.assertThat(fetched.getPosition()).isEqualTo(initialPosition + 1);
+                    } else {
+                        softly.assertThat(fetched.getPosition()).isEqualTo(initialPosition);
+                    }
+                }
+            });
+        }
+
+        @Test
+        @DisplayName("Does not affect entries outside the given day.")
+        void otherDaysExcluded() {
+            // Arrange
+            Day excludedDay = defaultDayBuilder().plan(myPlan).position(2).build();
+            myPlan.getDays().add(excludedDay);
+            entityManager.persist(excludedDay);
+
+            FoodEntry entry = prepareFoodEntry(myUser, excludedDay);
+            entry.setPosition(5);
+
+            flushAndClear();
+
+            // Act
+            int result = entryRepository.shiftUpByDayAndCategory(myDay.getId(), TEST_CATEGORY, 3, 7);
+
+            // Assert
+            assertThat(result).isZero();
+
+            FoodEntry fetched = (FoodEntry) entryRepository.findById(entry.getId()).get();
+            assertThat(fetched.getPosition()).isEqualTo(entry.getPosition());
+
+        }
+
+        @Test
+        @DisplayName("Does not affect entries outside the given category.")
+        void otherCategoriesExcluded() {
+            // Arrange
+            FoodEntry entry = prepareFoodEntry(myUser, myDay);
+            entry.setCategory(EXCLUDED_CATEGORY);
+            entry.setPosition(5);
+
+            flushAndClear();
+
+            // Act
+            int result = entryRepository.shiftUpByDayAndCategory(myDay.getId(), TEST_CATEGORY, 3, 7);
+
+            // Assert
+            assertThat(result).isZero();
+
+            FoodEntry fetched = (FoodEntry) entryRepository.findById(entry.getId()).get();
+            assertThat(fetched.getPosition()).isEqualTo(entry.getPosition());
+        }
 
     }
 
