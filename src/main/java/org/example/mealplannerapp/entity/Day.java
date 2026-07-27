@@ -27,6 +27,7 @@ public class Day {
     @JoinColumn(name = "plan_id", nullable = false)
     private Plan plan;
 
+    // TODO: Unique constraint between Plan + position?
     /**
      * Position among the parent plan's days.
      */

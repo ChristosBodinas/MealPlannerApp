@@ -47,7 +47,7 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
      */
     @Query("SELECT e.day.id AS dayId, e.category AS category, e.position AS position " +
             "FROM Entry e WHERE e.day.plan.user.id = :userId AND e.id = :entryId")
-    Optional<Placement> fetchPlacementByIdVerified(
+    Optional<Placement> extractPlacementByIdVerified(
             @Param("userId") Long userId,
             @Param("entryId") Long entryId
     );
@@ -61,7 +61,7 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
      * @return the number of entries in the given day and category
      */
     @Query("SELECT COUNT(e) FROM Entry e WHERE e.day.id = :dayId AND e.category = :category")
-    int countInDayAndCategory(
+    int countByDayAndCategory(
             @Param("dayId") Long dayId,
             @Param("category") Category category
     );
@@ -82,7 +82,7 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
             "WHERE e.day.id = :dayId AND e.category = :category " +
             "AND (:minPosition IS NULL OR e.position >= :minPosition) " +
             "AND (:maxPosition IS NULL OR e.position < :maxPosition)")
-    void shiftUpInDayAndCategory(
+    void shiftUpByDayAndCategory(
             @Param("dayId") Long dayId,
             @Param("category") Category category,
             @Param("minPosition") Integer minPosition,
@@ -105,7 +105,7 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
             "WHERE e.day.id = :dayId AND e.category = :category " +
             "AND (:minPosition IS NULL OR e.position > :minPosition) " +
             "AND (:maxPosition IS NULL OR e.position <= :maxPosition)")
-    void shiftDownInDayAndCategory(
+    void shiftDownByDayAndCategory(
             @Param("dayId") Long dayId,
             @Param("category") Category category,
             @Param("minPosition") Integer minPosition,

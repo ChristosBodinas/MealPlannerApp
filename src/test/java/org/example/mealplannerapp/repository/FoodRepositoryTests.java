@@ -91,7 +91,7 @@ public class FoodRepositoryTests {
             Food fetched = result.get();
 
             assertThat(fetched.getId()).isEqualTo(food.getId());
-            assertThat(fetched.getUser()).isSameAs(myUser);
+            assertThat(fetched.getUser().getId()).isEqualTo(myUser.getId());
             assertThat(Hibernate.isInitialized(fetched.getUnits())).isTrue();
             assertThat(Hibernate.isInitialized(fetched.getPrices())).isTrue();
         }
@@ -244,7 +244,7 @@ public class FoodRepositoryTests {
         }
 
         @Test
-        @DisplayName("Deletes nothing when the requested food does not exist.")
+        @DisplayName("Does nothing when the requested food does not exist.")
         void foodNotFound() {
             // Arrange
             flushAndClear();
@@ -258,7 +258,7 @@ public class FoodRepositoryTests {
         }
 
         @Test
-        @DisplayName("Deletes nothing when the requested food exists but belongs to a different user.")
+        @DisplayName("Does nothing when the requested food exists but belongs to a different user.")
         void foodNotOwned() {
             // Arrange
             prepareOtherUser();
