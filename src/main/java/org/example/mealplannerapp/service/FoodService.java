@@ -19,7 +19,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Service that handles create, read, update, and delete operations for {@link Food} entities.
+ * Service that handles create, update, delete, retrieve, and text search
+ * operations for {@link Food} entities.
  */
 @Service
 @AllArgsConstructor

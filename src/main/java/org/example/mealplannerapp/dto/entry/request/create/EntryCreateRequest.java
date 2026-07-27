@@ -1,5 +1,7 @@
 package org.example.mealplannerapp.dto.entry.request.create;
 
+import org.example.mealplannerapp.constants.Category;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
@@ -12,4 +14,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = FoodEntryCreateRequest.class, name = "FOOD")
 })
 public sealed interface EntryCreateRequest permits FoodEntryCreateRequest {
+
+        Category category();
 }

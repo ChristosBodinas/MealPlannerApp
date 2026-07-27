@@ -1,5 +1,6 @@
 package org.example.mealplannerapp.advice;
 
+import org.example.mealplannerapp.exception.MappingMismatchException;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.exception.ServiceValidationErrorException;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ServiceValidationErrorException.class)
     public ResponseEntity<String> handleServiceValidation(
             ServiceValidationErrorException e
+    ) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
+    @ExceptionHandler(MappingMismatchException.class)
+    public ResponseEntity<String> handleMappingMismatch(
+        MappingMismatchException e
     ) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }

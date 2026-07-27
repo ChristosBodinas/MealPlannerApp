@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
@@ -117,6 +118,11 @@ public class EntryRepositoryTests {
     }
 
     // TESTS PROPER
+    @Nested
+    @DisplayName("fetchByIdVerified")
+    class FetchByIdVerified {
+
+    }
 
     @Nested
     @DisplayName("fetchFoodEntryByIdVerified")
@@ -178,6 +184,48 @@ public class EntryRepositoryTests {
             // Assert
             assertThat(result).isEmpty();
             assertThat(entryRepository.existsById(entry.getId())).isTrue();
+        }
+
+    }
+
+    @Nested
+    @DisplayName("extractEntryType")
+    class ExtractEntryType {
+
+        @BeforeEach
+        void prepareTests() {
+            prepareMyUser();
+        }
+
+        // TODO: Might parameterize in the future once more types are implemented.
+        @Test
+        @DisplayName("Returns FoodEntry.class when the requested entry is a food entry.")
+        void typeReturned() {
+            // Arrange
+            FoodEntry entry = prepareFoodEntry(myUser, myDay);
+            flushAndClear();
+
+            // Act
+            Optional<Class<? extends Entry>> result = entryRepository.extractEntryType(entry.getId());
+
+            // Assert
+            assertThat(result).isPresent();
+            assertThat(result.get()).isEqualTo(FoodEntry.class);
+
+        }
+
+        @Test
+        @DisplayName("Returns empty when the requested entry does not exist.")
+        void entryNotFound() {
+            // Arrange
+            flushAndClear();
+
+            // Act
+            Optional<Class<? extends Entry>> result = entryRepository.extractEntryType(999L);
+
+            // Assert
+            assertThat(result).isEmpty();
+            assertThat(entryRepository.existsById(999L)).isFalse();
         }
 
     }

@@ -17,6 +17,18 @@ import java.util.Optional;
 @Repository
 public interface EntryRepository extends JpaRepository<Entry, Long> {
 
+     // TODO: Javadocs
+        default Optional<Entry> fetchByIdVerified(Long userId, Long entryId) {
+                Class<? extends Entry> type = extractEntryType(entryId).orElse(null);
+
+                if (type == FoodEntry.class) {
+                        return fetchFoodEntryByIdVerified(userId, entryId);
+                } else {
+                        return Optional.empty();
+                }
+        }
+
+
     /**
      * Verifies that the {@link FoodEntry} with identifier {@code entryId} is owned by the {@link User}
      * with identifier {@code userId}, and if so, fetches it and eagerly loads the referenced food and
@@ -35,6 +47,12 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
     Optional<Entry> fetchFoodEntryByIdVerified(
             @Param("userId") Long userId,
             @Param("entryId") Long entryId
+    );
+
+    // TODO: Javadocs
+        @Query("SELECT TYPE(e) FROM Entry e WHERE e.id = :entryId")
+    Optional<Class<? extends Entry>> extractEntryType(
+                @Param("entryId") Long entryId
     );
 
     /**
