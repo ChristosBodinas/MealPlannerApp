@@ -22,7 +22,6 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
-import org.springframework.data.repository.query.Param;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,6 +102,18 @@ public class EntryRepositoryTests {
         entityManager.persist(entry);
 
         return entry;
+    }
+
+    private static Stream<Arguments> provideBounds() {
+            return Stream.of(
+                    Arguments.of(4, 8),             // both sides bounded
+                    Arguments.of(null, 8),          // only upper side bounded
+                    Arguments.of(4, null),          // only lower side bounded
+                    Arguments.of(null, null),       // neither side bounded
+                    Arguments.of(4, 4),             // edge case: minPosition = maxPosition
+                    Arguments.of(8, 4),             // edge case: minPosition > maxPosition
+                    Arguments.of(100, 200)          // edge case: both "sides" are out of range
+            );
     }
 
     // TESTS PROPER
@@ -305,23 +316,9 @@ public class EntryRepositoryTests {
     @DisplayName("shiftUpByDayAndCategory")
     class ShiftUpByDayAndCategory {
 
-        private List<FoodEntry> entries;
-
         private final int TEST_COUNT = 10;
         private final Category TEST_CATEGORY = Category.SNACK;
         private final Category EXCLUDED_CATEGORY = Category.UNSORTED;
-
-        private static Stream<Arguments> provideBounds() {
-            return Stream.of(
-                    Arguments.of(4, 8),             // both sides bounded
-                    Arguments.of(null, 8),          // only upper side bounded
-                    Arguments.of(4, null),          // only lower side bounded
-                    Arguments.of(null, null),       // neither side bounded
-                    Arguments.of(4, 4),             // edge case: minPosition = maxPosition
-                    Arguments.of(8, 4),             // edge case: minPosition > maxPosition
-                    Arguments.of(100, 200)          // edge case: both "sides" are out of range
-            );
-        }
 
         @BeforeEach
         void prepareTests() {
@@ -329,7 +326,7 @@ public class EntryRepositoryTests {
         }
 
         @ParameterizedTest
-        @MethodSource("provideBounds")
+        @MethodSource("EntryRepositoryTests#provideBounds")
         @DisplayName("Only increments the position of entries within range.")
         void onlyEntriesWithinBoundsShifted(Integer minPosition, Integer maxPosition) {
             // Arrange
@@ -422,6 +419,104 @@ public class EntryRepositoryTests {
     @Nested
     @DisplayName("shiftDownByDayAndCategory")
     class ShiftDownByDayAndCategory {
+
+        private final int TEST_COUNT = 10;
+        private final Category TEST_CATEGORY = Category.SNACK;
+        private final Category EXCLUDED_CATEGORY = Category.UNSORTED;
+
+        @BeforeEach
+        void prepareTests() {
+            prepareMyUser();
+        }
+
+        @ParameterizedTest
+        @MethodSource("EntryRepositoryTests#provideBounds")
+        @DisplayName("Only decrements the position of entries within range.")
+        void onlyEntriesWithinBoundsShifted(Integer minPosition, Integer maxPosition) {
+            // Arrange
+            List<FoodEntry> entries = new ArrayList<>(TEST_COUNT);
+
+            for (int i = 1; i <= TEST_COUNT; i++) {
+                FoodEntry entry = prepareFoodEntry(myUser, myDay);
+                entry.setCategory(TEST_CATEGORY);
+                entry.setPosition(i);
+                entries.add(entry);
+            }
+
+            flushAndClear();
+
+            // Act
+            int result = entryRepository.shiftDownByDayAndCategory(myDay.getId(), TEST_CATEGORY, minPosition, maxPosition);
+
+            // Assert
+            int expected = (int) entries.stream()
+                    .filter(e -> minPosition == null || e.getPosition() > minPosition)
+                    .filter(e -> maxPosition == null || e.getPosition() <= maxPosition)
+                    .count();
+            assertThat(result).isEqualTo(expected);
+
+            assertSoftly(softly -> {
+                List<Long> ids = entries.stream().map(Entry::getId).toList();
+                Map<Long, FoodEntry> fetchedEntries = entryRepository.findAllById(ids).stream()
+                        .map(e -> (FoodEntry) e)
+                        .collect(Collectors.toMap(FoodEntry::getId, Function.identity()));
+
+                for (FoodEntry entry : entries) {
+                    FoodEntry fetched = fetchedEntries.get(entry.getId());
+                    int initialPosition = entry.getPosition();
+                    if ((minPosition == null || initialPosition > minPosition) &&
+                            (maxPosition == null || initialPosition <= maxPosition)) {
+                        softly.assertThat(fetched.getPosition()).isEqualTo(initialPosition + 1);
+                    } else {
+                        softly.assertThat(fetched.getPosition()).isEqualTo(initialPosition);
+                    }
+                }
+            });
+        }
+
+        @Test
+        @DisplayName("Does not affect entries outside the given day.")
+        void otherDaysExcluded() {
+            // Arrange
+            Day excludedDay = defaultDayBuilder().plan(myPlan).position(2).build();
+            myPlan.getDays().add(excludedDay);
+            entityManager.persist(excludedDay);
+
+            FoodEntry entry = prepareFoodEntry(myUser, excludedDay);
+            entry.setPosition(5);
+
+            flushAndClear();
+
+            // Act
+            int result = entryRepository.shiftDownByDayAndCategory(myDay.getId(), TEST_CATEGORY, 3, 7);
+
+            // Assert
+            assertThat(result).isZero();
+
+            FoodEntry fetched = (FoodEntry) entryRepository.findById(entry.getId()).get();
+            assertThat(fetched.getPosition()).isEqualTo(entry.getPosition());
+
+        }
+
+        @Test
+        @DisplayName("Does not affect entries outside the given category.")
+        void otherCategoriesExcluded() {
+            // Arrange
+            FoodEntry entry = prepareFoodEntry(myUser, myDay);
+            entry.setCategory(EXCLUDED_CATEGORY);
+            entry.setPosition(5);
+
+            flushAndClear();
+
+            // Act
+            int result = entryRepository.shiftDownByDayAndCategory(myDay.getId(), TEST_CATEGORY, 3, 7);
+
+            // Assert
+            assertThat(result).isZero();
+
+            FoodEntry fetched = (FoodEntry) entryRepository.findById(entry.getId()).get();
+            assertThat(fetched.getPosition()).isEqualTo(entry.getPosition());
+        }
 
     }
 
