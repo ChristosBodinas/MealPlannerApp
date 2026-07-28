@@ -96,7 +96,7 @@ public abstract class Entry {
      * and position
      */
     public abstract Entry createDuplicate();
-    
+
     // TODO: Double check method name.
     public User getUser() {
         return day.getPlan().getUser();

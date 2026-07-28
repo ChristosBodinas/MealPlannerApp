@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
@@ -32,10 +31,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
-import static org.example.mealplannerapp.fixture.EntryTestFixtures.DEFAULT_CATEGORY;
 import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultFoodEntryBuilder;
 import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBuilder;
 import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
@@ -105,23 +104,64 @@ public class EntryRepositoryTests {
         return entry;
     }
 
-    private static Stream<Arguments> provideBounds() {
-            return Stream.of(
-                    Arguments.of(4, 8),             // both sides bounded
-                    Arguments.of(null, 8),          // only upper side bounded
-                    Arguments.of(4, null),          // only lower side bounded
-                    Arguments.of(null, null),       // neither side bounded
-                    Arguments.of(4, 4),             // edge case: minPosition = maxPosition
-                    Arguments.of(8, 4),             // edge case: minPosition > maxPosition
-                    Arguments.of(100, 200)          // edge case: both "sides" are out of range
-            );
-    }
-
     // TESTS PROPER
     @Nested
     @DisplayName("fetchByIdVerified")
     class FetchByIdVerified {
 
+        @BeforeEach
+        void prepareTests() {
+            prepareMyUser();
+        }
+
+        @Test
+        @DisplayName("Returns a FoodEntry if it exists and belongs to the given user.")
+        void foodEntryFetched() {
+            // Arrange
+            FoodEntry entry = prepareFoodEntry(myUser, myDay);
+            flushAndClear();
+
+            // Act
+            Optional<Entry> result = entryRepository.fetchByIdVerified(myUser.getId(), entry.getId());
+
+            // Assert
+            assertThat(result).isPresent();
+            Entry fetched = result.get();
+
+            assertThat(fetched).isInstanceOf(FoodEntry.class);
+            assertThat(fetched.getId()).isEqualTo(entry.getId());
+            assertThat(fetched.getUser().getId()).isEqualTo(entry.getUser().getId());
+        }
+
+        @Test
+        @DisplayName("Returns empty if the requested entry does not exist.")
+        void entryNotFound() {
+            // Arrange
+            flushAndClear();
+
+            // Act
+            Optional<Entry> result = entryRepository.fetchByIdVerified(myUser.getId(), 999L);
+
+            // Assert
+            assertThat(result).isEmpty();
+            assertThat(entryRepository.existsById(999L)).isFalse();
+        }
+
+        @Test
+        @DisplayName("Returns empty if the requested entry exists but belongs to a different user.")
+        void entryNotOwned() {
+            // Arrange
+            prepareOtherUser();
+            FoodEntry entry = prepareFoodEntry(otherUser, otherDay);
+            flushAndClear();
+
+            // Act
+            Optional<Entry> result = entryRepository.fetchByIdVerified(myUser.getId(), entry.getId());
+
+            // Assert
+            assertThat(result).isEmpty();
+            assertThat(entryRepository.existsById(entry.getId())).isTrue();
+        }
     }
 
     @Nested
@@ -189,8 +229,8 @@ public class EntryRepositoryTests {
     }
 
     @Nested
-    @DisplayName("extractEntryType")
-    class ExtractEntryType {
+    @DisplayName("extractTypeById")
+    class ExtractTypeById {
 
         @BeforeEach
         void prepareTests() {
@@ -206,7 +246,7 @@ public class EntryRepositoryTests {
             flushAndClear();
 
             // Act
-            Optional<Class<? extends Entry>> result = entryRepository.extractEntryType(entry.getId());
+            Optional<Class<? extends Entry>> result = entryRepository.extractTypeById(entry.getId());
 
             // Assert
             assertThat(result).isPresent();
@@ -221,7 +261,7 @@ public class EntryRepositoryTests {
             flushAndClear();
 
             // Act
-            Optional<Class<? extends Entry>> result = entryRepository.extractEntryType(999L);
+            Optional<Class<? extends Entry>> result = entryRepository.extractTypeById(999L);
 
             // Assert
             assertThat(result).isEmpty();
@@ -368,13 +408,25 @@ public class EntryRepositoryTests {
         private final Category TEST_CATEGORY = Category.SNACK;
         private final Category EXCLUDED_CATEGORY = Category.UNSORTED;
 
+        private static Stream<Arguments> provideBounds() {
+            return Stream.of(
+                    Arguments.of(4, 8),             // both sides bounded
+                    Arguments.of(null, 8),          // only upper side bounded
+                    Arguments.of(4, null),          // only lower side bounded
+                    Arguments.of(null, null),       // neither side bounded
+                    Arguments.of(4, 4),             // edge case: minPosition = maxPosition
+                    Arguments.of(8, 4),             // edge case: minPosition > maxPosition
+                    Arguments.of(100, 200)          // edge case: both "sides" are out of range
+            );
+        }
+
         @BeforeEach
         void prepareTests() {
             prepareMyUser();
         }
 
         @ParameterizedTest
-        @MethodSource("EntryRepositoryTests#provideBounds")
+        @MethodSource("provideBounds")
         @DisplayName("Only increments the position of entries within range.")
         void onlyEntriesWithinBoundsShifted(Integer minPosition, Integer maxPosition) {
             // Arrange
@@ -472,13 +524,25 @@ public class EntryRepositoryTests {
         private final Category TEST_CATEGORY = Category.SNACK;
         private final Category EXCLUDED_CATEGORY = Category.UNSORTED;
 
+        private static Stream<Arguments> provideBounds() {
+            return Stream.of(
+                    Arguments.of(4, 8),             // both sides bounded
+                    Arguments.of(null, 8),          // only upper side bounded
+                    Arguments.of(4, null),          // only lower side bounded
+                    Arguments.of(null, null),       // neither side bounded
+                    Arguments.of(4, 4),             // edge case: minPosition = maxPosition
+                    Arguments.of(8, 4),             // edge case: minPosition > maxPosition
+                    Arguments.of(100, 200)          // edge case: both "sides" are out of range
+            );
+        }
+
         @BeforeEach
         void prepareTests() {
             prepareMyUser();
         }
 
         @ParameterizedTest
-        @MethodSource("EntryRepositoryTests#provideBounds")
+        @MethodSource("provideBounds")
         @DisplayName("Only decrements the position of entries within range.")
         void onlyEntriesWithinBoundsShifted(Integer minPosition, Integer maxPosition) {
             // Arrange
@@ -514,7 +578,7 @@ public class EntryRepositoryTests {
                     int initialPosition = entry.getPosition();
                     if ((minPosition == null || initialPosition > minPosition) &&
                             (maxPosition == null || initialPosition <= maxPosition)) {
-                        softly.assertThat(fetched.getPosition()).isEqualTo(initialPosition + 1);
+                        softly.assertThat(fetched.getPosition()).isEqualTo(initialPosition - 1);
                     } else {
                         softly.assertThat(fetched.getPosition()).isEqualTo(initialPosition);
                     }

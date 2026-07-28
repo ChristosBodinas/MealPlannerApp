@@ -97,7 +97,7 @@ public class DayRepositoryTests {
             // Assert
             assertThat(result).isPresent();
             Day fetched = result.get();
-            
+
             assertThat(fetched.getId()).isEqualTo(day.getId());
             assertThat(fetched.getUser().getId()).isEqualTo(myUser.getId());
         }
@@ -187,7 +187,7 @@ public class DayRepositoryTests {
             assertThat(result).isFalse();
             assertThat(dayRepository.existsById(day.getId())).isTrue();
         }
-        
+
     }
 
 }

@@ -127,8 +127,8 @@ public class FoodRepositoryTests {
         }
 
     }
-    
-    
+
+
     @Nested
     @DisplayName("fetchShallowByUserAndText")
     class FetchShallowByUserAndText {
@@ -155,7 +155,7 @@ public class FoodRepositoryTests {
             flushAndClear();
 
             // Act
-            List<Food> results = foodRepository .fetchShallowByUserAndText(myUser.getId(), "bean");
+            List<Food> results = foodRepository.fetchShallowByUserAndText(myUser.getId(), "bean");
 
             // Assert
             assertThat(results).extracting(Food::getId).containsExactly(match.getId());

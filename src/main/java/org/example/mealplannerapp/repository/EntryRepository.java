@@ -17,17 +17,24 @@ import java.util.Optional;
 @Repository
 public interface EntryRepository extends JpaRepository<Entry, Long> {
 
-     // TODO: Javadocs
-        default Optional<Entry> fetchByIdVerified(Long userId, Long entryId) {
-                Class<? extends Entry> type = extractEntryType(entryId).orElse(null);
+    /**
+     * Verifies that the {@link Entry} with identifier {@code entryId} is owned by the {@link User}
+     * with identifier {@code userId}, and if so, fetches it and eagerly loads the referenced food
+     * and its associated units and prices.
+     * @param userId the identifier of the entry's owner
+     * @param entryId the identifier of the requested entry
+     * @return the requested entry and the full data of the entity it references, or empty
+     * if no such entry is owned by the given user
+     */
+    default Optional<Entry> fetchByIdVerified(Long userId, Long entryId) {
+        Class<? extends Entry> type = extractTypeById(entryId).orElse(null);
 
-                if (type == FoodEntry.class) {
-                        return fetchFoodEntryByIdVerified(userId, entryId);
-                } else {
-                        return Optional.empty();
-                }
+        if (type == FoodEntry.class) {
+            return fetchFoodEntryByIdVerified(userId, entryId);
+        } else {
+            return Optional.empty();
         }
-
+    }
 
     /**
      * Verifies that the {@link FoodEntry} with identifier {@code entryId} is owned by the {@link User}
@@ -49,10 +56,14 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
             @Param("entryId") Long entryId
     );
 
-    // TODO: Javadocs
-        @Query("SELECT TYPE(e) FROM Entry e WHERE e.id = :entryId")
-    Optional<Class<? extends Entry>> extractEntryType(
-                @Param("entryId") Long entryId
+    /**
+     * Finds the type of the {@link Entry} entity with identifier {@code entryId}.
+     * @param entryId the identifier of the requested entry
+     * @return the type of the requested entry, or empty if it does not exist
+     */
+    @Query("SELECT TYPE(e) FROM Entry e WHERE e.id = :entryId")
+    Optional<Class<? extends Entry>> extractTypeById(
+            @Param("entryId") Long entryId
     );
 
     /**
@@ -88,8 +99,9 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
      * Increases the position of all {@link Entry} entities in the {@link Day} with identifier
      * {@code dayId} and in the given {@code category} by 1, provided that their current position
      * is between {@code minPosition} (inclusive) and {@code maxPosition} (exclusive).
-     * @param dayId the identifier of the target day
-     * @param category the target category
+     *
+     * @param dayId       the identifier of the target day
+     * @param category    the target category
      * @param minPosition the inclusive minimum position that can be affected,
      *                    or {@code null} if there is no lower bound
      * @param maxPosition the exclusive maximum position that can be affected,
@@ -111,8 +123,9 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
      * Decreases the position of all {@link Entry} entities in the {@link Day} with identifier
      * {@code dayId} and in the given {@code category} by 1, provided that their current position
      * is between {@code minPosition} (exclusive) and {@code maxPosition} (inclusive).
-     * @param dayId the identifier of the target day
-     * @param category the target category
+     *
+     * @param dayId       the identifier of the target day
+     * @param category    the target category
      * @param minPosition the exclusive minimum position that can be affected,
      *                    or {@code null} if there is no lower bound
      * @param maxPosition the inclusive maximum position that can be affected,

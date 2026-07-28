@@ -10,6 +10,7 @@ import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.exception.ServiceValidationErrorException;
 import org.example.mealplannerapp.mapper.FoodMapper;
+import org.example.mealplannerapp.mapper.FoodMapperImpl;
 import org.example.mealplannerapp.repository.FoodRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +30,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.example.mealplannerapp.fixture.FoodTestFixtures.*;
+import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -36,26 +38,56 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class FoodServiceUnitTests {
 
-    // MOCKS AND INJECTION
+    // MOCKS
     @Mock
     private FoodRepository foodRepository;
-    @Mock
+
+    // VARIABLES
     private FoodMapper foodMapper;
-
-    @InjectMocks
     private FoodService foodService;
-
-    // UNIVERSAL VARIABLES
     private User user;
 
-    private enum DupeType {
-        UNITS,
-        PRICES
+    // CONSTANTS
+    private final Long USER_ID = 1L;
+    private final Long FOOD_ID = 99L;
+
+    @BeforeEach
+    void prepareALlTests() {
+        user = defaultUserBuilder().id(USER_ID).build();
+
+        foodMapper = new FoodMapperImpl();
+        foodService = new FoodService(foodRepository, foodMapper);
     }
 
-    private static final Long USER_ID = 1L;
-    private static final Long FOOD_ID = 99L;
+    // TESTS PROPER
+    @Nested
+    @DisplayName("createFood")
+    class CreateFood {
 
+        @Test
+        @DisplayName("Creates a new food and saves it to the database when the input data is valid.")
+        void foodCreated() {
+            // Arrange
+            FoodRequest request = defaultFoodRequestBuilder().build();
+            Food saved = defaultFoodBuilder().build();
+
+            // Act
+
+            // Assert
+
+        }
+
+        @Test
+        @DisplayName("Throws ServiceValidationErrorException when the input data contains duplicate unit or vendor names.")
+        void duplicateUnitsOrPrices() {
+
+        }
+
+    }
+    /*
+
+
+    // TESTS PROPER
     @Nested
     class createFood {
 
@@ -291,5 +323,6 @@ class FoodServiceUnitTests {
         }
 
     }
+     */
 
 }

@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MappingMismatchException.class)
     public ResponseEntity<String> handleMappingMismatch(
-        MappingMismatchException e
+            MappingMismatchException e
     ) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }

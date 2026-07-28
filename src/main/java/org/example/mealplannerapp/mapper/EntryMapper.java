@@ -11,7 +11,9 @@ import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.exception.MappingMismatchException;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", uses = {FoodMapper.class}, subclassExhaustiveStrategy = SubclassExhaustiveStrategy.RUNTIME_EXCEPTION)
+@Mapper(componentModel = "spring",
+        uses = {FoodMapper.class},
+        subclassExhaustiveStrategy = SubclassExhaustiveStrategy.RUNTIME_EXCEPTION)
 public interface EntryMapper {
 
     // CREATE FROM REQUEST
@@ -27,7 +29,7 @@ public interface EntryMapper {
         }
     }
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)    
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateFoodEntry(@MappingTarget FoodEntry entry, FoodEntryEditRequest request);
 
     // GENERATE RESPONSE

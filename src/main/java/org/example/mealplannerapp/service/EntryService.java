@@ -1,5 +1,6 @@
 package org.example.mealplannerapp.service;
 
+import lombok.AllArgsConstructor;
 import org.example.mealplannerapp.dto.entry.request.EntryDuplicateRequest;
 import org.example.mealplannerapp.dto.entry.request.EntryMoveRequest;
 import org.example.mealplannerapp.dto.entry.request.create.EntryCreateRequest;
@@ -7,18 +8,19 @@ import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateReques
 import org.example.mealplannerapp.dto.entry.request.edit.EntryEditRequest;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
 import org.example.mealplannerapp.entity.Day;
-import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.entity.Food;
+import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
+import org.example.mealplannerapp.exception.ServiceValidationErrorException;
 import org.example.mealplannerapp.mapper.EntryMapper;
+import org.example.mealplannerapp.projection.Placement;
+import org.example.mealplannerapp.repository.DayRepository;
 import org.example.mealplannerapp.repository.EntryRepository;
 import org.example.mealplannerapp.repository.FoodRepository;
-import org.example.mealplannerapp.repository.DayRepository;
 import org.springframework.stereotype.Service;
-
-import lombok.AllArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service that handles create, duplicate, edit, move, delete, and retrieve
@@ -28,6 +30,8 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class EntryService {
 
+    // TODO: Javadocs for all.
+
     private final EntryRepository entryRepository;
     private final DayRepository dayRepository;
     private final FoodRepository foodRepository;
@@ -36,7 +40,7 @@ public class EntryService {
     // TODO: Transactional or not?
     public EntryResponse createEntry(User user, Long dayId, EntryCreateRequest request) {
         Day day = dayRepository.fetchByIdVerified(user.getId(), dayId)  // 
-            .orElseThrow(() -> new ResourceNotFoundException("Requested day (id: " + dayId + ") not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Requested day (id: " + dayId + ") not found."));
 
         Entry entry = entryMapper.createFromRequest(request);
         entry.setDay(day);
@@ -47,7 +51,7 @@ public class EntryService {
         switch (request) {
             case FoodEntryCreateRequest f:
                 Food food = foodRepository.fetchByIdVerified(user.getId(), f.foodId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Requested food (id: " + f.foodId() + ") not found."));
+                        .orElseThrow(() -> new ResourceNotFoundException("Requested food (id: " + f.foodId() + ") not found."));
                 ((FoodEntry) entry).setFood(food);
                 break;
         }
@@ -58,91 +62,88 @@ public class EntryService {
         return entryMapper.generateResponse(saved);
     }
 
-
-
-
-/*
-
-    @Transactional
-    public void deleteEntry(User user, Long entryId) {
-        PositionData positionData = entryRepository.findPositionDataByIdVerified(user.getId(), entryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
-
-        // Check only exists to catch race conditions. Might remove later.
-        entryRepository.deleteByIdVerified(user.getId(), entryId);
-
-        entryRepository.shiftDownInDayAndCategory(
-                positionData.getDayId(), positionData.getCategory(), positionData.getPosition(), null
-        );
-    }
-
-    @Transactional
+    // TODO: Transactional or not?
     public EntryResponse duplicateEntry(User user, Long dayId, EntryDuplicateRequest request) {
-        Entry entry = entryRepository.findByIdVerified(user.getId(), request.entryId())
+        Entry entry = entryRepository.fetchByIdVerified(user.getId(), request.entryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + request.entryId() + ") not found."));
 
-        Day day = dayRepository.findByIdVerified(user.getId(), dayId)
-                .orElseThrow(() -> new ResourceNotFoundException("Requested day (id: " + dayId + ") not found."));
+        Day day = dayRepository.fetchByIdVerified(user.getId(), dayId)
+                .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + dayId + ") not found."));
 
         Entry copy = entry.createDuplicate();
         copy.setDay(day);
         copy.setCategory(request.category());
 
-        long count = entryRepository.countInDayAndCategory(dayId, request.category());
-        copy.setPosition(((int) count) + 1);
+        int count = entryRepository.countByDayAndCategory(dayId, request.category());
+        copy.setPosition(count + 1);
 
         Entry saved = entryRepository.save(copy);
         return entryMapper.generateResponse(saved);
     }
 
- 
     @Transactional
     public EntryResponse editEntry(User user, Long entryId, EntryEditRequest request) {
-        Entry entry = entryRepository.findByIdVerified(user.getId(), entryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id:" + entryId + ") not found."));
+        Entry entry = entryRepository.fetchByIdVerified(user.getId(), entryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
 
         entryMapper.updateFromRequest(entry, request);
-        entry.snapshotNutritionAndPriceInfo();  // Recalculate snapshot fields to account for the change.
+        entry.snapshotNutritionAndPriceInfo();
 
         return entryMapper.generateResponse(entry);
     }
 
-
     @Transactional
     public void moveEntry(User user, Long dayId, Long entryId, EntryMoveRequest request) {
-        Entry entry = entryRepository.findShallowByIdAndDayVerified(user.getId(), dayId, entryId)
+        Entry entry = entryRepository.fetchByIdVerified(user.getId(), entryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
 
+        if (!entry.getDay().getId().equals(dayId)) {
+            throw new ServiceValidationErrorException("Requested entry does not belong to the given day.");
+        }
+
         int sourcePosition = entry.getPosition();
-        int categoryCount = (int) entryRepository.countInDayAndCategory(dayId, request.category());
+        int categoryCount = entryRepository.countByDayAndCategory(dayId, request.category());
         int targetPosition;
 
         if (entry.getCategory() == request.category()) {
             targetPosition = Math.min(request.desiredPosition(), categoryCount);
 
             if (sourcePosition > targetPosition) {
-                entryRepository.shiftUpInDayAndCategory(dayId, request.category(), targetPosition, sourcePosition);
+                entryRepository.shiftUpByDayAndCategory(dayId, request.category(), targetPosition, sourcePosition);
             } else if (sourcePosition < targetPosition) {
-                entryRepository.shiftDownInDayAndCategory(dayId, request.category(), sourcePosition, targetPosition);
+                entryRepository.shiftDownByDayAndCategory(dayId, request.category(), sourcePosition, targetPosition);
             }
+
         } else {
             targetPosition = Math.min(request.desiredPosition(), categoryCount + 1);
 
-            entryRepository.shiftUpInDayAndCategory(dayId, request.category(), null, targetPosition);
-            entryRepository.shiftDownInDayAndCategory(dayId, entry.getCategory(), sourcePosition, null);
-
-            entry.setCategory(request.category());
+            entryRepository.shiftUpByDayAndCategory(dayId, request.category(), targetPosition, null);
+            entryRepository.shiftDownByDayAndCategory(dayId, request.category(), sourcePosition, null);
         }
 
-        entry.setPosition(targetPosition);
+        entry.setCategory(request.category());
+        entry.setPosition(request.desiredPosition());
+    }
+
+    @Transactional
+    public void deleteEntry(User user, Long entryId) {
+        Placement placement = entryRepository.extractPlacementByIdVerified(user.getId(), entryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
+
+        entryRepository.deleteByIdVerified(user.getId(), entryId);
+
+        entryRepository.shiftDownByDayAndCategory(
+                placement.getDayId(),
+                placement.getCategory(),
+                placement.getPosition(),
+                null);
     }
 
     public EntryResponse retrieveEntry(User user, Long entryId) {
-        Entry entry = entryRepository.findByIdVerified(user.getId(), entryId)
+        Entry entry = entryRepository.fetchByIdVerified(user.getId(), entryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
+
         return entryMapper.generateResponse(entry);
     }
-    }
-*/
-    
+
 }
