@@ -12,6 +12,6 @@ public record FoodEntryEditRequest(
         // TODO: Look into validation for these.
         String displayUnit,
 
-        String displayMerchant
+        String selectedVendor
 ) implements EntryEditRequest {
 }

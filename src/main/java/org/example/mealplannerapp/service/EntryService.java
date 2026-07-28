@@ -13,7 +13,7 @@ import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
-import org.example.mealplannerapp.exception.ServiceValidationErrorException;
+import org.example.mealplannerapp.exception.ServiceValidationException;
 import org.example.mealplannerapp.mapper.EntryMapper;
 import org.example.mealplannerapp.projection.Placement;
 import org.example.mealplannerapp.repository.DayRepository;
@@ -98,7 +98,7 @@ public class EntryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
 
         if (!entry.getDay().getId().equals(dayId)) {
-            throw new ServiceValidationErrorException("Requested entry does not belong to the given day.");
+            throw new ServiceValidationException("Requested entry does not belong to the given day.");
         }
 
         int sourcePosition = entry.getPosition();

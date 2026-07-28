@@ -1,15 +1,17 @@
 package org.example.mealplannerapp.service;
 
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.example.mealplannerapp.entity.User;
+import org.example.mealplannerapp.entity.Plan;
 
-@ExtendWith(MockitoExtension.class)
-public class EntryServiceUnitTests {
-}
+import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
-/*
-package org.example.mealplannerapp.service;
-
+import java.util.Optional;
 
 import org.example.mealplannerapp.constants.Category;
 import org.example.mealplannerapp.dto.entry.request.EntryDuplicateRequest;
@@ -17,14 +19,16 @@ import org.example.mealplannerapp.dto.entry.request.EntryMoveRequest;
 import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateRequest;
 import org.example.mealplannerapp.dto.entry.request.edit.FoodEntryEditRequest;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
-import org.example.mealplannerapp.dto.entry.response.FoodEntryResponse;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Food;
-import org.example.mealplannerapp.entity.User;
+import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
+import org.example.mealplannerapp.entity.entry.FoodEntry.FoodEntryBuilder;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
+import org.example.mealplannerapp.exception.ServiceValidationException;
 import org.example.mealplannerapp.mapper.EntryMapper;
-import org.example.mealplannerapp.projection.PositionData;
+import org.example.mealplannerapp.mapper.EntryMapperImpl;
+import org.example.mealplannerapp.projection.Placement;
 import org.example.mealplannerapp.repository.DayRepository;
 import org.example.mealplannerapp.repository.EntryRepository;
 import org.example.mealplannerapp.repository.FoodRepository;
@@ -33,43 +37,301 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.example.mealplannerapp.fixtures.EntryTestFixtures.*;
-import static org.example.mealplannerapp.fixtures.FoodTestFixtures.defaultFoodBuilder;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.example.mealplannerapp.fixture.UserTestFixtures.*;
+import static org.example.mealplannerapp.fixture.FoodTestFixtures.*;
+import static org.example.mealplannerapp.fixture.EntryTestFixtures.*;
+import static org.example.mealplannerapp.fixture.PlanTestFixtures.*;
+import static org.example.mealplannerapp.fixture.DayTestFixtures.*;
 
 @ExtendWith(MockitoExtension.class)
 public class EntryServiceUnitTests {
 
-    // MOCKS AND INJECTION
-    @Mock
-    private EntryRepository entryRepository;
-    @Mock
+    // MOCKS, SPIES, CAPTORS
+    @Mock private EntryRepository entryRepository;
+    @Mock private DayRepository dayRepository;
+    @Mock private FoodRepository foodRepository;
+    @Captor ArgumentCaptor<Entry> entryCaptor;
+
+    // VARIABLES
     private EntryMapper entryMapper;
-    @Mock
-    private DayRepository dayRepository;
-    @Mock
-    private FoodRepository foodRepository;
-
-    @InjectMocks
     private EntryService entryService;
+    private User myUser;
+    private Plan myPlan;
+    private Day myDay;
 
-    // UNIVERSAL VARIABLES
-    private User user;
-    private static final Long USER_ID = 1L;
-    private static final Long ENTRY_ID = 99L;
-    private static final Long FOOD_ID = 88L;
-    private static final Long DAY_ID = 77L;
+    // CONSTANTS
+    private final long USER_ID = 1L;
+    private final long FOOD_ID = 99L;
+    private final long ENTRY_ID = 88L;
+    private final long DAY_ID = 77L;
+    private final long PLAN_ID = 66L;
+
+    // HELPER METHODS
+    private FoodEntry prepareMyEntry() {
+        Food food = defaultFoodBuilder().id(FOOD_ID).user(myUser).build();
+        FoodEntry entry = defaultFoodEntryBuilder().id(ENTRY_ID).day(myDay).food(food).build();
+        return entry;
+    }
+
+    // BEFORE EACH
+    @BeforeEach
+    void prepareAllTests() {
+        myUser = defaultUserBuilder().id(USER_ID).build();
+        myPlan = defaultPlanBuilder().id(PLAN_ID).user(myUser).build();
+        myDay = defaultDayBuilder().id(DAY_ID).plan(myPlan).build();
+        myPlan.getDays().add(myDay);
+
+        entryMapper = new EntryMapperImpl();
+        entryService = new EntryService(entryRepository, dayRepository, foodRepository, entryMapper);
+    }
+
+    // TESTS PROPER
+    @Nested
+    @DisplayName("createEntry")
+    class CreateEntry {
+
+        FoodEntryCreateRequest request;
+
+        @BeforeEach
+        void prepareTests() {
+            request = defaultFoodEntryCreateRequestBuilder().foodId(FOOD_ID).build();
+        }
+
+        @Test
+        @DisplayName("Creates and saves a FoodEntry when given a valid dayId and valid input data.")
+        void foodEntryCreated() {
+            // TODO: Write test.
+        }
+
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the given day does not exist or belongs to a different user.")
+        void dayNotFound() {
+            // Arrange
+            when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.createEntry(myUser, DAY_ID, request))
+                .isInstanceOf(ResourceNotFoundException.class);
+            verifyNoInteractions(foodRepository, entryRepository);
+        }
+
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the referenced food does not exist or belongs to a different user.")
+        void foodNotFound() {
+            // Arrange
+            when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.of(myDay));
+            when(foodRepository.fetchByIdVerified(USER_ID, FOOD_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.createEntry(myUser, DAY_ID, request))
+                .isInstanceOf(ResourceNotFoundException.class);
+            verifyNoInteractions(entryRepository);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("duplicateEntry")
+    class DuplicateEntry {
+
+        EntryDuplicateRequest request;
+
+        @BeforeEach
+        void prepareTests() {
+            request = defaultEntryDuplicateRequestBuilder().entryId(ENTRY_ID).build();
+        }
+
+        @Test
+        @DisplayName("Creates and saves a duplicate of the requested entry when entryId and dayId are valid for the given user.")
+        void entryDuplicated() {
+            // TODO: Write test.
+        }
+
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the requested entry does not exist or belongs to a different user.")
+        void entryNotFound() {
+            // Arrange
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.duplicateEntry(myUser, DAY_ID, request))
+                .isInstanceOf(ResourceNotFoundException.class);
+            verify(entryRepository, never()).save(any(Entry.class));
+        }
+
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the requested day does not exist or belongs to a different user.")
+        void dayNotFound() {
+            // Arrange
+            FoodEntry entry = prepareMyEntry();
+
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(entry));
+            when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.duplicateEntry(myUser, DAY_ID, request))
+                .isInstanceOf(ResourceNotFoundException.class);
+            verify(entryRepository, never()).save(any(Entry.class));
+        }
+
+    }
+
+    @Nested
+    @DisplayName("editEntry")
+    class EditEntry {
+
+        @Test
+        @DisplayName("Updates the request entry when it exists and belongs to the given user.")
+        void entryEdited() {
+            // TODO: Write test.
+        }
+
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the requested entry does not exist or belongs to a different user.")
+        void entryNotFound() {
+            // Arrange
+            FoodEntryEditRequest request = new FoodEntryEditRequest(100.0, "cup", "Sklavenitis");
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.editEntry(myUser, ENTRY_ID, request))
+                .isInstanceOf(ResourceNotFoundException.class);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("moveEntry")
+    class MoveEntry {
+
+        void entryMovedUpInSameCategory() {
+
+        }
+
+        void entryMovedDownInSameCategory() {
+
+        }
+
+        void entryMovedToDifferentCategory() {
+
+        }
+
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the requested entry does not exist or belongs to a different user.")
+        void entryNotFound() {
+            // Arrange
+            EntryMoveRequest request = defaultEntryMoveRequestBuilder().build();
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.moveEntry(myUser, DAY_ID, ENTRY_ID, request))
+                .isInstanceOf(ResourceNotFoundException.class);
+            // TODO: Verify no more interactions?
+        }
+
+        @Test
+        @DisplayName("Throws a ServiceValidationException when the given entry does not belong to the given day.")
+        void entryNotInGivenDay() {
+            // Arrange
+            EntryMoveRequest request = defaultEntryMoveRequestBuilder().build();
+            FoodEntry entry = prepareMyEntry();
+            Day otherDay = defaultDayBuilder().id(DAY_ID + 1).plan(myPlan).build();
+            entry.setDay(otherDay);
+
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(entry));
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.moveEntry(myUser, DAY_ID, ENTRY_ID, request))
+                .isInstanceOf(ServiceValidationException.class);
+            // TODO: Verify no more interactions?
+        }
+
+    }
+
+    @Nested
+    @DisplayName("deleteEntry")
+    class DeleteEntry {
+
+        final Category TARGET_CATEGORY = Category.DINNER;
+        final int TARGET_POSITION = 5;
+
+        @Test
+        @DisplayName("Deletes the requested entry and closes the gap in its day/category when it exists and belongs to the given user.")
+        void entryDeleted() {
+            // Arrange
+            Placement placement = mock(Placement.class);
+
+            when(entryRepository.extractPlacementByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(placement));
+            when(placement.getDayId()).thenReturn(DAY_ID);
+            when(placement.getCategory()).thenReturn(TARGET_CATEGORY);
+            when(placement.getPosition()).thenReturn(TARGET_POSITION);
+
+            // Act
+            assertThatCode(() -> entryService.deleteEntry(myUser, ENTRY_ID))
+                .doesNotThrowAnyException();
+            
+            // Assert
+            verify(entryRepository).deleteByIdVerified(USER_ID, ENTRY_ID);
+            verify(entryRepository).shiftDownByDayAndCategory(DAY_ID, TARGET_CATEGORY, TARGET_POSITION, null);
+        }
+
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the requested entry does not exist or belongs to a different user.")
+        void entryNotFound() {
+            // Arrange
+            when(entryRepository.extractPlacementByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.deleteEntry(myUser, ENTRY_ID))
+                .isInstanceOf(ResourceNotFoundException.class);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("retrieveEntry")
+    class retrieveEntry {
+
+        @Test
+        @DisplayName("Returns the requested entry's full data when it exists and belongs to the given user.")
+        void entryRetrieved() {
+            // Arrange
+            FoodEntry entry = prepareMyEntry();
+
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(entry));
+
+            // Act
+            EntryResponse result = entryService.retrieveEntry(myUser, ENTRY_ID);
+
+            // Assert
+            assertThat(result).isEqualTo(entryMapper.generateResponse(entry));
+        }
+
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the requested entry does not exist or belongs to a different user.")
+        void entryNotFound() {
+            // Arrange
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.retrieveEntry(myUser, ENTRY_ID))
+                .isInstanceOf(ResourceNotFoundException.class);
+        }
+    }
+
+}
+
+/*
+@ExtendWith(MockitoExtension.class)
+public class EntryServiceUnitTests {
 
     @Nested
     class createEntry {
@@ -404,94 +666,4 @@ public class EntryServiceUnitTests {
         }
 
     }
-
-    @Nested
-    class deleteEntry {
-
-        private static final Category ENTRY_CATEGORY = Category.BREAKFAST;
-        private static final int ENTRY_POSITION = 3;
-
-        @BeforeEach
-        void prepareTests() {
-            user = mock(User.class);
-            when(user.getId()).thenReturn(USER_ID);
-        }
-
-        @Test
-        @DisplayName("Given a valid input, finds and deletes the requested Entry, then closes the gap left behind.")
-        void happyFlow() {
-            // Arrange
-            PositionData data = mock(PositionData.class);
-
-            when(entryRepository.findPositionDataByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(data));
-            when(data.getDayId()).thenReturn(DAY_ID);
-            when(data.getCategory()).thenReturn(ENTRY_CATEGORY);
-            when(data.getPosition()).thenReturn(ENTRY_POSITION);
-
-            // Act
-            entryService.deleteEntry(user, ENTRY_ID);
-
-            // Assert
-            verify(entryRepository).findPositionDataByIdVerified(USER_ID, ENTRY_ID);
-            verify(entryRepository).deleteByIdVerified(USER_ID, ENTRY_ID);
-            verify(entryRepository).shiftDownInDayAndCategory(DAY_ID, ENTRY_CATEGORY, ENTRY_POSITION, null);
-        }
-
-        @Test
-        @DisplayName("Given an invalid user or entryId, throws a ResourceNotFoundException.")
-        void entryNotFound() {
-            // Arrange
-            when(entryRepository.findPositionDataByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
-
-            // Act + Assert
-            assertThatThrownBy(() -> entryService.deleteEntry(user, ENTRY_ID))
-                    .isInstanceOf(ResourceNotFoundException.class);
-            verify(entryRepository).findPositionDataByIdVerified(USER_ID, ENTRY_ID);
-            verify(entryRepository, never()).deleteByIdVerified(any(), any());
-            verify(entryRepository, never()).shiftDownInDayAndCategory(any(), any(), any(), any());
-        }
-    }
-
-    @Nested
-    class retrieveEntry {
-
-        @BeforeEach
-        void prepareTests() {
-            user = mock(User.class);
-            when(user.getId()).thenReturn(USER_ID);
-        }
-
-        @Test
-        @DisplayName("Given a valid input, finds and returns the requested Entry.")
-        void happyFlow() {
-            // Arrange
-            FoodEntry entry = new FoodEntry();
-            FoodEntryResponse expected = defaultFoodEntryResponseBuilder().build();
-
-            when(entryRepository.findByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(entry));
-            when(entryMapper.generateResponse(entry)).thenReturn(expected);
-
-            // Act
-            EntryResponse response = entryService.retrieveEntry(user, ENTRY_ID);
-
-            // Assert
-            assertThat(response).isEqualTo(expected);
-        }
-
-        @Test
-        @DisplayName("Given an invalid user or entryId, throws a ResourceNotFoundException.")
-        void entryNotFound() {
-            // Arrange
-            when(entryRepository.findByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
-
-            // Act + Assert
-            assertThatThrownBy(() -> entryService.retrieveEntry(user, ENTRY_ID))
-                    .isInstanceOf(ResourceNotFoundException.class);
-            verify(entryRepository).findByIdVerified(USER_ID, ENTRY_ID);
-            verify(entryMapper, never()).generateResponse(any());
-        }
-
-    }
-
-}
  */

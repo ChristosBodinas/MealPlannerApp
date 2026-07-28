@@ -9,7 +9,7 @@ import org.example.mealplannerapp.dto.food.response.ListedFoodResponse;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
-import org.example.mealplannerapp.exception.ServiceValidationErrorException;
+import org.example.mealplannerapp.exception.ServiceValidationException;
 import org.example.mealplannerapp.mapper.FoodMapper;
 import org.example.mealplannerapp.repository.FoodRepository;
 import org.springframework.stereotype.Service;
@@ -35,12 +35,12 @@ public class FoodService {
 
         if (units != null
                 && units.size() > units.stream().map(UnitRequest::name).distinct().count()) {
-            throw new ServiceValidationErrorException("A food can't have duplicates of the same unit.");
+            throw new ServiceValidationException("A food can't have duplicates of the same unit.");
         }
 
         if (prices != null
                 && prices.size() > prices.stream().map(PriceRequest::vendor).distinct().count()) {
-            throw new ServiceValidationErrorException("A food can't have duplicates of the same merchant.");
+            throw new ServiceValidationException("A food can't have duplicates of the same merchant.");
         }
     }
 

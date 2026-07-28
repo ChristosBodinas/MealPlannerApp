@@ -15,6 +15,6 @@ public record FoodEntryResponse(
         FoodResponse foodResponse,
         double grams,
         String displayUnit,
-        String displayMerchant
+        String selectedVendor
 ) implements EntryResponse {
 }

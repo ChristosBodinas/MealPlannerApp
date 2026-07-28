@@ -8,7 +8,7 @@ import org.example.mealplannerapp.dto.food.response.ListedFoodResponse;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
-import org.example.mealplannerapp.exception.ServiceValidationErrorException;
+import org.example.mealplannerapp.exception.ServiceValidationException;
 import org.example.mealplannerapp.mapper.FoodMapper;
 import org.example.mealplannerapp.mapper.FoodMapperImpl;
 import org.example.mealplannerapp.repository.FoodRepository;
@@ -19,15 +19,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.example.mealplannerapp.fixture.FoodTestFixtures.*;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
@@ -38,22 +42,25 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class FoodServiceUnitTests {
 
-    // MOCKS
+    // MOCKS, SPIES, CAPTORS
     @Mock
     private FoodRepository foodRepository;
+    @Captor
+    private ArgumentCaptor<Food> foodCaptor;
 
     // VARIABLES
     private FoodMapper foodMapper;
     private FoodService foodService;
-    private User user;
+    private User myUser;
 
     // CONSTANTS
-    private final Long USER_ID = 1L;
-    private final Long FOOD_ID = 99L;
+    private final long USER_ID = 1L;
+    private final long FOOD_ID = 99L;
 
+    // BEFORE EACH
     @BeforeEach
     void prepareALlTests() {
-        user = defaultUserBuilder().id(USER_ID).build();
+        myUser = defaultUserBuilder().id(USER_ID).build();
 
         foodMapper = new FoodMapperImpl();
         foodService = new FoodService(foodRepository, foodMapper);
@@ -69,260 +76,174 @@ class FoodServiceUnitTests {
         void foodCreated() {
             // Arrange
             FoodRequest request = defaultFoodRequestBuilder().build();
-            Food saved = defaultFoodBuilder().build();
+            Food saved = defaultFoodBuilder().id(FOOD_ID).build();
+
+            when(foodRepository.save(any(Food.class))).thenReturn(saved);
 
             // Act
+            FoodResponse result = foodService.createFood(myUser, request);
 
             // Assert
+            assertThat(result).isEqualTo(foodMapper.generateResponse(saved));
 
+            verify(foodRepository).save(foodCaptor.capture());
+            assertThat(foodCaptor.getValue().getUser()).isEqualTo(myUser);
+            assertThat(foodCaptor.getValue())
+                .usingRecursiveComparison()
+                .ignoringFields("id", "user")
+                .isEqualTo(foodMapper.createFromRequest(request));
         }
 
         @Test
         @DisplayName("Throws ServiceValidationErrorException when the input data contains duplicate unit or vendor names.")
         void duplicateUnitsOrPrices() {
-
-        }
-
-    }
-    /*
-
-
-    // TESTS PROPER
-    @Nested
-    class createFood {
-
-        @BeforeEach
-        void prepareTests() {
-            user = new User();
-        }
-
-        @Test
-        @DisplayName("Given a valid input, creates and saves the new Food.")
-        void happyFlow() {
-            // Arrange
-            FoodRequest request = defaultFoodRequestBuilder().build();
-            Food created = new Food();
-            Food saved = new Food();
-            FoodResponse expected = defaultFoodResponseBuilder().build();
-
-            when(foodMapper.createFromRequest(request)).thenReturn(created);
-            when(foodRepository.save(created)).thenReturn(saved);
-            when(foodMapper.generateResponse(saved)).thenReturn(expected);
-
-            // Act
-            FoodResponse response = foodService.createFood(user, request);
-
-            // Assert
-            assertThat(response).isEqualTo(expected);
-        }
-
-        @ParameterizedTest
-        @DisplayName("Given duplicate units or merchants, throws an IllegalDuplicateValueException.")
-        @EnumSource(DupeType.class)
-        void duplicateUnitsOrPrices(DupeType dupeType) {
-            // Arrange
-            FoodRequest request;
-            if (dupeType == DupeType.UNITS) {
-                request = defaultFoodRequestBuilder().units(
-                        Set.of(new UnitRequest("tbsp", 15.0), new UnitRequest("tbsp", 27.0))
-                ).build();
-            } else {
-                request = defaultFoodRequestBuilder().prices(
-                        Set.of(new PriceRequest("Masoutis", 6.80, 200), new PriceRequest("Masoutis", 5.30, 500))
-                ).build();
-            }
-
-            // Act + Assert
-            assertThatThrownBy(() -> foodService.createFood(user, request))
-                    .isInstanceOf(ServiceValidationErrorException.class);
-            verify(foodMapper, never()).updateFromRequest(any(), any());
+            // TODO: Write this test.
         }
 
     }
 
     @Nested
-    class updateFood {
+    @DisplayName("updateFood")
+    class UpdateFood {
 
-        private FoodRequest request;
-
-        @BeforeEach
-        void prepareTests() {
-            user = mock(User.class);
-        }
+        private final double CALORIES_BEFORE = 120.0;
+        private final double CALORIES_AFTER = 153.0;
 
         @Test
-        @DisplayName("Given a valid input, finds and updates the requested Food.")
-        void happyFlow() {
+        @DisplayName("Updates the requested food when it exists and belongs to the given user and the input data is valid.")
+        void foodUpdated() {
             // Arrange
-            request = defaultFoodRequestBuilder().build();
-            Food found = new Food();
-            FoodResponse expected = defaultFoodResponseBuilder().build();
+            FoodRequest request = defaultFoodRequestBuilder().caloriesPer100g(CALORIES_AFTER).build();
+            Food found = defaultFoodBuilder().id(FOOD_ID).user(myUser).caloriesPer100g(CALORIES_BEFORE).build();
 
-            when(user.getId()).thenReturn(USER_ID);
             when(foodRepository.fetchByIdVerified(USER_ID, FOOD_ID)).thenReturn(Optional.of(found));
-            when(foodMapper.generateResponse(found)).thenReturn(expected);
 
             // Act
-            FoodResponse response = foodService.updateFood(user, FOOD_ID, request);
+            FoodResponse result = foodService.updateFood(myUser, FOOD_ID, request);
 
             // Assert
-            assertThat(response).isEqualTo(expected);
-            verify(foodMapper).updateFromRequest(found, request);
-        }
-
-        @ParameterizedTest
-        @DisplayName("Given duplicate units or merchants, throws an IllegalDuplicateValueException.")
-        @EnumSource(DupeType.class)
-        void duplicateUnitsOrPrices(DupeType dupeType) {
-            // Arrange
-            if (dupeType == DupeType.UNITS) {
-                request = defaultFoodRequestBuilder().units(
-                        Set.of(new UnitRequest("tbsp", 15.0), new UnitRequest("tbsp", 27.0))
-                ).build();
-            } else {
-                request = defaultFoodRequestBuilder().prices(
-                        Set.of(new PriceRequest("Masoutis", 6.80, 200), new PriceRequest("Masoutis", 5.30, 500))
-                ).build();
-            }
-
-            // Act + Assert
-            assertThatThrownBy(() -> foodService.updateFood(user, FOOD_ID, request))
-                    .isInstanceOf(ServiceValidationErrorException.class);
-            verify(foodRepository, never()).fetchByIdVerified(anyLong(), anyLong());
-            verify(foodMapper, never()).updateFromRequest(any(), any());
+            assertThat(result).isEqualTo(foodMapper.generateResponse(found));
+            assertThat(found.getCaloriesPer100g()).isEqualTo(CALORIES_AFTER);
         }
 
         @Test
-        @DisplayName("Given an invalid user or foodId, throws a ResourceNotFoundException.")
+        @DisplayName("Throws a ServiceValidationException when the input data contains duplicate unit or vendor names.")
+        void duplicateUnitsOrPrices() {
+            // TODO: Write this test.
+        }
+
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the requested entry does not exist or belongs to a different user.")
         void foodNotFound() {
             // Arrange
-            request = defaultFoodRequestBuilder().build();
-
-            when(user.getId()).thenReturn(USER_ID);
+            FoodRequest request = defaultFoodRequestBuilder().build();
+            
             when(foodRepository.fetchByIdVerified(USER_ID, FOOD_ID)).thenReturn(Optional.empty());
 
             // Act + Assert
-            assertThatThrownBy(() -> foodService.updateFood(user, FOOD_ID, request))
-                    .isInstanceOf(ResourceNotFoundException.class);
-            verify(foodMapper, never()).updateFromRequest(any(), any());
+            assertThatThrownBy(() -> foodService.updateFood(myUser, FOOD_ID, request))
+                .isInstanceOf(ResourceNotFoundException.class);
         }
 
     }
 
     @Nested
-    class deleteFood {
-
-        @BeforeEach
-        void prepareTests() {
-            user = mock(User.class);
-            when(user.getId()).thenReturn(USER_ID);
-        }
+    @DisplayName("deleteFood")
+    class DeleteFood {
 
         @Test
-        @DisplayName("Given a valid input, finds and deletes the requested Food.")
-        void happyFlow() {
+        @DisplayName("Deletes the requested food when it exists and belongs to the given user.")
+        void foodDeleted() {
             // Arrange
             when(foodRepository.deleteByIdVerified(USER_ID, FOOD_ID)).thenReturn(1);
 
             // Act
-            foodService.deleteFood(user, FOOD_ID);
+            assertThatCode(() -> foodService.deleteFood(myUser, FOOD_ID))
+                .doesNotThrowAnyException();
 
             // Assert
-            verify(foodRepository).deleteByIdVerified(USER_ID, FOOD_ID);
+            verify(foodRepository.deleteByIdVerified(USER_ID, FOOD_ID));
         }
 
         @Test
-        @DisplayName("Given an invalid user or foodId, throws a ResourceNotFoundException.")
+        @DisplayName("Throws a ResourceNotFoundException if the requested food does not exist or belongs to a different user.")
         void foodNotFound() {
             // Arrange
             when(foodRepository.deleteByIdVerified(USER_ID, FOOD_ID)).thenReturn(0);
 
             // Act + Assert
-            assertThatThrownBy(() -> foodService.deleteFood(user, FOOD_ID))
-                    .isInstanceOf(ResourceNotFoundException.class);
-            verify(foodRepository).deleteByIdVerified(USER_ID, FOOD_ID);
+            assertThatThrownBy(() -> foodService.deleteFood(myUser, FOOD_ID))
+                .isInstanceOf(ResourceNotFoundException.class);
+            verify(foodRepository.deleteByIdVerified(USER_ID, FOOD_ID));
         }
 
     }
 
     @Nested
-    class retrieveFood {
-
-        @BeforeEach
-        void prepareTests() {
-            user = mock(User.class);
-            when(user.getId()).thenReturn(USER_ID);
-        }
+    @DisplayName("retrieveFood")
+    class RetrieveFood {
 
         @Test
-        @DisplayName("Given a valid input, finds and returns the requested Food.")
-        void happyFlow() {
+        @DisplayName("Returns the requested food's full data when it exists and belongs to the given user.")
+        void foodRetrieved() {
             // Arrange
-            Food found = new Food();
-            FoodResponse expected = defaultFoodResponseBuilder().build();
+            Food found = defaultFoodBuilder().id(FOOD_ID).user(myUser).build();
 
             when(foodRepository.fetchByIdVerified(USER_ID, FOOD_ID)).thenReturn(Optional.of(found));
-            when(foodMapper.generateResponse(found)).thenReturn(expected);
 
             // Act
-            FoodResponse response = foodService.retrieveFood(user, FOOD_ID);
+            FoodResponse result = foodService.retrieveFood(myUser, FOOD_ID);
 
             // Assert
-            assertThat(response).isEqualTo(expected);
+            assertThat(result).isEqualTo(foodMapper.generateResponse(found));
         }
 
         @Test
-        @DisplayName("Given an invalid user or foodId, throws a ResourceNotFoundException.")
+        @DisplayName("Throws a ResourceNotFoundException when the requested food does not exist or belongs to a different user.")
         void foodNotFound() {
             // Arrange
             when(foodRepository.fetchByIdVerified(USER_ID, FOOD_ID)).thenReturn(Optional.empty());
 
             // Act + Assert
-            assertThatThrownBy(() -> foodService.retrieveFood(user, FOOD_ID))
-                    .isInstanceOf(ResourceNotFoundException.class);
-            verify(foodRepository).fetchByIdVerified(USER_ID, FOOD_ID);
-            verify(foodMapper, never()).generateResponse(any());
+            assertThatThrownBy(() -> foodService.retrieveFood(myUser, FOOD_ID))
+                .isInstanceOf(ResourceNotFoundException.class);
         }
-
     }
 
     @Nested
-    class searchFoods {
+    @DisplayName("searchFoods")
+    class SearchFoods {
 
-        List<Food> listedFoods() {
-            Food food1 = defaultFoodBuilder().name("Listed Food #1").build();
-            Food food2 = defaultFoodBuilder().name("Listed Food #2").build();
-            return List.of(food1, food2);
-        }
+        List<Food> listedFoods(int number) {
+            List<Food> foods = new ArrayList<>number);
 
-        List<ListedFoodResponse> listedResponses() {
-            ListedFoodResponse expected1 = defaultListedFoodResponseBuilder().name("Listed Food #1").build();
-            ListedFoodResponse expected2 = defaultListedFoodResponseBuilder().name("Listed Food #2").build();
-            return List.of(expected1, expected2);
+            for (int i = 1; i <= number; i++) {
+                Food food = defaultFoodBuilder()
+                    .id((long) i)
+                    .user(myUser)
+                    .name("Listed Food #" + i)
+                    .build();
+                foods.add(food);
+            }
+
+            return foods;
         }
 
         @Test
-        @DisplayName("Given a user and a search text, returns the core data of the repository results.")
-        void happyFlow() {
+        @DisplayName("Returns a list of matching foods when given a user and a search string.")
+        void foodsRetrieved() {
             // Arrange
-            user = mock(User.class);
-            when(user.getId()).thenReturn(USER_ID);
-            String search = "text";
-            List<Food> listedFoods = listedFoods();
-            List<ListedFoodResponse> expected = listedResponses();
+            List<Food> foods = listedFoods(5);
 
-            when(foodRepository.fetchShallowByUserAndText(USER_ID, search)).thenReturn(listedFoods);
-            when(foodMapper.generateListedResponse(listedFoods.get(0))).thenReturn(expected.get(0));
-            when(foodMapper.generateListedResponse(listedFoods.get(1))).thenReturn(expected.get(1));
+            when(foodRepository.fetchShallowByUserAndText(USER_ID, "text"));
 
             // Act
-            List<ListedFoodResponse> response = foodService.searchFoods(user, search);
+            List<ListedFoodResponse> results = foodService.searchFoods(myUser, "text");
 
             // Assert
-            assertThat(response).isEqualTo(expected);
+            assertThat(results).isEqualTo(foods.stream().map(foodMapper:generateListedResponse).toList());
         }
 
     }
-     */
 
 }
