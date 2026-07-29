@@ -32,13 +32,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
 import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultFoodEntryBuilder;
 import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBuilder;
 import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 @Slf4j
 @DataJpaTest(properties = {
@@ -102,6 +102,18 @@ public class EntryRepositoryTests {
         entityManager.persist(entry);
 
         return entry;
+    }
+
+    private static Stream<Arguments> provideBounds() {
+        return Stream.of(
+                argumentSet("Both sides bounded", 4, 8),
+                argumentSet("Only upper side bounded",null, 8),
+                argumentSet("Only lower side bounded", 4, null),
+                argumentSet("Neither side bounded",null, null),
+                argumentSet("Upper bound = Lower bound", 4, 4),
+                argumentSet("Upper bound < Lower bound", 8, 4),
+                argumentSet("Both bounds out of range", 100, 200)
+        );
     }
 
     // TESTS PROPER
@@ -408,25 +420,13 @@ public class EntryRepositoryTests {
         private final Category TEST_CATEGORY = Category.SNACK;
         private final Category EXCLUDED_CATEGORY = Category.UNSORTED;
 
-        private static Stream<Arguments> provideBounds() {
-            return Stream.of(
-                    Arguments.of(4, 8),             // both sides bounded
-                    Arguments.of(null, 8),          // only upper side bounded
-                    Arguments.of(4, null),          // only lower side bounded
-                    Arguments.of(null, null),       // neither side bounded
-                    Arguments.of(4, 4),             // edge case: minPosition = maxPosition
-                    Arguments.of(8, 4),             // edge case: minPosition > maxPosition
-                    Arguments.of(100, 200)          // edge case: both "sides" are out of range
-            );
-        }
-
         @BeforeEach
         void prepareTests() {
             prepareMyUser();
         }
 
         @ParameterizedTest
-        @MethodSource("provideBounds")
+        @MethodSource("org.example.mealplannerapp.repository.EntryRepositoryTests#provideBounds")
         @DisplayName("Only increments the position of entries within range.")
         void onlyEntriesWithinBoundsShifted(Integer minPosition, Integer maxPosition) {
             // Arrange
@@ -524,25 +524,13 @@ public class EntryRepositoryTests {
         private final Category TEST_CATEGORY = Category.SNACK;
         private final Category EXCLUDED_CATEGORY = Category.UNSORTED;
 
-        private static Stream<Arguments> provideBounds() {
-            return Stream.of(
-                    Arguments.of(4, 8),             // both sides bounded
-                    Arguments.of(null, 8),          // only upper side bounded
-                    Arguments.of(4, null),          // only lower side bounded
-                    Arguments.of(null, null),       // neither side bounded
-                    Arguments.of(4, 4),             // edge case: minPosition = maxPosition
-                    Arguments.of(8, 4),             // edge case: minPosition > maxPosition
-                    Arguments.of(100, 200)          // edge case: both "sides" are out of range
-            );
-        }
-
         @BeforeEach
         void prepareTests() {
             prepareMyUser();
         }
 
         @ParameterizedTest
-        @MethodSource("provideBounds")
+        @MethodSource("org.example.mealplannerapp.repository.EntryRepositoryTests#provideBounds")
         @DisplayName("Only decrements the position of entries within range.")
         void onlyEntriesWithinBoundsShifted(Integer minPosition, Integer maxPosition) {
             // Arrange

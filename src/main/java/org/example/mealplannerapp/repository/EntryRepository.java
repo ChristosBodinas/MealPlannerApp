@@ -21,7 +21,8 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
      * Verifies that the {@link Entry} with identifier {@code entryId} is owned by the {@link User}
      * with identifier {@code userId}, and if so, fetches it and eagerly loads the referenced food
      * and its associated units and prices.
-     * @param userId the identifier of the entry's owner
+     *
+     * @param userId  the identifier of the entry's owner
      * @param entryId the identifier of the requested entry
      * @return the requested entry and the full data of the entity it references, or empty
      * if no such entry is owned by the given user
@@ -58,6 +59,7 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
 
     /**
      * Finds the type of the {@link Entry} entity with identifier {@code entryId}.
+     *
      * @param entryId the identifier of the requested entry
      * @return the type of the requested entry, or empty if it does not exist
      */

@@ -3,7 +3,6 @@ package org.example.mealplannerapp.controller;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.apache.coyote.Response;
 import org.example.mealplannerapp.dto.entry.request.EntryDuplicateRequest;
 import org.example.mealplannerapp.dto.entry.request.EntryMoveRequest;
 import org.example.mealplannerapp.dto.entry.request.create.EntryCreateRequest;

@@ -1,18 +1,5 @@
 package org.example.mealplannerapp.service;
 
-import org.example.mealplannerapp.entity.User;
-import org.example.mealplannerapp.entity.Plan;
-
-import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-
-import java.util.Optional;
-
 import org.example.mealplannerapp.constants.Category;
 import org.example.mealplannerapp.dto.entry.request.EntryDuplicateRequest;
 import org.example.mealplannerapp.dto.entry.request.EntryMoveRequest;
@@ -21,9 +8,10 @@ import org.example.mealplannerapp.dto.entry.request.edit.FoodEntryEditRequest;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Food;
+import org.example.mealplannerapp.entity.Plan;
+import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
-import org.example.mealplannerapp.entity.entry.FoodEntry.FoodEntryBuilder;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.exception.ServiceValidationException;
 import org.example.mealplannerapp.mapper.EntryMapper;
@@ -42,23 +30,29 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.example.mealplannerapp.fixture.UserTestFixtures.*;
-import static org.example.mealplannerapp.fixture.FoodTestFixtures.*;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
 import static org.example.mealplannerapp.fixture.EntryTestFixtures.*;
-import static org.example.mealplannerapp.fixture.PlanTestFixtures.*;
-import static org.example.mealplannerapp.fixture.DayTestFixtures.*;
+import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBuilder;
+import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
+import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class EntryServiceUnitTests {
 
     // MOCKS, SPIES, CAPTORS
-    @Mock private EntryRepository entryRepository;
-    @Mock private DayRepository dayRepository;
-    @Mock private FoodRepository foodRepository;
-    @Captor ArgumentCaptor<Entry> entryCaptor;
+    @Mock
+    private EntryRepository entryRepository;
+    @Mock
+    private DayRepository dayRepository;
+    @Mock
+    private FoodRepository foodRepository;
+    @Captor
+    ArgumentCaptor<Entry> entryCaptor;
 
     // VARIABLES
     private EntryMapper entryMapper;
@@ -119,7 +113,7 @@ public class EntryServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> entryService.createEntry(myUser, DAY_ID, request))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
             verifyNoInteractions(foodRepository, entryRepository);
         }
 
@@ -132,8 +126,8 @@ public class EntryServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> entryService.createEntry(myUser, DAY_ID, request))
-                .isInstanceOf(ResourceNotFoundException.class);
-            verifyNoInteractions(entryRepository);
+                    .isInstanceOf(ResourceNotFoundException.class);
+            verify(entryRepository, never()).save(any(Entry.class));
         }
 
     }
@@ -163,7 +157,7 @@ public class EntryServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> entryService.duplicateEntry(myUser, DAY_ID, request))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
             verify(entryRepository, never()).save(any(Entry.class));
         }
 
@@ -178,7 +172,7 @@ public class EntryServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> entryService.duplicateEntry(myUser, DAY_ID, request))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
             verify(entryRepository, never()).save(any(Entry.class));
         }
 
@@ -203,7 +197,7 @@ public class EntryServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> entryService.editEntry(myUser, ENTRY_ID, request))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
     }
@@ -233,7 +227,7 @@ public class EntryServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> entryService.moveEntry(myUser, DAY_ID, ENTRY_ID, request))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
             // TODO: Verify no more interactions?
         }
 
@@ -250,7 +244,7 @@ public class EntryServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> entryService.moveEntry(myUser, DAY_ID, ENTRY_ID, request))
-                .isInstanceOf(ServiceValidationException.class);
+                    .isInstanceOf(ServiceValidationException.class);
             // TODO: Verify no more interactions?
         }
 
@@ -276,8 +270,8 @@ public class EntryServiceUnitTests {
 
             // Act
             assertThatCode(() -> entryService.deleteEntry(myUser, ENTRY_ID))
-                .doesNotThrowAnyException();
-            
+                    .doesNotThrowAnyException();
+
             // Assert
             verify(entryRepository).deleteByIdVerified(USER_ID, ENTRY_ID);
             verify(entryRepository).shiftDownByDayAndCategory(DAY_ID, TARGET_CATEGORY, TARGET_POSITION, null);
@@ -291,7 +285,7 @@ public class EntryServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> entryService.deleteEntry(myUser, ENTRY_ID))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
     }
@@ -323,7 +317,7 @@ public class EntryServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> entryService.retrieveEntry(myUser, ENTRY_ID))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
     }
 

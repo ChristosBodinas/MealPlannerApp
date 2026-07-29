@@ -18,25 +18,22 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.example.mealplannerapp.fixture.FoodTestFixtures.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBuilder;
+import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodRequestBuilder;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,6 +53,25 @@ class FoodServiceUnitTests {
     // CONSTANTS
     private final long USER_ID = 1L;
     private final long FOOD_ID = 99L;
+
+    // HELPER METHODS
+    private static Stream<Arguments> provideDuplicateInputs() {
+
+        FoodRequest duplicateUnits = defaultFoodRequestBuilder().units(new HashSet<>(Set.of(
+                new UnitRequest("tbsp", 15.0),
+                new UnitRequest("tbsp", 17.0))))
+                .build();
+
+        FoodRequest duplicateVendors = defaultFoodRequestBuilder().prices(new HashSet<>(Set.of(
+                new PriceRequest("Masoutis", 6.80, 200),
+                new PriceRequest("Masoutis", 8.60, 240))))
+                .build();
+
+        return Stream.of(
+                argumentSet("Duplicate Unit Names", duplicateUnits),
+                argumentSet("Duplicate Vendor Names", duplicateVendors)
+        );
+    }
 
     // BEFORE EACH
     @BeforeEach
@@ -89,15 +105,19 @@ class FoodServiceUnitTests {
             verify(foodRepository).save(foodCaptor.capture());
             assertThat(foodCaptor.getValue().getUser()).isEqualTo(myUser);
             assertThat(foodCaptor.getValue())
-                .usingRecursiveComparison()
-                .ignoringFields("id", "user")
-                .isEqualTo(foodMapper.createFromRequest(request));
+                    .usingRecursiveComparison()
+                    .ignoringFields("id", "user")
+                    .isEqualTo(foodMapper.createFromRequest(request));
         }
 
-        @Test
+        @ParameterizedTest
         @DisplayName("Throws ServiceValidationErrorException when the input data contains duplicate unit or vendor names.")
-        void duplicateUnitsOrPrices() {
-            // TODO: Write this test.
+        @MethodSource("org.example.mealplannerapp.service.FoodServiceUnitTests#provideDuplicateInputs")
+        void duplicateUnitsOrPrices(FoodRequest request) {
+            // Act + Assert
+            assertThatThrownBy(() -> foodService.createFood(myUser, request))
+                    .isInstanceOf(ServiceValidationException.class);
+            verifyNoInteractions(foodRepository);
         }
 
     }
@@ -126,10 +146,17 @@ class FoodServiceUnitTests {
             assertThat(found.getCaloriesPer100g()).isEqualTo(CALORIES_AFTER);
         }
 
-        @Test
+        @ParameterizedTest
         @DisplayName("Throws a ServiceValidationException when the input data contains duplicate unit or vendor names.")
-        void duplicateUnitsOrPrices() {
-            // TODO: Write this test.
+        @MethodSource("org.example.mealplannerapp.service.FoodServiceUnitTests#provideDuplicateInputs")
+        void duplicateUnitsOrPrices(FoodRequest request) {
+            // Arrange
+            FoodMapper spyMapper = spy(foodMapper);
+
+            // Act + Assert
+            assertThatThrownBy(() -> foodService.updateFood(myUser, FOOD_ID, request))
+                    .isInstanceOf(ServiceValidationException.class);
+            verifyNoInteractions(spyMapper);
         }
 
         @Test
@@ -137,12 +164,12 @@ class FoodServiceUnitTests {
         void foodNotFound() {
             // Arrange
             FoodRequest request = defaultFoodRequestBuilder().build();
-            
+
             when(foodRepository.fetchByIdVerified(USER_ID, FOOD_ID)).thenReturn(Optional.empty());
 
             // Act + Assert
             assertThatThrownBy(() -> foodService.updateFood(myUser, FOOD_ID, request))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
     }
@@ -159,10 +186,10 @@ class FoodServiceUnitTests {
 
             // Act
             assertThatCode(() -> foodService.deleteFood(myUser, FOOD_ID))
-                .doesNotThrowAnyException();
+                    .doesNotThrowAnyException();
 
             // Assert
-            verify(foodRepository.deleteByIdVerified(USER_ID, FOOD_ID));
+            verify(foodRepository).deleteByIdVerified(USER_ID, FOOD_ID);
         }
 
         @Test
@@ -173,8 +200,8 @@ class FoodServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> foodService.deleteFood(myUser, FOOD_ID))
-                .isInstanceOf(ResourceNotFoundException.class);
-            verify(foodRepository.deleteByIdVerified(USER_ID, FOOD_ID));
+                    .isInstanceOf(ResourceNotFoundException.class);
+            verify(foodRepository).deleteByIdVerified(USER_ID, FOOD_ID);
         }
 
     }
@@ -206,7 +233,7 @@ class FoodServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> foodService.retrieveFood(myUser, FOOD_ID))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
     }
 
@@ -215,14 +242,14 @@ class FoodServiceUnitTests {
     class SearchFoods {
 
         List<Food> listedFoods(int number) {
-            List<Food> foods = new ArrayList<>number);
+            List<Food> foods = new ArrayList<>(number);
 
             for (int i = 1; i <= number; i++) {
                 Food food = defaultFoodBuilder()
-                    .id((long) i)
-                    .user(myUser)
-                    .name("Listed Food #" + i)
-                    .build();
+                        .id((long) i)
+                        .user(myUser)
+                        .name("Listed Food #" + i)
+                        .build();
                 foods.add(food);
             }
 
@@ -235,13 +262,13 @@ class FoodServiceUnitTests {
             // Arrange
             List<Food> foods = listedFoods(5);
 
-            when(foodRepository.fetchShallowByUserAndText(USER_ID, "text"));
+            when(foodRepository.fetchShallowByUserAndText(USER_ID, "text")).thenReturn(foods);
 
             // Act
             List<ListedFoodResponse> results = foodService.searchFoods(myUser, "text");
 
             // Assert
-            assertThat(results).isEqualTo(foods.stream().map(foodMapper:generateListedResponse).toList());
+            assertThat(results).isEqualTo(foods.stream().map(foodMapper::generateListedResponse).toList());
         }
 
     }

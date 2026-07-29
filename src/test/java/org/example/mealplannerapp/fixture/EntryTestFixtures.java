@@ -59,20 +59,22 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link EntryMoveRequest} DTOs.
+     *
      * @return an EntryMoveRequest builder with both fields filled out
      */
     public static EntryMoveRequest.EntryMoveRequestBuilder defaultEntryMoveRequestBuilder() {
         return EntryMoveRequest.builder()
-            .category(DEFAULT_CATEGORY)
-            .desiredPosition(DEFAULT_POSITION);
+                .category(DEFAULT_CATEGORY)
+                .desiredPosition(DEFAULT_POSITION);
     }
 
     /**
      * Method for building {@link EntryDuplicateRequest} DTOs.
+     *
      * @return an EntryDuplicateRequest builder with {@code category} filled out and {@code entryId} unset
      */
     public static EntryDuplicateRequest.EntryDuplicateRequestBuilder defaultEntryDuplicateRequestBuilder() {
         return EntryDuplicateRequest.builder()
-            .category(DEFAULT_CATEGORY);
+                .category(DEFAULT_CATEGORY);
     }
 }

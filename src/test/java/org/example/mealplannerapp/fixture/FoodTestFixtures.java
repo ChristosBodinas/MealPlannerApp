@@ -11,6 +11,7 @@ import org.example.mealplannerapp.embeddable.FoodPrice;
 import org.example.mealplannerapp.embeddable.FoodUnit;
 import org.example.mealplannerapp.entity.Food;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class FoodTestFixtures {
@@ -39,12 +40,12 @@ public class FoodTestFixtures {
                 .fatPer100g(DEFAULT_FAT_PER_100G)
                 .fiberPer100g(DEFAULT_FIBER_PER_100G)
                 .edibleRatio(DEFAULT_EDIBLE_RATIO)
-                .units(Set.of(
+                .units(new HashSet<>(Set.of(
                         new FoodUnit("tbsp", 15.0),
-                        new FoodUnit("cup", 235.0)))
-                .prices(Set.of(
+                        new FoodUnit("cup", 235.0))))
+                .prices(new HashSet<>(Set.of(
                         new FoodPrice("Masoutis", 6.80, 200),
-                        new FoodPrice("MyMarket", 5.70, 175)));
+                        new FoodPrice("MyMarket", 5.70, 175))));
     }
 
     /**
@@ -62,12 +63,12 @@ public class FoodTestFixtures {
                 .fatPer100g(DEFAULT_FAT_PER_100G)
                 .fiberPer100g(DEFAULT_FIBER_PER_100G)
                 .edibleRatio(DEFAULT_EDIBLE_RATIO)
-                .units(Set.of(
+                .units(new HashSet<>(Set.of(
                         new UnitRequest("tbsp", 15.0),
-                        new UnitRequest("cup", 235.0)))
-                .prices(Set.of(
+                        new UnitRequest("cup", 235.0))))
+                .prices(new HashSet<>(Set.of(
                         new PriceRequest("Masoutis", 6.80, 200),
-                        new PriceRequest("MyMarket", 5.70, 175)));
+                        new PriceRequest("MyMarket", 5.70, 175))));
     }
 
     /**
@@ -85,12 +86,12 @@ public class FoodTestFixtures {
                 .fatPer100g(DEFAULT_FAT_PER_100G)
                 .fiberPer100g(DEFAULT_FIBER_PER_100G)
                 .edibleRatio(DEFAULT_EDIBLE_RATIO)
-                .units(Set.of(
+                .units(new HashSet<>(Set.of(
                         new UnitResponse("tbsp", 15.0),
-                        new UnitResponse("cup", 235.0)))
-                .prices(Set.of(
+                        new UnitResponse("cup", 235.0))))
+                .prices(new HashSet<>(Set.of(
                         new PriceResponse("Masoutis", 6.80, 200),
-                        new PriceResponse("MyMarket", 5.70, 175)));
+                        new PriceResponse("MyMarket", 5.70, 175))));
     }
 
     /**

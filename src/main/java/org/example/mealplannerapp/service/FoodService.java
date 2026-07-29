@@ -51,7 +51,7 @@ public class FoodService {
      * @param user    the user making the request
      * @param request the submitted food data
      * @return a response containing the new food's full data (units and prices included)
-     * @throws ServiceValidationErrorException if the submitted data contains duplicate unit or vendor names
+     * @throws ServiceValidationException if the submitted data contains duplicate unit or vendor names
      */
     public FoodResponse createFood(User user, FoodRequest request) {
         verifyUniqueUnitsAndPrices(request);
@@ -71,8 +71,8 @@ public class FoodService {
      * @param foodId  the identifier of the food to be updated
      * @param request the submitted food data
      * @return a response containing the updated food's full data (units and prices included)
-     * @throws ResourceNotFoundException       if the food does not exist or belongs to another user
-     * @throws ServiceValidationErrorException if the submitted data contains duplicate unit or vendor names
+     * @throws ResourceNotFoundException  if the food does not exist or belongs to another user
+     * @throws ServiceValidationException if the submitted data contains duplicate unit or vendor names
      */
     @Transactional
     public FoodResponse updateFood(User user, Long foodId, FoodRequest request) {
