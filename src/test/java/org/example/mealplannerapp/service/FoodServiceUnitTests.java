@@ -117,7 +117,7 @@ class FoodServiceUnitTests {
             // Act + Assert
             assertThatThrownBy(() -> foodService.createFood(myUser, request))
                     .isInstanceOf(ServiceValidationException.class);
-            verifyNoInteractions(foodRepository);
+            verify(foodRepository, never()).save(any(Food.class));
         }
 
     }

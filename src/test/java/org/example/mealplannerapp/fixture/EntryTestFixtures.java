@@ -4,6 +4,7 @@ import org.example.mealplannerapp.constants.Category;
 import org.example.mealplannerapp.dto.entry.request.EntryDuplicateRequest;
 import org.example.mealplannerapp.dto.entry.request.EntryMoveRequest;
 import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateRequest;
+import org.example.mealplannerapp.dto.entry.request.edit.FoodEntryEditRequest;
 import org.example.mealplannerapp.dto.entry.response.FoodEntryResponse;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 
@@ -44,17 +45,14 @@ public class EntryTestFixtures {
     }
 
     /**
-     * Method for building {@link FoodEntryResponse} DTOs.
-     *
-     * @return a FoodEntryResponse builder with all fields except {@code id} and {@code foodResponse} filled out
+     * Method for building {@link FoodEntryEditRequest} DTOs.
+     * @return a FoodEntryEditRequest with all fields filled out
      */
-    public static FoodEntryResponse.FoodEntryResponseBuilder defaultFoodEntryResponseBuilder() {
-        return FoodEntryResponse.builder()
-                .category(DEFAULT_CATEGORY)
-                .position(DEFAULT_POSITION)
-                .grams(DEFAULT_GRAMS)
-                .displayUnit(DEFAULT_DISPLAY_UNIT)
-                .selectedVendor(DEFAULT_SELECTED_VENDOR);
+    public static FoodEntryEditRequest.FoodEntryEditRequestBuilder defaultFoodEntryEditRequestBuilder() {
+        return FoodEntryEditRequest.builder()
+            .grams(DEFAULT_GRAMS)
+            .displayUnit(DEFAULT_DISPLAY_UNIT)
+            .selectedVendor(DEFAULT_SELECTED_VENDOR);
     }
 
     /**
@@ -77,4 +75,19 @@ public class EntryTestFixtures {
         return EntryDuplicateRequest.builder()
                 .category(DEFAULT_CATEGORY);
     }
+
+    /**
+     * Method for building {@link FoodEntryResponse} DTOs.
+     *
+     * @return a FoodEntryResponse builder with all fields except {@code id} and {@code foodResponse} filled out
+     */
+    public static FoodEntryResponse.FoodEntryResponseBuilder defaultFoodEntryResponseBuilder() {
+        return FoodEntryResponse.builder()
+                .category(DEFAULT_CATEGORY)
+                .position(DEFAULT_POSITION)
+                .grams(DEFAULT_GRAMS)
+                .displayUnit(DEFAULT_DISPLAY_UNIT)
+                .selectedVendor(DEFAULT_SELECTED_VENDOR);
+    }
+
 }

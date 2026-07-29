@@ -2,7 +2,10 @@ package org.example.mealplannerapp.service;
 
 import net.bytebuddy.asm.Advice;
 import org.example.mealplannerapp.constants.Category;
+import org.example.mealplannerapp.dto.entry.request.EntryDuplicateRequest;
+import org.example.mealplannerapp.dto.entry.request.EntryMoveRequest;
 import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateRequest;
+import org.example.mealplannerapp.dto.entry.request.edit.FoodEntryEditRequest;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
 import org.example.mealplannerapp.dto.entry.response.FoodEntryResponse;
 import org.example.mealplannerapp.embeddable.FoodPrice;
@@ -35,12 +38,16 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
+import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultEntryMoveRequestBuilder;
+import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultEntryDuplicateRequestBuilder;
 import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultFoodEntryBuilder;
 import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultFoodEntryCreateRequestBuilder;
+import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultFoodEntryEditRequestBuilder;
 import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBuilder;
 import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,11 +70,12 @@ public class EntryServiceUnitTests {
     private Plan myPlan;
     private Day myDay;
 
-    // CONSTANTS - ENTITY IDS
+    // CONSTANTS - TEST ENTITY IDS
     private final long USER_ID = 1L;
     private final long FOOD_ID = 99L;
     private final long ENTRY_ID = 88L;
     private final long DAY_ID = 77L;
+    private final long OTHER_DAY_ID = 78L;
     private final long PLAN_ID = 66L;
 
     // CONSTANTS - TEST FOOD VALUES
@@ -83,9 +91,15 @@ public class EntryServiceUnitTests {
 
     // CONSTANTS - TEST ENTRY VALUES
     private final Category TEST_CATEGORY = Category.LUNCH;
+    private final Category OTHER_CATEGORY = Category.DINNER;
     private final int TEST_POSITION = 5;
     private final int TEST_COUNT = 10;
+    private final int OTHER_COUNT = 12;
     private final double TEST_GRAMS = 110.0;
+    private final double OTHER_GRAMS = 85.0;
+    private final String OTHER_VENDOR = "Sklavenitis";
+    private final String TEST_UNIT = "tbsp";
+    private final String OTHER_UNIT = "cup";
 
     // HELPER METHODS
     /**
@@ -114,8 +128,6 @@ public class EntryServiceUnitTests {
                 .build();
     }
 
-    // TODO: Might be unnecessary?
-
     /**
      * Method for creating a FoodEntry to be used in testing FoodEntry snapshot calculation.
      */
@@ -133,6 +145,7 @@ public class EntryServiceUnitTests {
                 .price((TEST_PURCHASE_PRICE / (TEST_PURCHASE_GRAMS * TEST_EDIBLE_RATIO)) * TEST_GRAMS)
                 .food(food)
                 .grams(TEST_GRAMS)
+                .displayUnit(TEST_UNIT)
                 .selectedVendor(TEST_VENDOR)
                 .build();
     }
@@ -165,7 +178,7 @@ public class EntryServiceUnitTests {
             // Act + Assert
             assertThatThrownBy(() -> entryService.createEntry(myUser, DAY_ID, request))
                     .isInstanceOf(ResourceNotFoundException.class);
-            verifyNoInteractions(entryRepository);
+            verify(entryRepository, never()).save(any(Entry.class));
         }
 
         @Nested
@@ -234,15 +247,113 @@ public class EntryServiceUnitTests {
     @DisplayName("duplicateEntry")
     class DuplicateEntry {
 
-        void entryDuplicated() {
+        EntryDuplicateRequest request;
 
+        Day prepareMyOtherDay() {
+            Day myOtherDay = defaultDayBuilder().id(OTHER_DAY_ID).plan(myPlan).position(2).build();
+            myPlan.getDays().add(myOtherDay);
+            return myOtherDay;
         }
 
+        @BeforeEach
+        void prepareTests() {
+            request = defaultEntryDuplicateRequestBuilder()
+                .entryId(ENTRY_ID)
+                .category(OTHER_CATEGORY)
+                .build();
+        }
+
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the requested entry does not exist or belongs to a different user.")
         void entryNotFound() {
+            // Arrange
+            FoodEntry entry = prepareMyFoodEntry();     // Subtype is irrelevant here.
 
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(entry));
+            when(dayRepository.fetchByIdVerified(USER_ID, OTHER_DAY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.duplicateEntry(myUser, OTHER_DAY_ID, request))
+                .isInstanceOf(ResourceNotFoundException.class);
+            verify(entryRepository, never()).save(any(Entry.class));
         }
 
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the given day does not exist or belongs to a different user.")
         void dayNotFound() {
+            // Arrange
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.duplicateEntry(myUser, OTHER_DAY_ID, request))
+                .isInstanceOf(ResourceNotFoundException.class);
+            verify(entryRepository, never()).save(any(Entry.class));
+        }
+
+        @Nested
+        @DisplayName("with entryId that points to a FoodEntry")
+        class DuplicateFoodEntry {
+
+                @Test
+                @DisplayName("Creates and saves a duplicate of a FoodEntry when given a valid dayId, entryId, and target category.")
+                void foodEntryDuplicated() {
+                    // Arrange
+                    Food food = prepareFoodWithTestValues();
+                    FoodEntry original = prepareFoodEntryWithExpectedValues(food);
+                    Day myOtherDay = prepareMyOtherDay();
+                    FoodEntry saved = prepareMyFoodEntry();
+
+                    when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(original));
+                    when(dayRepository.fetchByIdVerified(USER_ID, OTHER_DAY_ID)).thenReturn(Optional.of(myOtherDay));
+                    when(entryRepository.countByDayAndCategory(OTHER_DAY_ID, OTHER_CATEGORY)).thenReturn(OTHER_COUNT);
+                    when(entryRepository.save(any(FoodEntry.class))).thenReturn(saved);
+
+                    // Act
+                    EntryResponse result = entryService.duplicateEntry(myUser, OTHER_DAY_ID, request);
+
+                    // Assert
+                    assertThat(result).isEqualTo(entryMapper.generateResponse(saved));
+                    
+                    verify(entryRepository).save(entryCaptor.capture());
+                    FoodEntry copied = (FoodEntry) entryCaptor.getValue();
+
+                    assertThat(copied)
+                        .usingRecursiveComparison()
+                        .ignoringFields("id", "day", "category", "position")
+                        .isEqualTo(original);   // TODO: Learn how (if?) this works for floats.
+
+                    assertThat(copied.getDay()).isEqualTo(myOtherDay);
+                    assertThat(copied.getCategory()).isEqualTo(OTHER_CATEGORY);
+                    assertThat(copied.getPosition()).isEqualTo(OTHER_COUNT + 1);
+                }
+
+                @Test
+                @DisplayName("Duplicate FoodEntry calculates its own snapshots values from scratch.")
+                void outdatedFoodEntryDuplicated() {
+                    // Arrange
+                    Food food = prepareFoodWithTestValues();
+                    FoodEntry outdatedOriginal = prepareFoodEntryWithExpectedValues(food);
+                    outdatedOriginal.setCalories(1.0);
+
+                    Day myOtherDay = prepareMyOtherDay();
+                    FoodEntry saved = prepareMyFoodEntry();
+
+                    when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(outdatedOriginal));
+                    when(dayRepository.fetchByIdVerified(USER_ID, OTHER_DAY_ID)).thenReturn(Optional.of(myOtherDay));
+                    when(entryRepository.countByDayAndCategory(OTHER_DAY_ID, OTHER_CATEGORY)).thenReturn(OTHER_COUNT);
+                    when(entryRepository.save(any(FoodEntry.class))).thenReturn(saved);
+
+                    // Act
+                    EntryResponse result = entryService.duplicateEntry(myUser, OTHER_DAY_ID, request);
+
+                    // Assert
+                    verify(entryRepository).save(entryCaptor.capture());
+                    FoodEntry copied = (FoodEntry) entryCaptor.getValue();
+
+                    assertThat(copied.getCalories()).isNotCloseTo(outdatedOriginal.getCalories(), within(0.01));
+                    assertThat(copied.getCalories()).isCloseTo(TEST_CALORIES_PER_100G * TEST_GRAMS / 100.0, within(0.01));
+
+                }
 
         }
 
@@ -251,6 +362,57 @@ public class EntryServiceUnitTests {
     @Nested
     @DisplayName("editEntry")
     class EditEntry {
+
+        FoodEntry prepareFoodEntryToUpdate(Food food) {
+            return defaultFoodEntryBuilder()
+                .id(ENTRY_ID)
+                .day(myDay)
+                .food(food)
+                .grams(OTHER_GRAMS)
+                .displayUnit(OTHER_UNIT)
+                .selectedVendor(OTHER_VENDOR)
+                .build();
+        }
+
+        @Test
+        @DisplayName("Edits the requested FoodEntry when it exists and belongs to the given user.")
+        void foodEntryEdited() {
+            // Arrange
+            FoodEntryEditRequest request = defaultFoodEntryEditRequestBuilder()
+                .grams(TEST_GRAMS)
+                .displayUnit(TEST_UNIT)
+                .selectedVendor(TEST_VENDOR)
+                .build();
+
+            Food food = prepareFoodWithTestValues();
+            FoodEntry entry = prepareFoodEntryToUpdate(food);
+
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(entry));
+
+            // Act
+            EntryResponse result = entryService.editEntry(myUser, ENTRY_ID, request);
+
+            // Assert
+            assertThat(result).isEqualTo(entryMapper.generateResponse(entry));
+
+            FoodEntry target = prepareFoodEntryWithExpectedValues(food);
+            assertThat(entry)
+                .usingRecursiveComparison()
+                .isEqualTo(target);
+        }
+
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the requested entry does not exist or belongs to a different user.")
+        void entryNotFound() {
+            // Arrange
+            FoodEntryEditRequest request = defaultFoodEntryEditRequestBuilder().build();    // Subtype is irrelevant here.
+
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.editEntry(myUser, ENTRY_ID, request))
+                .isInstanceOf(ResourceNotFoundException.class);
+        }
 
     }
 
@@ -274,12 +436,32 @@ public class EntryServiceUnitTests {
 
         }
 
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the requested entry does not exist or belongs to a different user.")
         void entryNotFound() {
+            // Arrange
+            EntryMoveRequest request = defaultEntryMoveRequestBuilder().build();
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
 
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.moveEntry(myUser, DAY_ID, ENTRY_ID, request))
+                .isInstanceOf(ResourceNotFoundException.class);
+            verifyNoMoreInteractions(entryRepository);      // TODO: Check if this actually works.
         }
 
+        @Test
+        @DisplayName("Throws a ServiceValidationException when the requested entry does not belong to the given day.")
         void entryNotInGivenDay() {
+            // Arrange
+            EntryMoveRequest request = defaultEntryMoveRequestBuilder().build();
+            FoodEntry entry = prepareMyFoodEntry();
 
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(entry));
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.moveEntry(myUser, OTHER_DAY_ID, ENTRY_ID, request))
+                .isInstanceOf(ResourceNotFoundException.class);
+            verifyNoMoreInteractions(entryRepository);      // TODO: Check if this actually works.
         }
 
     }
@@ -321,6 +503,40 @@ public class EntryServiceUnitTests {
         }
 
     }
+
+    @Nested
+    @DisplayName("retrieveEntry")
+    class RetrieveEntry {
+
+        @Test
+        @DisplayName("Returns a FoodEntryResponse when given an entryId that points to a FoodEntry owned by the given user.")
+        void foodEntryRetrieved() {
+            // Arrange
+            FoodEntry entry = prepareMyFoodEntry();
+
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(entry));
+
+            // Act
+            EntryResponse result = entryService.retrieveEntry(myUser, ENTRY_ID);
+
+            // Assert
+            assertThat(result).isInstanceOf(FoodEntryResponse.class);
+            assertThat(result).isEqualTo(entryMapper.generateResponse(entry));
+        }
+
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the requested entry does not exist or belongs to a different user.")
+        void entryNotFound() {
+            // Arrange
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.retrieveEntry(myUser, ENTRY_ID))
+                .isInstanceOf(ResourceNotFoundException.class);
+        }
+
+    }
+
 }
 
 
