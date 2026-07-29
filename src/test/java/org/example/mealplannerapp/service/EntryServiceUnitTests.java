@@ -6,6 +6,8 @@ import org.example.mealplannerapp.dto.entry.request.EntryMoveRequest;
 import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateRequest;
 import org.example.mealplannerapp.dto.entry.request.edit.FoodEntryEditRequest;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
+import org.example.mealplannerapp.dto.entry.response.FoodEntryResponse;
+import org.example.mealplannerapp.embeddable.FoodPrice;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.Plan;
@@ -30,7 +32,9 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
@@ -61,18 +65,74 @@ public class EntryServiceUnitTests {
     private Plan myPlan;
     private Day myDay;
 
-    // CONSTANTS
+    // CONSTANTS - ENTITY IDS
     private final long USER_ID = 1L;
     private final long FOOD_ID = 99L;
     private final long ENTRY_ID = 88L;
     private final long DAY_ID = 77L;
     private final long PLAN_ID = 66L;
 
+    // CONSTANTS - TEST FOOD VALUES
+    private final double CALORIES_PER_100G = 123.0;
+    private final double PROTEIN_PER_100G = 24.0;
+    private final double CARBS_PER_100G = 56.0;
+    private final double FAT_PER_100G = 8.5;
+    private final double FIBER_PER_100G = 4.5;
+    private final double EDIBLE_RATIO = 0.9;
+    private final String VENDOR = "Masoutis";
+    private final double PURCHASE_PRICE = 6.00;
+    private final double PURCHASE_GRAMS = 500;
+
+    // CONSTANTS - TEST ENTRY VALUES
+    private final Category TEST_CATEGORY = Category.LUNCH;
+    private final int TEST_COUNT = 5;
+    private final String SELECTED_VENDOR = VENDOR;
+    private final double GRAMS = 110.0;
+
+    // CONSTANTS - EXPECTED ENTRY SNAPSHOT VALUES
+    private final double EXPECTED_CALORIES = CALORIES_PER_100G * GRAMS / 100.0;
+    private final double EXPECTED_PROTEIN = PROTEIN_PER_100G * GRAMS / 100.0;
+    private final double EXPECTED_CARBS = CARBS_PER_100G * GRAMS / 100.0;
+    private final double EXPECTED_FAT = FAT_PER_100G * GRAMS / 100.0;
+    private final double EXPECTED_FIBER = FIBER_PER_100G * GRAMS / 100.0;
+    private final double EXPECTED_PRICE = (PURCHASE_PRICE / (PURCHASE_GRAMS * EDIBLE_RATIO)) * GRAMS;
+
     // HELPER METHODS
     private FoodEntry prepareMyEntry() {
         Food food = defaultFoodBuilder().id(FOOD_ID).user(myUser).build();
         FoodEntry entry = defaultFoodEntryBuilder().id(ENTRY_ID).day(myDay).food(food).build();
         return entry;
+    }
+
+    private Food prepareFoodWithTestValues() {
+            return defaultFoodBuilder()
+                .id(FOOD_ID)
+                .user(myUser)
+                .caloriesPer100g(CALORIES_PER_100G)
+                .proteinPer100g(PROTEIN_PER_100G)
+                .carbsPer100g(CARBS_PER_100G)
+                .fatPer100g(FAT_PER_100G)
+                .fiberPer100g(FIBER_PER_100G)
+                .edibleRatio(EDIBLE_RATIO)
+                .prices(new HashSet<>(Set.of(new FoodPrice(VENDOR, PURCHASE_PRICE, PURCHASE_GRAMS))))
+                .build();
+    }
+
+    private FoodEntry prepareFoodEntryWithExpectedValues(Food food) {
+            return FoodEntry.builder()
+                .id(ENTRY_ID)
+                .day(myDay)
+                .category(TEST_CATEGORY)
+                .position(TEST_COUNT + 1)
+                .calories(EXPECTED_CALORIES)
+                .protein(EXPECTED_PROTEIN)
+                .carbs(EXPECTED_CARBS)
+                .fat(EXPECTED_FAT)
+                .fiber(EXPECTED_FIBER)
+                .price(EXPECTED_PRICE)
+                .food(food)
+                .grams(GRAMS)
+                .build();
     }
 
     // BEFORE EACH
@@ -96,13 +156,38 @@ public class EntryServiceUnitTests {
 
         @BeforeEach
         void prepareTests() {
-            request = defaultFoodEntryCreateRequestBuilder().foodId(FOOD_ID).build();
+            request = defaultFoodEntryCreateRequestBuilder()
+                .category(TEST_CATEGORY)
+                .foodId(FOOD_ID)
+                .selectedVendor(SELECTED_VENDOR)
+                .build();
         }
 
         @Test
-        @DisplayName("Creates and saves a FoodEntry when given a valid dayId and valid input data.")
+        @DisplayName("Creates and saves a FoodEntry when given a valid dayId and FoodEntryCreateRequest.")
         void foodEntryCreated() {
-            // TODO: Write test.
+            // Arrange
+            Food food = prepareFoodWithTestValues();
+            FoodEntry saved = prepareFoodEntryWithExpectedValues(food);
+
+            when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.of(myDay));
+            when(foodRepository.fetchByIdVerified(USER_ID, FOOD_ID)).thenReturn(Optional.of(food));
+            when(entryRepository.countByDayAndCategory(DAY_ID, TEST_CATEGORY)).thenReturn(5);
+            when(entryRepository.save(any(FoodEntry.class))).thenReturn(saved);
+
+            // Act
+            EntryResponse result = entryService.createEntry(myUser, DAY_ID, request);
+
+            // Assert
+            assertThat(result).isEqualTo(entryMapper.generateResponse(saved));
+
+            verify(entryRepository).save(entryCaptor.capture());
+            FoodEntry created = (FoodEntry) entryCaptor.getValue();
+
+            assertThat(created)
+                .usingRecursiveComparison()
+                .ignoringFields("id")
+                .isEqualTo(saved);
         }
 
         @Test
@@ -140,13 +225,25 @@ public class EntryServiceUnitTests {
 
         @BeforeEach
         void prepareTests() {
-            request = defaultEntryDuplicateRequestBuilder().entryId(ENTRY_ID).build();
+            request = defaultEntryDuplicateRequestBuilder()
+                .entryId(ENTRY_ID)
+                .category(TEST_CATEGORY)
+                .build();
         }
 
         @Test
         @DisplayName("Creates and saves a duplicate of the requested entry when entryId and dayId are valid for the given user.")
         void entryDuplicated() {
-            // TODO: Write test.
+            // Arrange
+            Food food = prepareFoodWithTestValues();
+            FoodEntry original = prepareFoodEntryWithExpectedValues(food);
+
+            when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.of(myDay));
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(original));
+            when(entryRepository.countByDayAndCategory(DAY_ID, TEST_CATEGORY)).thenReturn(TEST_COUNT);
+
+            // Act
+            EntryResponse result = entryService.duplicateEntry(myUser, DAY_ID, request);
         }
 
         @Test
