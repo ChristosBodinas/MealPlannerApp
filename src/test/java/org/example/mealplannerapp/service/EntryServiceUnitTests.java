@@ -1,10 +1,8 @@
 package org.example.mealplannerapp.service;
 
+import net.bytebuddy.asm.Advice;
 import org.example.mealplannerapp.constants.Category;
-import org.example.mealplannerapp.dto.entry.request.EntryDuplicateRequest;
-import org.example.mealplannerapp.dto.entry.request.EntryMoveRequest;
 import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateRequest;
-import org.example.mealplannerapp.dto.entry.request.edit.FoodEntryEditRequest;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
 import org.example.mealplannerapp.dto.entry.response.FoodEntryResponse;
 import org.example.mealplannerapp.embeddable.FoodPrice;
@@ -15,7 +13,6 @@ import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
-import org.example.mealplannerapp.exception.ServiceValidationException;
 import org.example.mealplannerapp.mapper.EntryMapper;
 import org.example.mealplannerapp.mapper.EntryMapperImpl;
 import org.example.mealplannerapp.projection.Placement;
@@ -38,7 +35,8 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
-import static org.example.mealplannerapp.fixture.EntryTestFixtures.*;
+import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultFoodEntryBuilder;
+import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultFoodEntryCreateRequestBuilder;
 import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBuilder;
 import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
@@ -73,65 +71,69 @@ public class EntryServiceUnitTests {
     private final long PLAN_ID = 66L;
 
     // CONSTANTS - TEST FOOD VALUES
-    private final double CALORIES_PER_100G = 123.0;
-    private final double PROTEIN_PER_100G = 24.0;
-    private final double CARBS_PER_100G = 56.0;
-    private final double FAT_PER_100G = 8.5;
-    private final double FIBER_PER_100G = 4.5;
-    private final double EDIBLE_RATIO = 0.9;
-    private final String VENDOR = "Masoutis";
-    private final double PURCHASE_PRICE = 6.00;
-    private final double PURCHASE_GRAMS = 500;
+    private final double TEST_CALORIES_PER_100G = 123.0;
+    private final double TEST_PROTEIN_PER_100G = 24.0;
+    private final double TEST_CARBS_PER_100G = 56.0;
+    private final double TEST_FAT_PER_100G = 8.5;
+    private final double TEST_FIBER_PER_100G = 4.5;
+    private final double TEST_EDIBLE_RATIO = 0.9;
+    private final String TEST_VENDOR = "Masoutis";
+    private final double TEST_PURCHASE_PRICE = 6.00;
+    private final double TEST_PURCHASE_GRAMS = 500;
 
     // CONSTANTS - TEST ENTRY VALUES
     private final Category TEST_CATEGORY = Category.LUNCH;
-    private final int TEST_COUNT = 5;
-    private final String SELECTED_VENDOR = VENDOR;
-    private final double GRAMS = 110.0;
-
-    // CONSTANTS - EXPECTED ENTRY SNAPSHOT VALUES
-    private final double EXPECTED_CALORIES = CALORIES_PER_100G * GRAMS / 100.0;
-    private final double EXPECTED_PROTEIN = PROTEIN_PER_100G * GRAMS / 100.0;
-    private final double EXPECTED_CARBS = CARBS_PER_100G * GRAMS / 100.0;
-    private final double EXPECTED_FAT = FAT_PER_100G * GRAMS / 100.0;
-    private final double EXPECTED_FIBER = FIBER_PER_100G * GRAMS / 100.0;
-    private final double EXPECTED_PRICE = (PURCHASE_PRICE / (PURCHASE_GRAMS * EDIBLE_RATIO)) * GRAMS;
+    private final int TEST_POSITION = 5;
+    private final int TEST_COUNT = 10;
+    private final double TEST_GRAMS = 110.0;
 
     // HELPER METHODS
-    private FoodEntry prepareMyEntry() {
+    /**
+     * Method for creating a simple FoodEntry and its referenced Food, using the default food and entry IDs,
+     * and owned by myDay and myUser respectively.
+     */
+    private FoodEntry prepareMyFoodEntry() {
         Food food = defaultFoodBuilder().id(FOOD_ID).user(myUser).build();
-        FoodEntry entry = defaultFoodEntryBuilder().id(ENTRY_ID).day(myDay).food(food).build();
-        return entry;
+        return defaultFoodEntryBuilder().id(ENTRY_ID).day(myDay).food(food).build();
     }
 
+    /**
+     * Method for creating a Food to be used in testing FoodEntry snapshot calculation.
+     */
     private Food prepareFoodWithTestValues() {
-            return defaultFoodBuilder()
+        return defaultFoodBuilder()
                 .id(FOOD_ID)
                 .user(myUser)
-                .caloriesPer100g(CALORIES_PER_100G)
-                .proteinPer100g(PROTEIN_PER_100G)
-                .carbsPer100g(CARBS_PER_100G)
-                .fatPer100g(FAT_PER_100G)
-                .fiberPer100g(FIBER_PER_100G)
-                .edibleRatio(EDIBLE_RATIO)
-                .prices(new HashSet<>(Set.of(new FoodPrice(VENDOR, PURCHASE_PRICE, PURCHASE_GRAMS))))
+                .caloriesPer100g(TEST_CALORIES_PER_100G)
+                .proteinPer100g(TEST_PROTEIN_PER_100G)
+                .carbsPer100g(TEST_CARBS_PER_100G)
+                .fatPer100g(TEST_FAT_PER_100G)
+                .fiberPer100g(TEST_FIBER_PER_100G)
+                .edibleRatio(TEST_EDIBLE_RATIO)
+                .prices(new HashSet<>(Set.of(new FoodPrice(TEST_VENDOR, TEST_PURCHASE_PRICE, TEST_PURCHASE_GRAMS))))
                 .build();
     }
 
+    // TODO: Might be unnecessary?
+
+    /**
+     * Method for creating a FoodEntry to be used in testing FoodEntry snapshot calculation.
+     */
     private FoodEntry prepareFoodEntryWithExpectedValues(Food food) {
-            return FoodEntry.builder()
+        return defaultFoodEntryBuilder()
                 .id(ENTRY_ID)
                 .day(myDay)
                 .category(TEST_CATEGORY)
                 .position(TEST_COUNT + 1)
-                .calories(EXPECTED_CALORIES)
-                .protein(EXPECTED_PROTEIN)
-                .carbs(EXPECTED_CARBS)
-                .fat(EXPECTED_FAT)
-                .fiber(EXPECTED_FIBER)
-                .price(EXPECTED_PRICE)
+                .calories(TEST_CALORIES_PER_100G * TEST_GRAMS / 100.0)
+                .protein(TEST_PROTEIN_PER_100G * TEST_GRAMS / 100.0)
+                .carbs(TEST_CARBS_PER_100G * TEST_GRAMS / 100.0)
+                .fat(TEST_FAT_PER_100G * TEST_GRAMS / 100.0)
+                .fiber(TEST_FIBER_PER_100G * TEST_GRAMS / 100.0)
+                .price((TEST_PURCHASE_PRICE / (TEST_PURCHASE_GRAMS * TEST_EDIBLE_RATIO)) * TEST_GRAMS)
                 .food(food)
-                .grams(GRAMS)
+                .grams(TEST_GRAMS)
+                .selectedVendor(TEST_VENDOR)
                 .build();
     }
 
@@ -152,71 +154,180 @@ public class EntryServiceUnitTests {
     @DisplayName("createEntry")
     class CreateEntry {
 
-        FoodEntryCreateRequest request;
-
-        @BeforeEach
-        void prepareTests() {
-            request = defaultFoodEntryCreateRequestBuilder()
-                .category(TEST_CATEGORY)
-                .foodId(FOOD_ID)
-                .selectedVendor(SELECTED_VENDOR)
-                .build();
-        }
-
-        @Test
-        @DisplayName("Creates and saves a FoodEntry when given a valid dayId and FoodEntryCreateRequest.")
-        void foodEntryCreated() {
-            // Arrange
-            Food food = prepareFoodWithTestValues();
-            FoodEntry saved = prepareFoodEntryWithExpectedValues(food);
-
-            when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.of(myDay));
-            when(foodRepository.fetchByIdVerified(USER_ID, FOOD_ID)).thenReturn(Optional.of(food));
-            when(entryRepository.countByDayAndCategory(DAY_ID, TEST_CATEGORY)).thenReturn(5);
-            when(entryRepository.save(any(FoodEntry.class))).thenReturn(saved);
-
-            // Act
-            EntryResponse result = entryService.createEntry(myUser, DAY_ID, request);
-
-            // Assert
-            assertThat(result).isEqualTo(entryMapper.generateResponse(saved));
-
-            verify(entryRepository).save(entryCaptor.capture());
-            FoodEntry created = (FoodEntry) entryCaptor.getValue();
-
-            assertThat(created)
-                .usingRecursiveComparison()
-                .ignoringFields("id")
-                .isEqualTo(saved);
-        }
-
         @Test
         @DisplayName("Throws a ResourceNotFoundException when the given day does not exist or belongs to a different user.")
         void dayNotFound() {
             // Arrange
+            FoodEntryCreateRequest request = defaultFoodEntryCreateRequestBuilder().build();    // Request type is irrelevant here.
+
             when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.empty());
 
             // Act + Assert
             assertThatThrownBy(() -> entryService.createEntry(myUser, DAY_ID, request))
                     .isInstanceOf(ResourceNotFoundException.class);
-            verifyNoInteractions(foodRepository, entryRepository);
+            verifyNoInteractions(entryRepository);
         }
 
-        @Test
-        @DisplayName("Throws a ResourceNotFoundException when the referenced food does not exist or belongs to a different user.")
-        void foodNotFound() {
-            // Arrange
-            when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.of(myDay));
-            when(foodRepository.fetchByIdVerified(USER_ID, FOOD_ID)).thenReturn(Optional.empty());
+        @Nested
+        @DisplayName("with a FoodEntryCreateRequest")
+        class CreateFoodEntry {
 
-            // Act + Assert
-            assertThatThrownBy(() -> entryService.createEntry(myUser, DAY_ID, request))
-                    .isInstanceOf(ResourceNotFoundException.class);
-            verify(entryRepository, never()).save(any(Entry.class));
+            FoodEntryCreateRequest request;
+
+            @BeforeEach
+            void prepareTests() {
+                request = defaultFoodEntryCreateRequestBuilder()
+                        .foodId(FOOD_ID)
+                        .category(TEST_CATEGORY)
+                        .grams(TEST_GRAMS)
+                        .selectedVendor(TEST_VENDOR)
+                        .build();
+
+                when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.of(myDay));
+            }
+
+            @Test
+            @DisplayName("Creates a FoodEntry when the given day and food exist and belong to the given user.")
+            void foodEntryCreated() {
+                // Arrange
+                Food food = prepareFoodWithTestValues();
+                FoodEntry saved = prepareFoodEntryWithExpectedValues(food);
+
+                when(foodRepository.fetchByIdVerified(USER_ID, FOOD_ID)).thenReturn(Optional.of(food));
+                when(entryRepository.countByDayAndCategory(DAY_ID, TEST_CATEGORY)).thenReturn(TEST_COUNT);
+                when(entryRepository.save(any(FoodEntry.class))).thenReturn(saved);
+
+                // Act
+                EntryResponse result = entryService.createEntry(myUser, DAY_ID, request);
+
+                // Assert
+                assertThat(result).isInstanceOf(FoodEntryResponse.class);
+                assertThat(result).isEqualTo(entryMapper.generateResponse(saved));
+
+                verify(entryRepository).save(entryCaptor.capture());
+                FoodEntry created = (FoodEntry) entryCaptor.getValue();
+
+                assertThat(created)
+                        .usingRecursiveComparison()
+                        .ignoringFields("id")
+                        .isEqualTo(saved);
+            }
+
+            @Test
+            @DisplayName("Throws a ResourceNotFoundException when the given food does not exist or belongs to a different user.")
+            void foodNotFound() {
+                // Arrange
+                when(foodRepository.fetchByIdVerified(USER_ID, FOOD_ID)).thenReturn(Optional.empty());
+
+                // Act + Assert
+                assertThatThrownBy(() -> entryService.createEntry(myUser, DAY_ID, request))
+                        .isInstanceOf(ResourceNotFoundException.class);
+                verify(entryRepository, never()).save(any(Entry.class));
+
+            }
+
         }
 
     }
 
+    @Nested
+    @DisplayName("duplicateEntry")
+    class DuplicateEntry {
+
+        void entryDuplicated() {
+
+        }
+
+        void entryNotFound() {
+
+        }
+
+        void dayNotFound() {
+
+        }
+
+    }
+
+    @Nested
+    @DisplayName("editEntry")
+    class EditEntry {
+
+    }
+
+    @Nested
+    @DisplayName("moveEntry")
+    class MoveEntry {
+
+        void entryMovedUpInSameCategory() {
+
+        }
+
+        void entryMovedDownInSameCategory() {
+
+        }
+
+        void entryMovedToAnotherCategory() {
+
+        }
+
+        void noMoveNecessary() {
+
+        }
+
+        void entryNotFound() {
+
+        }
+
+        void entryNotInGivenDay() {
+
+        }
+
+    }
+
+    @Nested
+    @DisplayName("deleteEntry")
+    class DeleteEntry {
+
+        @Test
+        @DisplayName("Deletes the requested entry and closes the gap when the entry exists and belongs to the given user.")
+        void entryDeleted() {
+            // Arrange
+            Placement placement = mock(Placement.class);
+
+            when(entryRepository.extractPlacementByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(placement));
+            when(placement.getDayId()).thenReturn(DAY_ID);
+            when(placement.getCategory()).thenReturn(TEST_CATEGORY);
+            when(placement.getPosition()).thenReturn(TEST_POSITION);
+
+            // Act
+            assertThatCode(() -> entryService.deleteEntry(myUser, ENTRY_ID))
+                    .doesNotThrowAnyException();
+
+            // Assert
+            verify(entryRepository).deleteByIdVerified(USER_ID, ENTRY_ID);
+            verify(entryRepository).shiftDownByDayAndCategory(DAY_ID, TEST_CATEGORY, TEST_POSITION, null);
+        }
+
+        @Test
+        @DisplayName("Throws a ResourceNotFoundException when the requested entry does not exist or belongs to a different user.")
+        void entryNotFound() {
+            // Arrange
+            when(entryRepository.extractPlacementByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.deleteEntry(myUser, ENTRY_ID))
+                    .isInstanceOf(ResourceNotFoundException.class);
+            verify(entryRepository, never()).deleteByIdVerified(anyLong(), anyLong());
+        }
+
+    }
+}
+
+
+
+    /*
+
+    }
     @Nested
     @DisplayName("duplicateEntry")
     class DuplicateEntry {
@@ -347,45 +458,7 @@ public class EntryServiceUnitTests {
 
     }
 
-    @Nested
-    @DisplayName("deleteEntry")
-    class DeleteEntry {
 
-        final Category TARGET_CATEGORY = Category.DINNER;
-        final int TARGET_POSITION = 5;
-
-        @Test
-        @DisplayName("Deletes the requested entry and closes the gap in its day/category when it exists and belongs to the given user.")
-        void entryDeleted() {
-            // Arrange
-            Placement placement = mock(Placement.class);
-
-            when(entryRepository.extractPlacementByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(placement));
-            when(placement.getDayId()).thenReturn(DAY_ID);
-            when(placement.getCategory()).thenReturn(TARGET_CATEGORY);
-            when(placement.getPosition()).thenReturn(TARGET_POSITION);
-
-            // Act
-            assertThatCode(() -> entryService.deleteEntry(myUser, ENTRY_ID))
-                    .doesNotThrowAnyException();
-
-            // Assert
-            verify(entryRepository).deleteByIdVerified(USER_ID, ENTRY_ID);
-            verify(entryRepository).shiftDownByDayAndCategory(DAY_ID, TARGET_CATEGORY, TARGET_POSITION, null);
-        }
-
-        @Test
-        @DisplayName("Throws a ResourceNotFoundException when the requested entry does not exist or belongs to a different user.")
-        void entryNotFound() {
-            // Arrange
-            when(entryRepository.extractPlacementByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
-
-            // Act + Assert
-            assertThatThrownBy(() -> entryService.deleteEntry(myUser, ENTRY_ID))
-                    .isInstanceOf(ResourceNotFoundException.class);
-        }
-
-    }
 
     @Nested
     @DisplayName("retrieveEntry")

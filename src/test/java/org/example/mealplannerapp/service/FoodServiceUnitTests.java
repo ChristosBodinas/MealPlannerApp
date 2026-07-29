@@ -58,13 +58,13 @@ class FoodServiceUnitTests {
     private static Stream<Arguments> provideDuplicateInputs() {
 
         FoodRequest duplicateUnits = defaultFoodRequestBuilder().units(new HashSet<>(Set.of(
-                new UnitRequest("tbsp", 15.0),
-                new UnitRequest("tbsp", 17.0))))
+                        new UnitRequest("tbsp", 15.0),
+                        new UnitRequest("tbsp", 17.0))))
                 .build();
 
         FoodRequest duplicateVendors = defaultFoodRequestBuilder().prices(new HashSet<>(Set.of(
-                new PriceRequest("Masoutis", 6.80, 200),
-                new PriceRequest("Masoutis", 8.60, 240))))
+                        new PriceRequest("Masoutis", 6.80, 200),
+                        new PriceRequest("Masoutis", 8.60, 240))))
                 .build();
 
         return Stream.of(

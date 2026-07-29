@@ -107,9 +107,9 @@ public class EntryRepositoryTests {
     private static Stream<Arguments> provideBounds() {
         return Stream.of(
                 argumentSet("Both sides bounded", 4, 8),
-                argumentSet("Only upper side bounded",null, 8),
+                argumentSet("Only upper side bounded", null, 8),
                 argumentSet("Only lower side bounded", 4, null),
-                argumentSet("Neither side bounded",null, null),
+                argumentSet("Neither side bounded", null, null),
                 argumentSet("Upper bound = Lower bound", 4, 4),
                 argumentSet("Upper bound < Lower bound", 8, 4),
                 argumentSet("Both bounds out of range", 100, 200)
