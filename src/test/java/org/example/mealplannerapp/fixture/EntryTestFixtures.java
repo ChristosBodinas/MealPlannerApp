@@ -46,13 +46,14 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link FoodEntryEditRequest} DTOs.
+     *
      * @return a FoodEntryEditRequest with all fields filled out
      */
     public static FoodEntryEditRequest.FoodEntryEditRequestBuilder defaultFoodEntryEditRequestBuilder() {
         return FoodEntryEditRequest.builder()
-            .grams(DEFAULT_GRAMS)
-            .displayUnit(DEFAULT_DISPLAY_UNIT)
-            .selectedVendor(DEFAULT_SELECTED_VENDOR);
+                .grams(DEFAULT_GRAMS)
+                .displayUnit(DEFAULT_DISPLAY_UNIT)
+                .selectedVendor(DEFAULT_SELECTED_VENDOR);
     }
 
     /**
