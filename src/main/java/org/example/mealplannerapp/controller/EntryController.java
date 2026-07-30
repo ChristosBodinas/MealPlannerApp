@@ -51,14 +51,14 @@ public class EntryController {
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/days/{dayId}/entries/{entryId}")
+    @PatchMapping("/entries/{entryId}/move")
     public ResponseEntity<Void> moveEntry(
             @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long dayId,
             @PathVariable Long entryId,
             @Valid @RequestBody EntryMoveRequest request
     ) {
-        entryService.moveEntry(authUser.getUser(), dayId, entryId, request);
+        entryService.moveEntry(authUser.getUser(), entryId, request);
         return ResponseEntity.noContent().build();
     }
 

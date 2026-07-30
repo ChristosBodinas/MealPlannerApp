@@ -93,36 +93,45 @@ public class EntryService {
     }
 
     @Transactional
-    public void moveEntry(User user, Long dayId, Long entryId, EntryMoveRequest request) {
+    public void moveEntry(User user, Long entryId, EntryMoveRequest request) {
         Entry entry = entryRepository.fetchByIdVerified(user.getId(), entryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
+            .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
 
-        if (!entry.getDay().getId().equals(dayId)) {
-            throw new ServiceValidationException("Requested entry does not belong to the given day.");
+        Long dayId = entry.getDay().getId();
+        int currentPosition = entry.getPosition();
+        int desiredPosition = request.desiredPosition();
+
+        // TODO: Might reorder some of this code?
+        if (entry.getCategory() == request.category() && currentPosition == desiredPosition) {
+            throw new ServiceValidationException("Requested entry is already in the desired category and position.");
         }
 
-        int sourcePosition = entry.getPosition();
-        int categoryCount = entryRepository.countByDayAndCategory(dayId, request.category());
-        int targetPosition;
+        int count = entryRepository.countByDayAndCategory(dayId, request.category());
 
         if (entry.getCategory() == request.category()) {
-            targetPosition = Math.min(request.desiredPosition(), categoryCount);
-
-            if (sourcePosition > targetPosition) {
-                entryRepository.shiftUpByDayAndCategory(dayId, request.category(), targetPosition, sourcePosition);
-            } else if (sourcePosition < targetPosition) {
-                entryRepository.shiftDownByDayAndCategory(dayId, request.category(), sourcePosition, targetPosition);
+            if (desiredPosition > count) {
+                throw new ServiceValidationException("Desired position is out of bounds.");
             }
 
+            if (currentPosition > desiredPosition) {
+                entryRepository.shiftUpByDayAndCategory(dayId, request.category(), desiredPosition, currentPosition);
+            } else if (currentPosition < desiredPosition) {
+                entryRepository.shiftDownByDayAndCategory(dayId, request.category(), currentPosition, desiredPosition);
+            }
+
+            entry.setPosition(desiredPosition);
+
         } else {
-            targetPosition = Math.min(request.desiredPosition(), categoryCount + 1);
+            if (desiredPosition > count + 1) {
+                throw new ServiceValidationException("Desired position is out of bounds.");
+            }
 
-            entryRepository.shiftUpByDayAndCategory(dayId, request.category(), targetPosition, null);
-            entryRepository.shiftDownByDayAndCategory(dayId, request.category(), sourcePosition, null);
+            entryRepository.shiftUpByDayAndCategory(dayId, request.category(), desiredPosition, null);
+            entryRepository.shiftDownByDayAndCategory(dayId, request.category(), currentPosition, null);
+
+            entry.setCategory(request.category());
+            entry.setPosition(desiredPosition);
         }
-
-        entry.setCategory(request.category());
-        entry.setPosition(request.desiredPosition());
     }
 
     @Transactional

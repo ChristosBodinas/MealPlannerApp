@@ -1,6 +1,5 @@
 package org.example.mealplannerapp.service;
 
-import net.bytebuddy.asm.Advice;
 import org.example.mealplannerapp.constants.Category;
 import org.example.mealplannerapp.dto.entry.request.EntryDuplicateRequest;
 import org.example.mealplannerapp.dto.entry.request.EntryMoveRequest;
@@ -16,6 +15,7 @@ import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
+import org.example.mealplannerapp.exception.ServiceValidationException;
 import org.example.mealplannerapp.mapper.EntryMapper;
 import org.example.mealplannerapp.mapper.EntryMapperImpl;
 import org.example.mealplannerapp.projection.Placement;
@@ -27,6 +27,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -35,6 +39,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
@@ -46,6 +51,7 @@ import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultFoodEn
 import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBuilder;
 import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -69,7 +75,7 @@ public class EntryServiceUnitTests {
     private User myUser;
     private Plan myPlan;
     private Day myDay;
-
+    // TODO: Make these static?
     // CONSTANTS - TEST ENTITY IDS
     private final long USER_ID = 1L;
     private final long FOOD_ID = 99L;
@@ -90,11 +96,13 @@ public class EntryServiceUnitTests {
     private final double TEST_PURCHASE_GRAMS = 500;
 
     // CONSTANTS - TEST ENTRY VALUES
-    private final Category TEST_CATEGORY = Category.LUNCH;
-    private final Category OTHER_CATEGORY = Category.DINNER;
+    private static final Category TEST_CATEGORY = Category.LUNCH;
+    private static final Category OTHER_CATEGORY = Category.DINNER;
     private final int TEST_POSITION = 5;
-    private final int TEST_COUNT = 10;
-    private final int OTHER_COUNT = 12;
+    private final int HIGHER_POSITION = 7;
+    private final int LOWER_POSITION = 3;
+    private static final int TEST_COUNT = 10;
+    private static final int OTHER_COUNT = 12;
     private final double TEST_GRAMS = 110.0;
     private final double OTHER_GRAMS = 85.0;
     private final String OTHER_VENDOR = "Sklavenitis";
@@ -420,20 +428,91 @@ public class EntryServiceUnitTests {
     @DisplayName("moveEntry")
     class MoveEntry {
 
+        FoodEntry prepareFoodEntryForMove() {
+            FoodEntry entry = prepareMyFoodEntry();
+            entry.setCategory(TEST_CATEGORY);
+            entry.setPosition(TEST_POSITION);
+            return entry;
+        }
+
+        EntryMoveRequest prepareSpecificRequest(Category category, int desiredPosition) {
+            return EntryMoveRequest.builder()
+                .category(category)
+                .desiredPosition(desiredPosition)
+                .build();
+        }
+
+        static Stream<Arguments> provideInvalidInputs() {
+            return Stream.of(
+                argumentSet("Same category", TEST_CATEGORY, TEST_COUNT + 1),
+                argumentSet("Different category", OTHER_CATEGORY, TEST_COUNT + 2)
+            );
+        }
+
+        @Test
+        @DisplayName("Moves entry up in the same category when the requested position is higher than the current position.")
         void entryMovedUpInSameCategory() {
+            // Arrange
+            EntryMoveRequest request = prepareSpecificRequest(TEST_CATEGORY, HIGHER_POSITION);
+            FoodEntry entry = prepareFoodEntryForMove();
 
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(entry));
+            when(entryRepository.countByDayAndCategory(DAY_ID, TEST_CATEGORY)).thenReturn(TEST_COUNT);
+
+            // Act
+            assertThatCode(() -> entryService.moveEntry(myUser, ENTRY_ID, request))
+                .doesNotThrowAnyException();
+
+            // Assert
+            verify(entryRepository).shiftDownByDayAndCategory(DAY_ID, TEST_CATEGORY, TEST_POSITION, HIGHER_POSITION);
+            verifyNoMoreInteractions(entryRepository);
+
+            assertThat(entry.getCategory()).isEqualTo(TEST_CATEGORY);
+            assertThat(entry.getPosition()).isEqualTo(HIGHER_POSITION);
         }
 
+        @Test
+        @DisplayName("Moves entry down in the same category when the requested position is lower than the current position.")
         void entryMovedDownInSameCategory() {
+            // Arrange
+            EntryMoveRequest request = prepareSpecificRequest(TEST_CATEGORY, LOWER_POSITION);
+            FoodEntry entry = prepareFoodEntryForMove();
 
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(entry));
+            when(entryRepository.countByDayAndCategory(DAY_ID, TEST_CATEGORY)).thenReturn(TEST_COUNT);
+
+            // Act
+            assertThatCode(() -> entryService.moveEntry(myUser, ENTRY_ID, request))
+                .doesNotThrowAnyException();
+
+            // Assert
+            verify(entryRepository).shiftUpByDayAndCategory(DAY_ID, TEST_CATEGORY, LOWER_POSITION, TEST_POSITION);
+            verifyNoMoreInteractions(entryRepository);
+
+            assertThat(entry.getCategory()).isEqualTo(TEST_CATEGORY);
+            assertThat(entry.getPosition()).isEqualTo(LOWER_POSITION);
         }
 
+        @Test
+        @DisplayName("Moves the requested entry to another category.")
         void entryMovedToAnotherCategory() {
+            // Arrange
+            EntryMoveRequest request = prepareSpecificRequest(OTHER_CATEGORY, HIGHER_POSITION);
+            FoodEntry entry = prepareFoodEntryForMove();
 
-        }
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(entry));
+            when(entryRepository.countByDayAndCategory(DAY_ID, OTHER_CATEGORY)).thenReturn(TEST_COUNT);
 
-        void noMoveNecessary() {
+            // Act
+            assertThatCode(() -> entryService.moveEntry(myUser, ENTRY_ID, request))
+                .doesNotThrowAnyException();
+            
+            // Assert
+            verify(entryRepository).shiftUpByDayAndCategory(DAY_ID, OTHER_CATEGORY, HIGHER_POSITION, null);
+            verify(entryRepository).shiftDownByDayAndCategory(DAY_ID, TEST_CATEGORY, TEST_POSITION, null);
 
+            assertThat(entry.getCategory()).isEqualTo(OTHER_CATEGORY);
+            assertThat(entry.getPosition()).isEqualTo(HIGHER_POSITION);
         }
 
         @Test
@@ -444,24 +523,44 @@ public class EntryServiceUnitTests {
             when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
 
             // Act + Assert
-            assertThatThrownBy(() -> entryService.moveEntry(myUser, DAY_ID, ENTRY_ID, request))
+            assertThatThrownBy(() -> entryService.moveEntry(myUser, ENTRY_ID, request))
                 .isInstanceOf(ResourceNotFoundException.class);
-            verifyNoMoreInteractions(entryRepository);      // TODO: Check if this actually works.
+            verifyNoMoreInteractions(entryRepository);
         }
 
         @Test
-        @DisplayName("Throws a ServiceValidationException when the requested entry does not belong to the given day.")
-        void entryNotInGivenDay() {
+        @DisplayName("Throws a ServiceValidationException when the request gives the entry's current category and position.")
+        void noMoveNecessary() {
             // Arrange
-            EntryMoveRequest request = defaultEntryMoveRequestBuilder().build();
-            FoodEntry entry = prepareMyFoodEntry();
+            EntryMoveRequest request = prepareSpecificRequest(TEST_CATEGORY, TEST_POSITION);
+            FoodEntry entry = prepareFoodEntryForMove();
 
             when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(entry));
 
+            // Act
+            assertThatThrownBy(() -> entryService.moveEntry(myUser, ENTRY_ID, request))
+                .isInstanceOf(ServiceValidationException.class);
+            verifyNoMoreInteractions(entryRepository);
+        }
+
+        @ParameterizedTest
+        @DisplayName("Throws a ServiceValidationException when the desired position is out of the desired ")
+        @MethodSource("provideInvalidInputs")
+        void desiredPositionInvalid(Category targetCategory, int targetPosition) {
+            // Arrange
+            EntryMoveRequest request = prepareSpecificRequest(targetCategory, targetPosition);
+            FoodEntry entry = prepareFoodEntryForMove();
+
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(entry));
+            when(entryRepository.countByDayAndCategory(DAY_ID, targetCategory)).thenReturn(TEST_COUNT);
+
             // Act + Assert
-            assertThatThrownBy(() -> entryService.moveEntry(myUser, OTHER_DAY_ID, ENTRY_ID, request))
-                .isInstanceOf(ResourceNotFoundException.class);
-            verifyNoMoreInteractions(entryRepository);      // TODO: Check if this actually works.
+            assertThatThrownBy(() -> entryService.moveEntry(myUser, ENTRY_ID, request))
+                .isInstanceOf(ServiceValidationException.class);
+
+            verifyNoMoreInteractions(entryRepository);
+            assertThat(entry.getCategory()).isEqualTo(TEST_CATEGORY);
+            assertThat(entry.getPosition()).isEqualTo(TEST_POSITION);
         }
 
     }
