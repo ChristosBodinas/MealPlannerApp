@@ -12,7 +12,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Repository
 public interface EntryRepository extends JpaRepository<Entry, Long> {
@@ -68,6 +71,22 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
             @Param("entryId") Long entryId
     );
 
+    // TODO: default List<Entry> fetchAllByDay
+    default List<Entry> fetchAllByDay(Long dayId) {
+        List<Entry> entries = new ArrayList<>();
+        return entries;
+    }
+
+    // TODO: javadoc
+        @Query("SELECT e FROM Entry e " +
+            "LEFT JOIN FETCH TREAT(e AS FoodEntry).food f " +
+            "LEFT JOIN FETCH f.units u " +
+            "LEFT JOIN FETCH f.prices p " +
+            "WHERE e.day.id = :dayId")
+    List<Entry> fetchAllFoodEntriesByDay(
+        @Param("dayId") Long dayId
+    );
+
     /**
      * Verifies that the {@link Entry} with identifier {@code entryId} is owned by the {@link User}
      * with identifier {@code userId}, and if so, fetches information about its placement.
@@ -82,6 +101,8 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
             @Param("userId") Long userId,
             @Param("entryId") Long entryId
     );
+
+    // TODO: extractCategoryTotalsByDay
 
     /**
      * Counts the total number of {@link Entry} entities that belong to the {@link Day} with
@@ -158,6 +179,16 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
     int deleteByIdVerified(
             @Param("userId") Long userId,
             @Param("entryId") Long entryId
+    );
+
+    /**
+     * Deletes all {@link Entry} entities owned by the {@link Day} with identifier {@code dayId}.
+     * @param dayId the identifier of the entries' owning day
+     */
+    @Modifying
+    @Query("DELETE FROM Entry e WHERE e.day.id = :dayId")
+    void deleteAllByDay(
+        @Param("dayId") Long dayId
     );
 
 }
