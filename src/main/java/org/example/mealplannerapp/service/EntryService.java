@@ -127,7 +127,7 @@ public class EntryService {
             }
 
             entryRepository.shiftUpByDayAndCategory(dayId, request.category(), desiredPosition, null);
-            entryRepository.shiftDownByDayAndCategory(dayId, request.category(), currentPosition, null);
+            entryRepository.shiftDownByDayAndCategory(dayId, entry.getCategory(), currentPosition, null);
 
             entry.setCategory(request.category());
             entry.setPosition(desiredPosition);
