@@ -1,4 +1,4 @@
-package org.example.mealplannerapp.projection;
+package org.example.mealplannerapp.projection.stats;
 
 import org.example.mealplannerapp.constants.Category;
 

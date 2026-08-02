@@ -1,4 +1,4 @@
-package org.example.mealplannerapp.projection;
+package org.example.mealplannerapp.projection.stats;
 
 /**
  * Interface for fetching nutrition and price values in one go.

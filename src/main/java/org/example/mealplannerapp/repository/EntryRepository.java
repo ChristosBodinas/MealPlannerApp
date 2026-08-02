@@ -5,7 +5,9 @@ import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
+import org.example.mealplannerapp.projection.stats.CategoryStats;
 import org.example.mealplannerapp.projection.Placement;
+import org.example.mealplannerapp.projection.stats.Stats;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,7 +17,6 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 @Repository
 public interface EntryRepository extends JpaRepository<Entry, Long> {
@@ -44,6 +45,7 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
      * Verifies that the {@link FoodEntry} with identifier {@code entryId} is owned by the {@link User}
      * with identifier {@code userId}, and if so, fetches it and eagerly loads the referenced food and
      * its associated units and prices.
+     * Internal method meant to be used only via EntryRepository's fetchByIdVerified.
      *
      * @param userId  the identifier of the entry's owner
      * @param entryId the identifier of the requested entry
@@ -60,8 +62,27 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
             @Param("entryId") Long entryId
     );
 
+    // TODO: default List<Entry> fetchAllByDay
+    default List<Entry> fetchAllByDay(Long dayId) {
+        List<Entry> entries = new ArrayList<>();
+        entries.addAll(fetchAllFoodEntriesByDay(dayId));
+        return entries;
+    }
+
+    // TODO: javadoc (internal method)
+        @Query("SELECT e FROM Entry e " +
+            "LEFT JOIN FETCH TREAT(e AS FoodEntry).food f " +
+            "LEFT JOIN FETCH f.units u " +
+            "LEFT JOIN FETCH f.prices p " +
+            "WHERE e.day.id = :dayId AND TYPE(e) = FoodEntry")
+    List<Entry> fetchAllFoodEntriesByDay(
+        @Param("dayId") Long dayId
+    );
+
     /**
      * Finds the type of the {@link Entry} entity with identifier {@code entryId}.
+     * Internal method meant to be used only via EntryRepository's fetchByIdVerified.
+     *
      *
      * @param entryId the identifier of the requested entry
      * @return the type of the requested entry, or empty if it does not exist
@@ -69,22 +90,6 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
     @Query("SELECT TYPE(e) FROM Entry e WHERE e.id = :entryId")
     Optional<Class<? extends Entry>> extractTypeById(
             @Param("entryId") Long entryId
-    );
-
-    // TODO: default List<Entry> fetchAllByDay
-    default List<Entry> fetchAllByDay(Long dayId) {
-        List<Entry> entries = new ArrayList<>();
-        return entries;
-    }
-
-    // TODO: javadoc
-        @Query("SELECT e FROM Entry e " +
-            "LEFT JOIN FETCH TREAT(e AS FoodEntry).food f " +
-            "LEFT JOIN FETCH f.units u " +
-            "LEFT JOIN FETCH f.prices p " +
-            "WHERE e.day.id = :dayId")
-    List<Entry> fetchAllFoodEntriesByDay(
-        @Param("dayId") Long dayId
     );
 
     /**
@@ -103,6 +108,21 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
     );
 
     // TODO: extractCategoryTotalsByDay
+    @Query("SELECT e.category AS category, " +
+            "SUM(e.calories) AS calories, SUM(e.protein) AS protein, SUM(e.carbs) AS carbs, " +
+            "SUM(e.fat) AS fat, SUM(e.fiber) AS fiber, SUM (e.price) AS price " +
+            "FROM Entry e WHERE e.day.id = :dayId " +
+            "GROUP BY e.category")
+    List<CategoryStats> extractCategoryStatsByDay(
+            @Param("dayId") Long dayId
+    );
+
+    @Query("SELECT SUM(e.calories) AS calories, SUM(e.protein) AS protein, SUM(e.carbs) AS carbs, " +
+            "SUM(e.fat) AS fat, SUM(e.fiber) AS fiber, SUM (e.price) AS price " +
+            "FROM Entry e WHERE e.day.plan.id = :planId ")
+    Stats extractStatsByPlan(
+            @Param("planId") Long planId
+    );
 
     /**
      * Counts the total number of {@link Entry} entities that belong to the {@link Day} with
@@ -189,6 +209,12 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
     @Query("DELETE FROM Entry e WHERE e.day.id = :dayId")
     void deleteAllByDay(
         @Param("dayId") Long dayId
+    );
+
+    @Modifying
+    @Query("DELETE FROM Entry e WHERE e.day.plan.id = :planId")
+    void deleteAllByPlan(
+            @Param("planId") Long planId
     );
 
 }
