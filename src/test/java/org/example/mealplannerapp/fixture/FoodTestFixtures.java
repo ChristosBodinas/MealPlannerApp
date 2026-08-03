@@ -1,5 +1,12 @@
 package org.example.mealplannerapp.fixture;
 
+import org.example.mealplannerapp.dto.food.request.FoodRequest;
+import org.example.mealplannerapp.dto.food.request.PriceRequest;
+import org.example.mealplannerapp.dto.food.request.UnitRequest;
+import org.example.mealplannerapp.dto.food.response.FoodResponse;
+import org.example.mealplannerapp.dto.food.response.ListedFoodResponse;
+import org.example.mealplannerapp.dto.food.response.PriceResponse;
+import org.example.mealplannerapp.dto.food.response.UnitResponse;
 import org.example.mealplannerapp.embeddable.FoodPrice;
 import org.example.mealplannerapp.embeddable.FoodUnit;
 import org.example.mealplannerapp.entity.Food;
