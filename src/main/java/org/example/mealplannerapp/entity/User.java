@@ -2,8 +2,8 @@ package org.example.mealplannerapp.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.example.mealplannerapp.constants.Gender;
-import org.example.mealplannerapp.constants.Sex;
+import org.example.mealplannerapp.common.Gender;
+import org.example.mealplannerapp.common.Sex;
 
 import java.time.LocalDate;
 

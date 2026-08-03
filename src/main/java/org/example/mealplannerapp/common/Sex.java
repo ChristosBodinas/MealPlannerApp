@@ -1,4 +1,4 @@
-package org.example.mealplannerapp.constants;
+package org.example.mealplannerapp.common;
 
 // TODO: Add proper names.
 public enum Sex {
