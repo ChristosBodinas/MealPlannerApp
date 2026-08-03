@@ -1,7 +1,14 @@
 package org.example.mealplannerapp.common;
 
-// TODO: Add proper names.
+import lombok.*;
+
+@Getter
+@RequiredArgsConstructor
 public enum Sex {
-    MALE,
-    FEMALE
+    MALE("Male", 161.0, 30.0),
+    FEMALE("Female", -5.0, 25.0);
+
+    private final String displayName;
+    private final double bmrOffset;
+    private final double fiberIntake;
 }

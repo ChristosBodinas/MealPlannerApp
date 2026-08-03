@@ -1,8 +1,17 @@
 package org.example.mealplannerapp.common;
 
-// TODO: Add proper names and possibly shorten the values.
+import lombok.*;
+
+@Getter
+@RequiredArgsConstructor
 public enum Gender {
-    MALE,
-    FEMALE,
-    NON_BINARY
+    MALE("Male", "He", "Him", "His", "His"),
+    FEMALE("Female", "She", "Her", "Her", "Hers"),
+    NON_BINARY("Non-Binary", "They", "Them", "Their", "Theirs");
+
+    private final String displayName;
+    private final String subjectPronoun;
+    private final String objectPronoun;
+    private final String possessiveAdjective;
+    private final String possessivePronoun;
 }
