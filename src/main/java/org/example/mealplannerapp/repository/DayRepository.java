@@ -15,7 +15,6 @@ public interface DayRepository extends JpaRepository<Day, Long> {
     /**
      * Verifies that the {@link Day} with identifier {@code dayId} is owned by the {@link User}
      * with identifier {@code userId}, and if so, fetches it from the database.
-     *
      * @param userId
      * @param dayId
      * @return
@@ -29,7 +28,6 @@ public interface DayRepository extends JpaRepository<Day, Long> {
     /**
      * Verifies that a {@link Day} with identifier {@code dayId} exists and is owned by the
      * {@link User} with identifier {@code userId}.
-     *
      * @param userId the identifier of the day's owner
      * @param dayId  the identifier of the requested day
      * @return true if the given day exists for the given user, or false otherwise
