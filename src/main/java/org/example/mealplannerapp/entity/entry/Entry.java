@@ -40,7 +40,7 @@ public abstract class Entry {
     private Category category;
 
     /**
-     * One-based osition of the entry within its category and scoped to its day.
+     * One-based position of the entry within its category and scoped to its day.
      */
     @Column(nullable = false)
     private int position;

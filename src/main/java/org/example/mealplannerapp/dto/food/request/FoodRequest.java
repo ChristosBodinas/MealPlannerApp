@@ -5,8 +5,8 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
-import org.hibernate.validator.constraints.Length;
 
 import java.util.Set;
 
@@ -17,10 +17,10 @@ import java.util.Set;
 public record FoodRequest(
 
         @NotBlank(message = "A food's name cannot be blank.")
-        @Length(max = 45, message = "A food's name cannot exceed 45 characters.")
+        @Size(max = 45, message = "A food's name cannot exceed 45 characters.")
         String name,
 
-        @Length(max = 45, message = "A food's brand name cannot exceed 45 characters.")
+        @Size(max = 45, message = "A food's brand name cannot exceed 45 characters.")
         String brand,
 
         @PositiveOrZero(message = "Calories cannot be a negative number.")

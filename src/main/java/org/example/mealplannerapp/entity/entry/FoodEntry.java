@@ -33,17 +33,19 @@ public class FoodEntry extends Entry {
     /**
      * Quantity of the given food in grams.
      */
-    @Column(nullable = false)
+    @Column(nullable = true)
     private double grams;
 
     /**
      * Name of unit last used as a reference.
+     * If null or invalid, the entry's quantity should be displayed in grams.
      */
-    @Column(nullable = false, length = 20)
+    @Column(nullable = true, length = 20)
     private String unit;
 
     /**
      * Name of vendor selected for price calculation.
+     * If null or invalid, the entry's price snapshot will be set to 0.
      */
     @Column(nullable = false, length = 20)
     private String vendor;
@@ -57,7 +59,7 @@ public class FoodEntry extends Entry {
         setFiber(food.getFiberPer100g() * grams / 100.0);
 
         Map<String, Double> pricesPer100g = food.computePricesPer100g();
-        if (pricesPer100g.containsKey(vendor)) {
+        if(vendor != null && pricesPer100g.containsKey(vendor)) {
             setPrice(pricesPer100g.get(vendor) * grams / 100);
         } else {
             setPrice(0.0);
