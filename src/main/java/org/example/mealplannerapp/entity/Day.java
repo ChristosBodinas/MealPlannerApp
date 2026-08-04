@@ -1,0 +1,38 @@
+package org.example.mealplannerapp.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+/**
+ * An entity that represents a day in a given meal plan and the
+ * target nutrition amounts for that day.
+ */
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Day {
+
+    // TODO: UniqueConstraints and/or CompositeKey using plan + position;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Setter(AccessLevel.NONE)
+    private Long id;
+
+    /**
+     * Plan to which the day belongs.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "plan_id", nullable = false)
+    private Plan plan;
+
+    /**
+     * Position among the parent plan's days.
+     */
+    @Column(nullable = false)
+    private int position;
+    
+}
