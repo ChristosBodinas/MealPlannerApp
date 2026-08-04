@@ -34,5 +34,30 @@ public class Day {
      */
     @Column(nullable = false)
     private int position;
+
+        /**
+     * Target energy amount (in Kcal) for the day.
+     */
+    private double targetCalories;
+
+    /**
+     * Target protein amount (in grams) for the day.
+     */
+    private double targetProtein;
+
+    /**
+     * Target carbs amount (in grams) for the day.
+     */
+    private double targetCarbs;
+
+    /**
+     * Target fat amount (in grams) for the day.
+     */
+    private double targetFat;
+
+    /**
+     * Target fiber amount (in grams) for the day.
+     */
+    private double targetFiber;
     
 }
