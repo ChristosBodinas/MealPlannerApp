@@ -18,29 +18,29 @@ import java.util.Set;
 public interface FoodMapper {
 
     // FOOD UNIT MAPPING
-    FoodUnit unitFromRequest(UnitRequest request);
+    FoodUnit toUnit(UnitRequest request);
 
     @IterableMapping(nullValueMappingStrategy = NullValueMappingStrategy.RETURN_DEFAULT)
-    Set<FoodUnit> unitsFromRequests(Set<UnitRequest> requests);
+    Set<FoodUnit> toUnits(Set<UnitRequest> requests);
 
-    UnitResponse responseFromUnit(FoodUnit unit);
+    UnitResponse toUnitResponse(FoodUnit unit);
 
     // FOOD PRICE MAPPING
-    FoodPrice priceFromRequest(PriceRequest request);
+    FoodPrice toPrice(PriceRequest request);
 
     @IterableMapping(nullValueMappingStrategy = NullValueMappingStrategy.RETURN_DEFAULT)
-    Set<FoodPrice> pricesFromRequests(Set<PriceRequest> requests);
+    Set<FoodPrice> toPrices(Set<PriceRequest> requests);
 
-    PriceResponse responseFromPrice(FoodPrice price);
+    PriceResponse toPriceResponse(FoodPrice price);
 
     // FOOD MAPPING
     @Mapping(target = "user", ignore = true)
-    Food createFromRequest(FoodRequest request);
+    Food toFood(FoodRequest request);
 
     @Mapping(target = "user", ignore = true)
-    void updateFromRequest(@MappingTarget Food food, FoodRequest request);
+    void update(@MappingTarget Food food, FoodRequest request);
 
-    FoodResponse generateResponse(Food food);
+    FoodResponse toResponse(Food food);
 
-    ListedFoodResponse generateListedResponse(Food food);
+    ListedFoodResponse toListedResponse(Food food);
 }

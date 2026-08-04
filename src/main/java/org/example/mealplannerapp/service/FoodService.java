@@ -55,11 +55,11 @@ public class FoodService {
     public FoodResponse createFood(User user, FoodRequest request) {
         verifyUniqueUnitsAndPrices(request);
 
-        Food food = foodMapper.createFromRequest(request);
+        Food food = foodMapper.toFood(request);
         food.setUser(user);
 
         Food saved = foodRepository.save(food);
-        return foodMapper.generateResponse(saved);
+        return foodMapper.toResponse(saved);
     }
 
     /**
@@ -80,9 +80,9 @@ public class FoodService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Requested food (id: " + foodId + ") not found.")
                 );
-        foodMapper.updateFromRequest(food, request);
+        foodMapper.update(food, request);
 
-        return foodMapper.generateResponse(food);
+        return foodMapper.toResponse(food);
     }
 
     /**
@@ -113,7 +113,7 @@ public class FoodService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Requested food (id: " + foodId + ") not found.")
                 );
-        return foodMapper.generateResponse(food);
+        return foodMapper.toResponse(food);
     }
 
     /**
@@ -127,7 +127,7 @@ public class FoodService {
     public List<ListedFoodResponse> searchFoods(User user, String search) {
         return foodRepository.fetchShallowByUserAndText(user.getId(), search)
                 .stream()
-                .map(foodMapper::generateListedResponse)
+                .map(foodMapper::toListedResponse)
                 .toList();
     }
 }

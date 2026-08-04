@@ -100,14 +100,14 @@ class FoodServiceUnitTests {
             FoodResponse result = foodService.createFood(myUser, request);
 
             // Assert
-            assertThat(result).isEqualTo(foodMapper.generateResponse(saved));
+            assertThat(result).isEqualTo(foodMapper.toResponse(saved));
 
             verify(foodRepository).save(foodCaptor.capture());
             assertThat(foodCaptor.getValue().getUser()).isEqualTo(myUser);
             assertThat(foodCaptor.getValue())
                     .usingRecursiveComparison()
                     .ignoringFields("id", "user")
-                    .isEqualTo(foodMapper.createFromRequest(request));
+                    .isEqualTo(foodMapper.toFood(request));
         }
 
         @ParameterizedTest
@@ -142,7 +142,7 @@ class FoodServiceUnitTests {
             FoodResponse result = foodService.updateFood(myUser, FOOD_ID, request);
 
             // Assert
-            assertThat(result).isEqualTo(foodMapper.generateResponse(found));
+            assertThat(result).isEqualTo(foodMapper.toResponse(found));
             assertThat(found.getCaloriesPer100g()).isEqualTo(CALORIES_AFTER);
         }
 
@@ -222,7 +222,7 @@ class FoodServiceUnitTests {
             FoodResponse result = foodService.retrieveFood(myUser, FOOD_ID);
 
             // Assert
-            assertThat(result).isEqualTo(foodMapper.generateResponse(found));
+            assertThat(result).isEqualTo(foodMapper.toResponse(found));
         }
 
         @Test
@@ -268,7 +268,7 @@ class FoodServiceUnitTests {
             List<ListedFoodResponse> results = foodService.searchFoods(myUser, "text");
 
             // Assert
-            assertThat(results).isEqualTo(foods.stream().map(foodMapper::generateListedResponse).toList());
+            assertThat(results).isEqualTo(foods.stream().map(foodMapper::toListedResponse).toList());
         }
 
     }
