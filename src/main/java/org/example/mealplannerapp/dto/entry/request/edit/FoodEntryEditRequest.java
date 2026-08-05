@@ -13,9 +13,9 @@ public record FoodEntryEditRequest(
         Double grams,
 
         @Size(max = 20, message = "Unit name cannot exceed 20 characters.")
-        String displayUnit,
+        String unit,
 
         @Size(max = 20, message = "Vendor name cannot exceed 20 characters.")
-        String selectedVendor
+        String vendor
 ) implements EntryEditRequest {
 }
