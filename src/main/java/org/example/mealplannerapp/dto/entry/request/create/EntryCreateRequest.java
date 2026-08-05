@@ -10,9 +10,10 @@ import org.example.mealplannerapp.constants.Category;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = FoodEntryCreateRequest.class, name = "FOOD")
+        @JsonSubTypes.Type(value = FoodEntryCreateRequest.class, name = "FOOD"),
+        @JsonSubTypes.Type(value = ExerciseEntryCreateRequest.class, name = "EXERCISE")
 })
-public sealed interface EntryCreateRequest permits FoodEntryCreateRequest {
+public sealed interface EntryCreateRequest permits FoodEntryCreateRequest, ExerciseEntryCreateRequest {
 
     Category category();
 }

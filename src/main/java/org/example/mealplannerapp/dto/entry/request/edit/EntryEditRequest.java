@@ -8,7 +8,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = FoodEntryEditRequest.class, name = "FOOD")
+        @JsonSubTypes.Type(value = FoodEntryEditRequest.class, name = "FOOD"),
+        @JsonSubTypes.Type(value = ExerciseEntryEditRequest.class, name = "EXERCISE")
 })
-public sealed interface EntryEditRequest permits FoodEntryEditRequest {
+public sealed interface EntryEditRequest permits FoodEntryEditRequest, ExerciseEntryEditRequest {
 }

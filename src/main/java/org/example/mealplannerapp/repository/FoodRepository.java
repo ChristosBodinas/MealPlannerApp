@@ -31,6 +31,8 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
             @Param("foodId") Long foodId
     );
 
+        // TODO: Repository methods that return multiple entities should either all have "All" or none should.
+
     /**
      * Fetches every {@code Food} that is owned by the {@link User} with identifier {@code userId}
      * whose name or brand contains the given {@code text}. Case-insensitive. Does not fetch the
