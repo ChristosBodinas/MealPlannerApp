@@ -66,7 +66,6 @@ public class FoodRepositoryTests {
     }
 
     // TESTS PROPER
-
     @Nested
     @DisplayName("fetchByIdVerified")
     class FetchByIdVerified {
