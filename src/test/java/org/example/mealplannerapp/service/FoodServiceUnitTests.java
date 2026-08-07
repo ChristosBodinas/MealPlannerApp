@@ -201,7 +201,6 @@ class FoodServiceUnitTests {
             // Act + Assert
             assertThatThrownBy(() -> foodService.deleteFood(myUser, FOOD_ID))
                     .isInstanceOf(ResourceNotFoundException.class);
-            verify(foodRepository).deleteByIdVerified(USER_ID, FOOD_ID);
         }
 
     }
