@@ -1,11 +1,9 @@
 package org.example.mealplannerapp.repository;
 
 import org.example.mealplannerapp.common.Category;
-import org.example.mealplannerapp.entity.Day;
-import org.example.mealplannerapp.entity.Food;
-import org.example.mealplannerapp.entity.Plan;
-import org.example.mealplannerapp.entity.User;
+import org.example.mealplannerapp.entity.*;
 import org.example.mealplannerapp.entity.entry.Entry;
+import org.example.mealplannerapp.entity.entry.ExerciseEntry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.projection.Placement;
 import org.hibernate.Hibernate;
@@ -33,7 +31,9 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
+import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultExerciseEntryBuilder;
 import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultFoodEntryBuilder;
+import static org.example.mealplannerapp.fixture.ExerciseTestFixtures.defaultExerciseBuilder;
 import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBuilder;
 import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
@@ -106,6 +106,16 @@ public class EntryRepositoryTests {
         return entry;
     }
 
+    private ExerciseEntry prepareExerciseEntry(User owner, Day ownerDay) {
+        Exercise exercise = defaultExerciseBuilder().user(owner).build();
+        ExerciseEntry entry = defaultExerciseEntryBuilder().day(ownerDay).build();
+
+        entityManager.persist(exercise);
+        entityManager.persist(entry);
+
+        return entry;
+    }
+
     private static Stream<Arguments> provideBounds() {
         return Stream.of(
                 argumentSet("Both sides bounded", 4, 8),
@@ -129,26 +139,7 @@ public class EntryRepositoryTests {
         }
 
         @Test
-        @DisplayName("Returns a FoodEntry if it exists and belongs to the given user.")
-        void foodEntryFetched() {
-            // Arrange
-            FoodEntry entry = prepareFoodEntry(myUser, myDay);
-            flushAndClear();
-
-            // Act
-            Optional<Entry> result = entryRepository.fetchByIdVerified(myUser.getId(), entry.getId());
-
-            // Assert
-            assertThat(result).isPresent();
-            Entry fetched = result.get();
-
-            assertThat(fetched).isInstanceOf(FoodEntry.class);
-            assertThat(fetched.getId()).isEqualTo(entry.getId());
-            assertThat(lookupUser(fetched).getId()).isEqualTo(myUser.getId());
-        }
-
-        @Test
-        @DisplayName("Returns empty if the requested entry does not exist.")
+        @DisplayName("Returns empty when the requested entry does not exist.")
         void entryNotFound() {
             // Arrange
             flushAndClear();
@@ -162,7 +153,7 @@ public class EntryRepositoryTests {
         }
 
         @Test
-        @DisplayName("Returns empty if the requested entry exists but belongs to a different user.")
+        @DisplayName("Returns empty when the requested entry exists but belongs to another user.")
         void entryNotOwned() {
             // Arrange
             prepareOtherUser();
@@ -176,27 +167,16 @@ public class EntryRepositoryTests {
             assertThat(result).isEmpty();
             assertThat(entryRepository.existsById(entry.getId())).isTrue();
         }
-    }
-
-    @Nested
-    @DisplayName("fetchFoodEntryByIdVerified")
-    class FetchFoodEntryByIdVerified {
-
-        @BeforeEach
-        void prepareTests() {
-            prepareMyUser();
-        }
 
         @Test
-        @DisplayName("Returns the requested food entry, its referenced food, and the food's associated " +
-                "units/prices when the entry exists and belongs to the given user.")
-        void entryFetched() {
+        @DisplayName("Returns a FoodEntry and its associated Food when given the id of an existing, owned FoodEntry.")
+        void foodEntryFetched() {
             // Arrange
             FoodEntry entry = prepareFoodEntry(myUser, myDay);
             flushAndClear();
 
             // Act
-            Optional<Entry> result = entryRepository.fetchFoodEntryByIdVerified(myUser.getId(), entry.getId());
+            Optional<Entry> result = entryRepository.fetchByIdVerified(myUser.getId(), entry.getId());
 
             // Assert
             assertThat(result).isPresent();
@@ -211,75 +191,24 @@ public class EntryRepositoryTests {
         }
 
         @Test
-        @DisplayName("Returns empty when the requested entry does not exist.")
-        void entryNotFound() {
+        @DisplayName("Returns an ExerciseEntry and its associated Exercise when given the id of an existing, owned ExerciseEntry.")
+        void exerciseEntryFetched() {
             // Arrange
+            ExerciseEntry entry = prepareExerciseEntry(myUser, myDay);
             flushAndClear();
 
             // Act
-            Optional<Entry> result = entryRepository.fetchFoodEntryByIdVerified(myUser.getId(), 999L);
-
-            // Assert
-            assertThat(result).isEmpty();
-            assertThat(entryRepository.existsById(999L)).isFalse();
-        }
-
-        @Test
-        @DisplayName("Returns empty when the requested entry exists but belongs to a different user.")
-        void entryNotOwned() {
-            // Arrange
-            prepareOtherUser();
-            FoodEntry entry = prepareFoodEntry(otherUser, otherDay);
-            flushAndClear();
-
-            // Act
-            Optional<Entry> result = entryRepository.fetchFoodEntryByIdVerified(myUser.getId(), entry.getId());
-
-            // Assert
-            assertThat(result).isEmpty();
-            assertThat(entryRepository.existsById(entry.getId())).isTrue();
-        }
-
-    }
-
-    @Nested
-    @DisplayName("extractTypeById")
-    class ExtractTypeById {
-
-        @BeforeEach
-        void prepareTests() {
-            prepareMyUser();
-        }
-
-        // TODO: Might parameterize in the future once more types are implemented.
-        @Test
-        @DisplayName("Returns FoodEntry.class when the requested entry is a food entry.")
-        void typeReturned() {
-            // Arrange
-            FoodEntry entry = prepareFoodEntry(myUser, myDay);
-            flushAndClear();
-
-            // Act
-            Optional<Class<? extends Entry>> result = entryRepository.extractTypeById(entry.getId());
+            Optional<Entry> result = entryRepository.fetchByIdVerified(myUser.getId(), entry.getId());
 
             // Assert
             assertThat(result).isPresent();
-            assertThat(result.get()).isEqualTo(FoodEntry.class);
+            ExerciseEntry fetched = (ExerciseEntry) result.get();
 
-        }
+            assertThat(fetched.getId()).isEqualTo(entry.getId());
+            assertThat(lookupUser(fetched).getId()).isEqualTo(myUser.getId());
 
-        @Test
-        @DisplayName("Returns empty when the requested entry does not exist.")
-        void entryNotFound() {
-            // Arrange
-            flushAndClear();
-
-            // Act
-            Optional<Class<? extends Entry>> result = entryRepository.extractTypeById(999L);
-
-            // Assert
-            assertThat(result).isEmpty();
-            assertThat(entryRepository.existsById(999L)).isFalse();
+            assertThat(Hibernate.isInitialized(fetched.getExercise())).isTrue();
+            assertThat(Hibernate.isInitialized(fetched.getExercise().getLevels())).isTrue();
         }
 
     }
@@ -409,8 +338,6 @@ public class EntryRepositoryTests {
             assertThat(result).isEqualTo(TOTAL_COUNT - 1);
             assertThat(entryRepository.count()).isEqualTo(TOTAL_COUNT);
         }
-
-        // TODO: polymorphic counting test
 
     }
 

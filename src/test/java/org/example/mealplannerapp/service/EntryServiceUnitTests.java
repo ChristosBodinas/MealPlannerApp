@@ -21,6 +21,7 @@ import org.example.mealplannerapp.mapper.EntryMapperImpl;
 import org.example.mealplannerapp.projection.Placement;
 import org.example.mealplannerapp.repository.DayRepository;
 import org.example.mealplannerapp.repository.EntryRepository;
+import org.example.mealplannerapp.repository.ExerciseRepository;
 import org.example.mealplannerapp.repository.FoodRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -62,6 +63,8 @@ public class EntryServiceUnitTests {
     private DayRepository dayRepository;
     @Mock
     private FoodRepository foodRepository;
+    @Mock
+    private ExerciseRepository exerciseRepository;
     @Captor
     ArgumentCaptor<Entry> entryCaptor;
 
@@ -164,7 +167,12 @@ public class EntryServiceUnitTests {
         myPlan.getDays().add(myDay);
 
         entryMapper = new EntryMapperImpl();
-        entryService = new EntryService(entryRepository, dayRepository, foodRepository, entryMapper);
+        entryService = new EntryService(
+                entryRepository,
+                dayRepository,
+                foodRepository,
+                exerciseRepository,
+                entryMapper);
     }
 
     // TESTS PROPER
@@ -325,7 +333,7 @@ public class EntryServiceUnitTests {
                 assertThat(copied)
                         .usingRecursiveComparison()
                         .ignoringFields("id", "day", "category", "position")
-                        .isEqualTo(original);   // TODO: Learn how (if?) this works for floats.
+                        .isEqualTo(original);
 
                 assertThat(copied.getDay()).isEqualTo(myOtherDay);
                 assertThat(copied.getCategory()).isEqualTo(OTHER_CATEGORY);
@@ -361,6 +369,24 @@ public class EntryServiceUnitTests {
 
             }
 
+        }
+
+        @Nested
+        @DisplayName("with entryId that points to an ExerciseEntry")
+        class DuplicateExerciseEntry {
+
+            @Test
+            @DisplayName("Creates and saves a duplicate of an ExerciseEntry when given a valid dayId, entryId, and target category.")
+            void exerciseEntryDuplicated() {
+                // TODO: Write test.
+
+            }
+
+            @Test
+            @DisplayName("Duplicate ExerciseEntry calculates its own snapshots values from scratch.")
+            void outdatedExerciseEntryDuplicated() {
+                // TODO: Write test.
+            }
         }
 
     }

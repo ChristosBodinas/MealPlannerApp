@@ -28,64 +28,38 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
      * if no such entry is owned by the given user
      */
     default Optional<Entry> fetchByIdVerified(Long userId, Long entryId) {
-        Class<? extends Entry> type = extractTypeById(entryId).orElse(null);
+        Class<? extends Entry> type = extractTypeByIdVerified(userId, entryId)
+                .orElse(null);
 
         if (type == FoodEntry.class) {
-            return fetchFoodEntryByIdVerified(userId, entryId);
+            return fetchFoodEntryById(entryId);
         } else if (type == ExerciseEntry.class) {
-                return fetchExerciseEntryByIdVerified(userId, entryId);
+                return fetchExerciseEntryById(entryId);
         } else {
             return Optional.empty();
         }
     }
 
-    /**
-     * Verifies that the {@link FoodEntry} with identifier {@code entryId} is owned by the {@link User}
-     * with identifier {@code userId}, and if so, fetches it and eagerly loads the referenced food and
-     * its associated units and prices.
-     * <p>INTERNAL METHOD. Meant to be used only via EntryRepository's fetchByIdVerified.</p>
-     * @param userId  the identifier of the entry's owner
-     * @param entryId the identifier of the requested entry
-     * @return the requested entry, its referenced food, and the food's associated units/prices, or
-     * empty if no such entry is owned by the given user
-     */
     @Query("SELECT e FROM Entry e " +
             "LEFT JOIN FETCH TREAT(e AS FoodEntry).food f " +
             "LEFT JOIN FETCH f.units u " +
             "LEFT JOIN FETCH f.prices p " +
-            "WHERE e.day.plan.user.id = :userId AND e.id = :entryId")
-    Optional<Entry> fetchFoodEntryByIdVerified(
-            @Param("userId") Long userId,
+            "WHERE e.id = :entryId")
+    Optional<Entry> fetchFoodEntryById(
             @Param("entryId") Long entryId
     );
 
-        /**
-     * Verifies that the {@link ExerciseEntry} with identifier {@code entryId} is owned by the {@link User}
-     * with identifier {@code userId}, and if so, fetches it and eagerly loads the referenced exercise and
-     * its associated intensity levels.
-     * <p>INTERNAL METHOD. Meant to be used only via EntryRepository's fetchByIdVerified.</p>
-     * @param userId  the identifier of the entry's owner
-     * @param entryId the identifier of the requested entry
-     * @return the requested entry, its referenced exercise, and the food's associated intensity levels, or
-     * empty if no such entry is owned by the given user
-     */
     @Query("SELECT e FROM Entry e " +
                 "LEFT JOIN FETCH TREAT(e AS ExerciseEntry).exercise x " +
                 "LEFT JOIN FETCH x.levels l " +
-                "WHERE e.day.plan.user.id = :userId AND e.id = :entryId")
-    Optional<Entry> fetchExerciseEntryByIdVerified(
-        @Param("userId") Long userId,
+                "WHERE e.id = :entryId")
+    Optional<Entry> fetchExerciseEntryById(
         @Param("entryId") Long entryId
     );
 
-    /**
-     * Finds the type of the {@link Entry} entity with identifier {@code entryId}.
-     * <p>INTERNAL METHOD. Meant to be used only via EntryRepository's fetchByIdVerified.</p>
-     * @param entryId the identifier of the requested entry
-     * @return the type of the requested entry, or empty if it does not exist
-     */
-    @Query("SELECT TYPE(e) FROM Entry e WHERE e.id = :entryId")
-    Optional<Class<? extends Entry>> extractTypeById(
+    @Query("SELECT TYPE(e) FROM Entry e WHERE e.day.plan.user.id = :userId AND e.id = :entryId")
+    Optional<Class<? extends Entry>> extractTypeByIdVerified(
+            @Param("userId") Long userId,
             @Param("entryId") Long entryId
     );
 

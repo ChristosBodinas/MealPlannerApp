@@ -22,6 +22,7 @@ import org.example.mealplannerapp.exception.ServiceValidationException;
 import org.example.mealplannerapp.mapper.ExerciseMapper;
 import org.example.mealplannerapp.mapper.ExerciseMapperImpl;
 import org.example.mealplannerapp.repository.ExerciseRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -62,6 +63,7 @@ public class ExerciseServiceUnitTests {
     }
 
     // BEFORE EACH
+    @BeforeEach
     void prepareAllTests() {
         myUser = defaultUserBuilder().id(USER_ID).build();
 
@@ -143,9 +145,9 @@ public class ExerciseServiceUnitTests {
             ExerciseMapper spyMapper = spy(exerciseMapper);
 
             // Act + Assert
-            assertThatThrownBy(() -> exerciseService.updateExercise(myUser, null, request))
-                .isInstanceOf(ResourceNotFoundException.class);
-            verifyNoInteractions(exerciseMapper);
+            assertThatThrownBy(() -> exerciseService.updateExercise(myUser, EXERCISE_ID, request))
+                .isInstanceOf(ServiceValidationException.class);
+            verifyNoInteractions(spyMapper);
 
         }
 
