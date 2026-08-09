@@ -4,13 +4,16 @@ import lombok.AllArgsConstructor;
 import org.example.mealplannerapp.dto.entry.request.EntryDuplicateRequest;
 import org.example.mealplannerapp.dto.entry.request.EntryMoveRequest;
 import org.example.mealplannerapp.dto.entry.request.create.EntryCreateRequest;
+import org.example.mealplannerapp.dto.entry.request.create.ExerciseEntryCreateRequest;
 import org.example.mealplannerapp.dto.entry.request.create.FoodEntryCreateRequest;
 import org.example.mealplannerapp.dto.entry.request.edit.EntryEditRequest;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
 import org.example.mealplannerapp.entity.Day;
+import org.example.mealplannerapp.entity.Exercise;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.entity.entry.Entry;
+import org.example.mealplannerapp.entity.entry.ExerciseEntry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.exception.ServiceValidationException;
@@ -18,6 +21,7 @@ import org.example.mealplannerapp.mapper.EntryMapper;
 import org.example.mealplannerapp.projection.Placement;
 import org.example.mealplannerapp.repository.DayRepository;
 import org.example.mealplannerapp.repository.EntryRepository;
+import org.example.mealplannerapp.repository.ExerciseRepository;
 import org.example.mealplannerapp.repository.FoodRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +37,7 @@ public class EntryService {
     private final EntryRepository entryRepository;
     private final DayRepository dayRepository;
     private final FoodRepository foodRepository;
+    private final ExerciseRepository exerciseRepository;
     private final EntryMapper entryMapper;
 
     /**
@@ -59,6 +64,11 @@ public class EntryService {
                 Food food = foodRepository.fetchByIdVerified(user.getId(), f.foodId())
                         .orElseThrow(() -> new ResourceNotFoundException("Requested food (id: " + f.foodId() + ") not found."));
                 ((FoodEntry) entry).setFood(food);
+                break;
+            case ExerciseEntryCreateRequest x:
+                Exercise exercise = exerciseRepository.fetchByIdVerified(user.getId(), x.exerciseId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Requested exercise (id: " + x.exerciseId() + ") not found."));
+                ((ExerciseEntry) entry).setExercise(exercise);
                 break;
         }
 

@@ -33,7 +33,7 @@ public class FoodEntry extends Entry {
     /**
      * Quantity of the given food in grams.
      */
-    @Column(nullable = true)
+    @Column(nullable = false)
     private double grams;
 
     /**

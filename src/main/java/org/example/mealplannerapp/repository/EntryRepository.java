@@ -4,6 +4,7 @@ import org.example.mealplannerapp.common.Category;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.entity.entry.Entry;
+import org.example.mealplannerapp.entity.entry.ExerciseEntry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.projection.Placement;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,6 +32,8 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
 
         if (type == FoodEntry.class) {
             return fetchFoodEntryByIdVerified(userId, entryId);
+        } else if (type == ExerciseEntry.class) {
+                return fetchExerciseEntryByIdVerified(userId, entryId);
         } else {
             return Optional.empty();
         }
@@ -54,6 +57,25 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
     Optional<Entry> fetchFoodEntryByIdVerified(
             @Param("userId") Long userId,
             @Param("entryId") Long entryId
+    );
+
+        /**
+     * Verifies that the {@link ExerciseEntry} with identifier {@code entryId} is owned by the {@link User}
+     * with identifier {@code userId}, and if so, fetches it and eagerly loads the referenced exercise and
+     * its associated intensity levels.
+     * <p>INTERNAL METHOD. Meant to be used only via EntryRepository's fetchByIdVerified.</p>
+     * @param userId  the identifier of the entry's owner
+     * @param entryId the identifier of the requested entry
+     * @return the requested entry, its referenced exercise, and the food's associated intensity levels, or
+     * empty if no such entry is owned by the given user
+     */
+    @Query("SELECT e FROM Entry e " +
+                "LEFT JOIN FETCH TREAT(e AS ExerciseEntry).exercise x " +
+                "LEFT JOIN FETCH x.levels l " +
+                "WHERE e.day.plan.user.id = :userId AND e.id = :entryId")
+    Optional<Entry> fetchExerciseEntryByIdVerified(
+        @Param("userId") Long userId,
+        @Param("entryId") Long entryId
     );
 
     /**
