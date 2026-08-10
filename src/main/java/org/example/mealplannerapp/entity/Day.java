@@ -1,5 +1,7 @@
 package org.example.mealplannerapp.entity;
 
+import org.example.mealplannerapp.projection.impl.GoalsImpl;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -59,5 +61,15 @@ public class Day {
      * Target fiber amount (in grams) for the day.
      */
     private double targetFiber;
+
+    public GoalsImpl retrieveGoals() {
+        return new GoalsImpl(
+            targetCalories,
+            targetProtein,
+            targetCarbs,
+            targetFat,
+            targetFiber
+        );
+    }
     
 }

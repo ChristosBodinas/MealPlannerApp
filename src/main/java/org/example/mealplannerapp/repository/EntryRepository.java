@@ -4,8 +4,7 @@ import org.example.mealplannerapp.common.Category;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.entity.entry.Entry;
-import org.example.mealplannerapp.entity.entry.ExerciseEntry;
-import org.example.mealplannerapp.entity.entry.FoodEntry;
+import org.example.mealplannerapp.projection.CategoryStats;
 import org.example.mealplannerapp.projection.Placement;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -13,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -27,40 +27,28 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
      * @return the requested entry and the full data of the entity it references, or empty
      * if no such entry is owned by the given user
      */
-    default Optional<Entry> fetchByIdVerified(Long userId, Long entryId) {
-        Class<? extends Entry> type = extractTypeByIdVerified(userId, entryId)
-                .orElse(null);
-
-        if (type == FoodEntry.class) {
-            return fetchFoodEntryById(entryId);
-        } else if (type == ExerciseEntry.class) {
-                return fetchExerciseEntryById(entryId);
-        } else {
-            return Optional.empty();
-        }
-    }
-
     @Query("SELECT e FROM Entry e " +
             "LEFT JOIN FETCH TREAT(e AS FoodEntry).food f " +
-            "LEFT JOIN FETCH f.units u " +
-            "LEFT JOIN FETCH f.prices p " +
-            "WHERE e.id = :entryId")
-    Optional<Entry> fetchFoodEntryById(
-            @Param("entryId") Long entryId
-    );
+            "LEFT JOIN FETCH f.units u LEFT JOIN FETCH f.prices p " +
+            "LEFT JOIN FETCH TREAT(e AS ExerciseEntry).exercise x " +
+            "LEFT JOIN FETCH x.levels l " +
+            "WHERE e.day.plan.user.id = :userId AND e.id = :entryId")
+        Optional<Entry> fetchByIdVerified(
+                @Param("userId") Long userId,
+                @Param("entryId") Long entryId
+        );
 
+    // TODO: Javadoc.
     @Query("SELECT e FROM Entry e " +
-                "LEFT JOIN FETCH TREAT(e AS ExerciseEntry).exercise x " +
-                "LEFT JOIN FETCH x.levels l " +
-                "WHERE e.id = :entryId")
-    Optional<Entry> fetchExerciseEntryById(
-        @Param("entryId") Long entryId
-    );
-
-    @Query("SELECT TYPE(e) FROM Entry e WHERE e.day.plan.user.id = :userId AND e.id = :entryId")
-    Optional<Class<? extends Entry>> extractTypeByIdVerified(
-            @Param("userId") Long userId,
-            @Param("entryId") Long entryId
+        "LEFT JOIN FETCH TREAT(e AS FoodEntry).food f " +
+        "LEFT JOIN FETCH f.units u LEFT JOIN FETCH f.prices p " +
+        "LEFT JOIN FETCH TREAT(e AS ExerciseEntry).exercise x " +
+        "LEFT JOIN FETCH x.levels l " +
+        "WHERE e.day.id = :dayId " +
+        "ORDER BY e.category ASC, e.position ASC"
+    )
+    List<Entry> fetchByDayOrdered(
+        @Param("dayId") Long dayId
     );
 
     /**
@@ -88,6 +76,14 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
     int countByDayAndCategory(
             @Param("dayId") Long dayId,
             @Param("category") Category category
+    );
+
+    // TODO: Javadoc.
+    @Query("SELECT e.category AS category, SUM(e.calories) AS calories, SUM(e.protein) AS protein, " +
+        "SUM(e.carbs) AS carbs, SUM(e.fat) AS fat, SUM(e.fiber) AS fiber, SUM(e.price) AS price " +
+        "FROM Entry e WHERE e.day.id = :dayId GROUP BY e.category")
+    List<CategoryStats> sumSnapshotsByDayGroupedByCategory(
+        @Param("dayId") Long dayId
     );
 
     /**
@@ -148,6 +144,18 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
     int deleteByIdVerified(
             @Param("userId") Long userId,
             @Param("entryId") Long entryId
+    );
+
+    /**
+     * Deletes all {@link Entry} entities that belong to the {@link Day} with identifier {@code dayId}
+     * from the database.
+     * @param dayId the identifier of the day whose entries to delete
+     * @return the number of rows deleted
+     */
+    @Modifying
+    @Query("DELETE FROM Entry e WHERE e.day.id = :dayId")
+    int deleteByDay(
+        @Param("dayId") Long dayId
     );
 
 }

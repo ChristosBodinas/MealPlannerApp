@@ -47,6 +47,10 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 public class EntryRepositoryTests {
 
+    // TODO: deleteByDay
+    // TODO: fetchByDay
+    // TODO: ???
+
     // BEANS
     @Autowired
     private EntryRepository entryRepository;
