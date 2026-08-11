@@ -5,6 +5,7 @@ import org.example.mealplannerapp.entity.*;
 import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.ExerciseEntry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
+import org.example.mealplannerapp.projection.CategoryStats;
 import org.example.mealplannerapp.projection.Placement;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
 import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultExerciseEntryBuilder;
@@ -84,6 +86,13 @@ public class EntryRepositoryTests {
 
         entityManager.persist(myUser);
         entityManager.persist(myPlan);
+    }
+
+    private Day prepareMySecondDay() {
+        Day mySecondDay = defaultDayBuilder().plan(myPlan).position(2).build();
+        myPlan.getDays().add(mySecondDay);
+        entityManager.persist(mySecondDay);
+        return mySecondDay;
     }
 
     private void prepareOtherUser() {
@@ -216,7 +225,95 @@ public class EntryRepositoryTests {
     @Nested
     @DisplayName("fetchByDayOrdered")
     class FetchByDayOrdered {
-        // TODO: Write tests.
+
+        @Test
+        @DisplayName("Only fetches entries that belong to the day with the given identifier.")
+        void correctEntriesFetched() {
+            // Arrange
+            FoodEntry validFoodEntry = prepareFoodEntry(myUser, myDay);
+            ExerciseEntry validExerciseEntry = prepareExerciseEntry(myUser, myDay);
+
+            Day invalidDay = prepareMySecondDay();
+            FoodEntry invalidEntry = prepareFoodEntry(myUser, invalidDay);
+
+            entityManager.persist(validFoodEntry);
+            entityManager.persist(validExerciseEntry);
+            entityManager.persist(invalidEntry);
+            flushAndClear();
+
+            // Act
+            List<Entry> result = entryRepository.fetchByDayOrdered(myDay.getId());
+
+            // Assert
+            assertThat(result).containsExactlyInAnyOrder(validFoodEntry, validExerciseEntry);
+            // TODO: Assert that referenced entities and collections are initialized.
+
+        }
+
+        private FoodEntry prepareFoodEntryToOrder(Category category, int position) {
+            FoodEntry entry = prepareFoodEntry(myUser, myDay);
+            entry.setCategory(category);
+            entry.setPosition(position);
+            entityManager.persist(entry);
+            return entry;
+        }
+
+        @Test
+        @DisplayName("Fetches entries ordered by category and then by position.")
+        void entriesFetchedInOrder() {
+            // Arrange
+            FoodEntry breakfast1 = prepareFoodEntryToOrder(Category.BREAKFAST, 1)
+            FoodEntry breakfast2 = prepareFoodEntryToOrder(Category.BREAKFAST, 2);
+            FoodEntry dinner1 = prepareFoodEntryToOrder(Category.DINNER, 1);
+            FoodEntry dinner2 = prepareFoodEntryToOrder(Category.DINNER, 2);
+            flushAndClear();
+
+            // Act
+            List<Entry> result = entryRepository.fetchByDayOrdered(myDay.getId());
+
+            // Assert
+            assertThat(result).containsExactly(breakfast1, breakfast2, dinner1, dinner2);
+        }
+
+        @Test
+        @DisplayName("Eagerly loads the referenced Food and its associated units/prices for any fetched FoodEntry.")
+        void foodEagerlyFetched() {
+            // Arrange
+            FoodEntry entry = prepareFoodEntry(myUser, myDay);
+            flushAndClear();
+
+            // Act
+            List<Entry> result = entryRepository.fetchByDayOrdered(myDay.getId());
+
+            // Assert
+            assertThat(result).containsExactly(entry);
+
+            FoodEntry fetched = (FoodEntry) result.get(0);
+
+            assertThat(Hibernate.isInitialized(fetched.getFood())).isTrue();
+            assertThat(Hibernate.isInitialized(fetched.getFood().getUnits())).isTrue();
+            assertThat(Hibernate.isInitialized(fetched.getFood().getPrices())).isTrue();
+        }
+
+        @Test
+        @DisplayName("Eagerly loads the referenced Exercise and its associated intensity levels for any fetched ExerciseEntry.")
+        void exerciseEagerlyFetched() {
+            // Arrange
+            ExerciseEntry entry = prepareExerciseEntry(myUser, myDay);
+            flushAndClear();
+
+            // Act
+            List<Entry> result = entryRepository.fetchByDayOrdered(myDay.getId());
+
+            // Assert
+            assertThat(result).containsExactly(entry);
+
+            ExerciseEntry fetched = (ExerciseEntry) result.get(0);
+
+            assertThat(Hibernate.isInitialized(fetched.getExercise())).isTrue();
+            assertThat(Hibernate.isInitialized(fetched.getExercise().getLevels())).isTrue();
+        }
+
     }
 
     @Nested
@@ -350,7 +447,82 @@ public class EntryRepositoryTests {
     @Nested
     @DisplayName("sumSnapshotsByDayGroupedByCategory")
     class SumSnapshotsByDayGroupedByCategory {
-        // TODO: Write tests.
+        
+        FoodEntry prepareFoodEntryToSum(
+            Category category,
+            double calories, double protein, double carbs,
+            double fat, double fiber, double price
+        ) {
+            Food food = defaultFoodBuilder().user(myUser).build();
+            FoodEntry entry = defaultFoodEntryBuilder()
+                .day(myDay).food(food).category(category)
+                .calories(calories).protein(protein).carbs(carbs)
+                .fat(fat).fiber(fiber).price(price)
+                .build();
+
+            entityManager.persist(food);
+            entityManager.persist(entry);
+
+            return entry;
+        }
+
+        @Test
+        @DisplayName("Correctly calculates sums per category for the given day.")
+        void sumsCalculatedCorrectly() {
+            // Arrange
+            FoodEntry breakfast1 = prepareFoodEntryToSum(Category.BREAKFAST, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0);
+            FoodEntry breakfast2 = prepareFoodEntryToSum(Category.BREAKFAST, 5.0, 7.0, 4.0, 8.0, 3.0, 7.0);
+            FoodEntry dinner1 = prepareFoodEntryToSum(Category.DINNER, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0);
+            FoodEntry dinner2 = prepareFoodEntryToSum(Category.DINNER, 13.0, 18.0, 15.0, 5.0, 7.0, 12.0);
+            flushAndClear();
+
+            // Act
+            List<CategoryStats> result = entryRepository.sumSnapshotsByDayGroupedByCategory(myDay.getId());
+
+            // Assert
+            assertThat(result).extracting(
+                CategoryStats::getCategory,
+                CategoryStats::getCalories,
+                CategoryStats::getProtein,
+                CategoryStats::getCarbs,
+                CategoryStats::getFat,
+                CategoryStats::getFiber,
+                CategoryStats::getPrice
+            ).contains(
+                tuple(Category.BREAKFAST, 15.0, 17.0, 14.0, 18.0, 13.0, 17.0),
+                tuple(Category.LUNCH, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+                tuple(Category.DINNER, 33.0, 38.0, 35.0, 25.0, 27.0, 32.0)
+            );
+        }
+
+        @Test
+        @DisplayName("Only uses values from entries in the given day.")
+        void otherDaysNotInvolved() {
+            // Arrange
+            FoodEntry breakfast1 = prepareFoodEntryToSum(Category.BREAKFAST, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0);
+            FoodEntry breakfast2 = prepareFoodEntryToSum(Category.BREAKFAST, 5.0, 7.0, 4.0, 8.0, 3.0, 7.0);
+            
+            Day invalidDay = prepareMySecondDay();
+            breakfast2.setDay(invalidDay);
+            flushAndClear();
+
+            // Act
+            List<CategoryStats> result = entryRepository.sumSnapshotsByDayGroupedByCategory(myDay.getId());
+
+            // Assert
+            assertThat(result).extracting(                
+                CategoryStats::getCategory,
+                CategoryStats::getCalories,
+                CategoryStats::getProtein,
+                CategoryStats::getCarbs,
+                CategoryStats::getFat,
+                CategoryStats::getFiber,
+                CategoryStats::getPrice
+            ).contains(
+                tuple(Category.BREAKFAST, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0);
+            );
+        }
+
     }
 
     @Nested
@@ -620,7 +792,32 @@ public class EntryRepositoryTests {
     @Nested
     @DisplayName("deleteByDay")
     class DeleteByDay {
-        // TODO: Write tests.
+        
+        @Test
+        @DisplayName("Deletes all entries that belong to the given day and only those entries.")
+        void correctEntriesDeleted() {
+            // Arrange
+            FoodEntry valid1 = prepareFoodEntry(myUser, myDay);
+            ExerciseEntry valid2 = prepareExerciseEntry(myUser, myDay);
+
+            Day invalidDay = prepareMySecondDay();
+            FoodEntry invalid1 = prepareFoodEntry(myUser, invalidDay);
+
+            entityManager.persist(valid1);
+            entityManager.persist(valid2);
+            entityManager.persist(invalid1);
+            flushAndClear();
+
+            // Act
+            int result = entryRepository.deleteByDay(myDay.getId());
+
+            // Assert
+            assertThat(result).isEqualTo(2);
+            assertThat(entryRepository.existsById(valid1.getId())).isFalse();
+            assertThat(entryRepository.existsById(valid2.getId())).isFalse();
+            assertThat(entryRepository.existsById(invalid1.getId())).isTrue();
+        }
+
     }
 
 }
