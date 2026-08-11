@@ -255,8 +255,6 @@ public class EntryRepositoryTests {
 
             // Assert
             assertThat(result).containsExactlyInAnyOrder(validFoodEntry, validExerciseEntry);
-            // TODO: Assert that referenced entities and collections are initialized.
-
         }
 
         private FoodEntry prepareFoodEntryToOrder(Category category, int position) {
