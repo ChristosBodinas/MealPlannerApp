@@ -6,6 +6,7 @@ import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.ExerciseEntry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.projection.CategoryStats;
+import org.example.mealplannerapp.projection.CategoryStats;
 import org.example.mealplannerapp.projection.Placement;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
@@ -86,6 +88,13 @@ public class EntryRepositoryTests {
 
         entityManager.persist(myUser);
         entityManager.persist(myPlan);
+    }
+
+    private Day prepareMySecondDay() {
+        Day mySecondDay = defaultDayBuilder().plan(myPlan).position(2).build();
+        myPlan.getDays().add(mySecondDay);
+        entityManager.persist(mySecondDay);
+        return mySecondDay;
     }
 
     private Day prepareMySecondDay() {
@@ -792,6 +801,32 @@ public class EntryRepositoryTests {
     @Nested
     @DisplayName("deleteByDay")
     class DeleteByDay {
+        
+        @Test
+        @DisplayName("Deletes all entries that belong to the given day and only those entries.")
+        void correctEntriesDeleted() {
+            // Arrange
+            FoodEntry valid1 = prepareFoodEntry(myUser, myDay);
+            ExerciseEntry valid2 = prepareExerciseEntry(myUser, myDay);
+
+            Day invalidDay = prepareMySecondDay();
+            FoodEntry invalid1 = prepareFoodEntry(myUser, invalidDay);
+
+            entityManager.persist(valid1);
+            entityManager.persist(valid2);
+            entityManager.persist(invalid1);
+            flushAndClear();
+
+            // Act
+            int result = entryRepository.deleteByDay(myDay.getId());
+
+            // Assert
+            assertThat(result).isEqualTo(2);
+            assertThat(entryRepository.existsById(valid1.getId())).isFalse();
+            assertThat(entryRepository.existsById(valid2.getId())).isFalse();
+            assertThat(entryRepository.existsById(invalid1.getId())).isTrue();
+        }
+
         
         @Test
         @DisplayName("Deletes all entries that belong to the given day and only those entries.")
