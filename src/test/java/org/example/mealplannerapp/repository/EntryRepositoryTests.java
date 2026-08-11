@@ -262,7 +262,7 @@ public class EntryRepositoryTests {
         @DisplayName("Fetches entries ordered by category and then by position.")
         void entriesFetchedInOrder() {
             // Arrange
-            FoodEntry breakfast1 = prepareFoodEntryToOrder(Category.BREAKFAST, 1)
+            FoodEntry breakfast1 = prepareFoodEntryToOrder(Category.BREAKFAST, 1);
             FoodEntry breakfast2 = prepareFoodEntryToOrder(Category.BREAKFAST, 2);
             FoodEntry dinner1 = prepareFoodEntryToOrder(Category.DINNER, 1);
             FoodEntry dinner2 = prepareFoodEntryToOrder(Category.DINNER, 2);
@@ -519,7 +519,7 @@ public class EntryRepositoryTests {
                 CategoryStats::getFiber,
                 CategoryStats::getPrice
             ).contains(
-                tuple(Category.BREAKFAST, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0);
+                tuple(Category.BREAKFAST, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0)
             );
         }
 
