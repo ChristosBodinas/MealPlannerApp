@@ -1,11 +1,19 @@
 package org.example.mealplannerapp.service;
 
+import org.example.mealplannerapp.common.Category;
+import org.example.mealplannerapp.dto.day.response.DaySummaryResponse;
+import org.example.mealplannerapp.dto.entry.response.EntryResponse;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Plan;
 import org.example.mealplannerapp.entity.User;
+import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
+import org.example.mealplannerapp.mapper.DayMapper;
+import org.example.mealplannerapp.mapper.DayMapperImpl;
 import org.example.mealplannerapp.mapper.EntryMapper;
 import org.example.mealplannerapp.mapper.EntryMapperImpl;
+import org.example.mealplannerapp.projection.CategoryStats;
+import org.example.mealplannerapp.projection.impl.StatsImpl;
 import org.example.mealplannerapp.repository.DayRepository;
 import org.example.mealplannerapp.repository.EntryRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,13 +25,17 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.*;
+import static org.example.mealplannerapp.fixture.EntryTestFixtures.*;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -39,6 +51,7 @@ public class DayServiceUnitTests {
     // VARIABLES
     private DayService dayService;
     private EntryMapper entryMapper;
+    private DayMapper dayMapper;
     private User myUser;
     private Plan myPlan;
 
@@ -61,7 +74,8 @@ public class DayServiceUnitTests {
         myPlan = defaultPlanBuilder().id(PLAN_ID).user(myUser).build();
 
         entryMapper = new EntryMapperImpl();
-        dayService = new DayService(entryRepository, dayRepository, entryMapper);
+        dayMapper = new DayMapperImpl();
+        dayService = new DayService(entryRepository, dayRepository, entryMapper, dayMapper);
     }
 
     // TESTS PROPER
@@ -103,11 +117,27 @@ public class DayServiceUnitTests {
     @DisplayName("retrieveAllEntries")
     class RetrieveAllEntries {
 
+        List<Entry> prepareEntryList() {
+            List<Entry> entries = new ArrayList<>(2);
+            entries.add(defaultFoodEntryBuilder().build());
+            entries.add(defaultExerciseEntryBuilder().build());
+            return entries;
+        }
+
         @Test
         @DisplayName("Returns list of all entries that belong to the given day when it exists and belongs to the given user.")
         void entriesRetrieved() {
-            // TODO: Write test.
+            // Arrange
+            List<Entry> entries = prepareEntryList();
 
+            when(dayRepository.existsByIdVerified(USER_ID, DAY_ID)).thenReturn(true);
+            when(entryRepository.fetchByDayOrdered(DAY_ID)).thenReturn(entries);
+
+            // Act
+            List<EntryResponse> result = dayService.retrieveAllEntries(myUser, DAY_ID);
+
+            // Assert
+            assertThat(result).isEqualTo(entries.stream().map(entryMapper::toResponse).toList());
         }
 
         @Test
@@ -123,7 +153,64 @@ public class DayServiceUnitTests {
 
     }
 
-    // TODO: summarizeDay tests
+    @Nested
+    @DisplayName("summarizeDay")
+    class SummarizeDay {
+
+        CategoryStats mockStats(Category category, double calories, double protein,
+            double carbs, double fat, double fiber, double price) {
+            CategoryStats mockStats = mock(CategoryStats.class);
+
+            when(mockStats.getCategory()).thenReturn(category);
+            when(mockStats.getCalories()).thenReturn(calories);
+            when(mockStats.getProtein()).thenReturn(protein);
+            when(mockStats.getCarbs()).thenReturn(carbs);
+            when(mockStats.getFat()).thenReturn(fat);
+            when(mockStats.getFiber()).thenReturn(fiber);
+            when(mockStats.getPrice()).thenReturn(price);
+            
+            return mockStats;
+        }
+
+        List<CategoryStats> prepareCategoryStats() {
+            List<CategoryStats> categoryStats = new ArrayList<>(3);
+            categoryStats.add(mockStats(Category.BREAKFAST, 100.0, 25.0, 40.0, 15.0, 5.0, 3.0));
+            categoryStats.add(mockStats(Category.LUNCH, 120.0, 30.0, 50.0, 10.0, 3.0, 4.0));
+            categoryStats.add(mockStats(Category.DINNER, 80.0, 15.0, 30.0, 5.0, 2.0, 3.0));
+            return categoryStats;
+        }
+
+        @Test
+        @DisplayName("Returns a summary of day goals, day stats, and category stats when the requested day exists and belongs to the given user.")
+        void daySummarized() {
+            // Arrange
+            Day found = prepareMyDay();
+            List<CategoryStats> categoryStats = prepareCategoryStats();
+
+            when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.of(found));
+            when(entryRepository.sumSnapshotsByDayGroupedByCategory(DAY_ID)).thenReturn(categoryStats);
+
+            // Act
+            DaySummaryResponse result = dayService.summarizeDay(myUser, DAY_ID);
+
+            // Assert
+            StatsImpl target = new StatsImpl(300.0, 70.0, 120.0, 30.0, 10.0, 10.0);
+            assertThat(result).isEqualTo(dayMapper.toSummaryResponse(categoryStats, target, found.retrieveGoals()));
+        }
+
+        @Test
+        @DisplayName("Throws ResourceNotFoundException when the given day does not exist or belongs to another user.")
+        void dayNotFound() {
+            // Arrange
+            when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> dayService.summarizeDay(myUser, DAY_ID))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        }
+
+    }
 
     
 }

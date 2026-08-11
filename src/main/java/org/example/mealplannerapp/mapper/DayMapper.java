@@ -1,7 +1,6 @@
 package org.example.mealplannerapp.mapper;
 
 import java.util.List;
-import java.util.Locale.Category;
 
 import org.example.mealplannerapp.dto.day.response.CategoryStatsResponse;
 import org.example.mealplannerapp.dto.day.response.DayGoalsResponse;

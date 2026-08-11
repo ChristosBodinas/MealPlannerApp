@@ -47,10 +47,6 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 public class EntryRepositoryTests {
 
-    // TODO: deleteByDay
-    // TODO: fetchByDay
-    // TODO: ???
-
     // BEANS
     @Autowired
     private EntryRepository entryRepository;
@@ -218,6 +214,12 @@ public class EntryRepositoryTests {
     }
 
     @Nested
+    @DisplayName("fetchByDayOrdered")
+    class FetchByDayOrdered {
+        // TODO: Write tests.
+    }
+
+    @Nested
     @DisplayName("extractPlacementByIdVerified")
     class ExtractPlacementByIdVerified {
 
@@ -343,6 +345,12 @@ public class EntryRepositoryTests {
             assertThat(entryRepository.count()).isEqualTo(TOTAL_COUNT);
         }
 
+    }
+
+    @Nested
+    @DisplayName("sumSnapshotsByDayGroupedByCategory")
+    class SumSnapshotsByDayGroupedByCategory {
+        // TODO: Write tests.
     }
 
     @Nested
@@ -607,6 +615,12 @@ public class EntryRepositoryTests {
             assertThat(entryRepository.existsById(entry.getId())).isTrue();
         }
 
+    }
+
+    @Nested
+    @DisplayName("deleteByDay")
+    class DeleteByDay {
+        // TODO: Write tests.
     }
 
 }

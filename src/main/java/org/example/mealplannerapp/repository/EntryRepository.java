@@ -20,8 +20,8 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
 
     /**
      * Verifies that the {@link Entry} with identifier {@code entryId} is owned by the {@link User}
-     * with identifier {@code userId}, and if so, fetches it and eagerly loads the referenced food
-     * and its associated units and prices.
+     * with identifier {@code userId}, and if so, fetches it along with its referenced {@link Food}
+     *  or {@link Exercise} and the corresponding element collections.
      * @param userId  the identifier of the entry's owner
      * @param entryId the identifier of the requested entry
      * @return the requested entry and the full data of the entity it references, or empty
@@ -38,7 +38,13 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
                 @Param("entryId") Long entryId
         );
 
-    // TODO: Javadoc.
+    /**
+     * Fetches all {@link Entry} entities owned by the {@link Day} with identifier {@code dayId}.
+     * Eagerly loads the referenced {@link Food} and its associated units/price for each {@link FoodEntry}.
+     * Eagerly loads the referenced {@link Exercise} and its associated intensity levels for each {@link ExerciseEntry}.
+     * @param dayId the identifier of the day whose entries to fetch
+     * @return all the requested entries and the full data of the entities they reference
+     */
     @Query("SELECT e FROM Entry e " +
         "LEFT JOIN FETCH TREAT(e AS FoodEntry).food f " +
         "LEFT JOIN FETCH f.units u LEFT JOIN FETCH f.prices p " +
@@ -78,7 +84,12 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
             @Param("category") Category category
     );
 
-    // TODO: Javadoc.
+    /**
+     * Calculates the total nutritional and price values by category for the {@link Day} with
+     * identifier {@code dayId}.
+     * @param dayId the identifier of the day whose category totals to calculate
+     * @return a list with each category's nutrition and price totals
+     */
     @Query("SELECT e.category AS category, SUM(e.calories) AS calories, SUM(e.protein) AS protein, " +
         "SUM(e.carbs) AS carbs, SUM(e.fat) AS fat, SUM(e.fiber) AS fiber, SUM(e.price) AS price " +
         "FROM Entry e WHERE e.day.id = :dayId GROUP BY e.category")
