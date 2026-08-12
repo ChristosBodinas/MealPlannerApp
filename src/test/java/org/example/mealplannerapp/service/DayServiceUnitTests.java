@@ -195,7 +195,7 @@ public class DayServiceUnitTests {
                 CategoryStats::getFiber,
                 CategoryStats::getPrice
             ).contains(
-                tuple(Category.UNSORTED, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+                tuple(Category.UNSORTED, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
                 // Not checking other empty categories because the actual number and names might change.
             );
         }

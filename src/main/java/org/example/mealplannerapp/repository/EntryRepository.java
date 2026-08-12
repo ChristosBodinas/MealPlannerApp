@@ -10,6 +10,7 @@ import org.example.mealplannerapp.entity.entry.ExerciseEntry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.projection.CategoryStats;
 import org.example.mealplannerapp.projection.Placement;
+import org.example.mealplannerapp.projection.Stats;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -99,6 +100,13 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
         "FROM Entry e WHERE e.day.id = :dayId GROUP BY e.category")
     List<CategoryStats> sumSnapshotsByDayGroupedByCategory(
         @Param("dayId") Long dayId
+    );
+
+    @Query("SELECT SUM(e.calories) AS calories, SUM(e.protein) AS protein, SUM(e.carbs) AS carbs, " +
+        "SUM(e.fat) AS fat, SUM(e.fiber) AS fiber, SUM(e.price) AS price " +
+        "FROM Entry e WHEE e.day.plan.id = :planId")
+    Stats sumSnapshotsByPlan(
+        @Param("planId") Long planId
     );
 
     /**

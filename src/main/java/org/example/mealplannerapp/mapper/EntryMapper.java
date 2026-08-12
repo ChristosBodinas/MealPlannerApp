@@ -16,7 +16,7 @@ import org.example.mealplannerapp.exception.MappingMismatchException;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring",
-        uses = {FoodMapper.class},
+        uses = {FoodMapper.class, ExerciseMapper.class},
         subclassExhaustiveStrategy = SubclassExhaustiveStrategy.RUNTIME_EXCEPTION)
 public interface EntryMapper {
 

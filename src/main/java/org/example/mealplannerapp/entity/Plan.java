@@ -5,6 +5,7 @@ import java.util.Set;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.mealplannerapp.common.ActivityLevel;
+import org.example.mealplannerapp.projection.impl.GoalsImpl;
 
 
 /**
@@ -34,7 +35,7 @@ public class Plan {
      * Days that comprise the plan.
      */
     @OneToMany(mappedBy = "plan", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-    @OrderBy("position ASC")    // TODO: Possibly unnecessary/ineffectual when using sets.
+    @OrderBy("position ASC")
     private Set<Day> days;
 
     /**
@@ -112,6 +113,16 @@ public class Plan {
 
         // Fiber Goal (Plan)
         targetFiber = user.getSex().getFiberIntake() * days.size();
+    }
+
+    public GoalsImpl retrieveGoals() {
+        return new GoalsImpl(
+            targetCalories,
+            targetProtein,
+            targetCarbs,
+            targetFat,
+            targetFiber
+        );
     }
 
 }

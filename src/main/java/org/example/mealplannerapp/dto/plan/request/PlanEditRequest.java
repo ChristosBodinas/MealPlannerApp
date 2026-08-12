@@ -30,6 +30,6 @@ public record PlanEditRequest(
         Double proteinRatio,
 
         @Positive(message = "Carbs ratio must be a positive number.")
-        Double carbsRatio,
+        Double carbsRatio
 ) {
 }
