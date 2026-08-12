@@ -13,6 +13,7 @@ import org.example.mealplannerapp.mapper.DayMapperImpl;
 import org.example.mealplannerapp.mapper.EntryMapper;
 import org.example.mealplannerapp.mapper.EntryMapperImpl;
 import org.example.mealplannerapp.projection.CategoryStats;
+import org.example.mealplannerapp.projection.impl.CategoryStatsImpl;
 import org.example.mealplannerapp.projection.impl.StatsImpl;
 import org.example.mealplannerapp.repository.DayRepository;
 import org.example.mealplannerapp.repository.EntryRepository;
@@ -157,26 +158,11 @@ public class DayServiceUnitTests {
     @DisplayName("summarizeDay")
     class SummarizeDay {
 
-        CategoryStats mockStats(Category category, double calories, double protein,
-            double carbs, double fat, double fiber, double price) {
-            CategoryStats mockStats = mock(CategoryStats.class);
-
-            when(mockStats.getCategory()).thenReturn(category);
-            when(mockStats.getCalories()).thenReturn(calories);
-            when(mockStats.getProtein()).thenReturn(protein);
-            when(mockStats.getCarbs()).thenReturn(carbs);
-            when(mockStats.getFat()).thenReturn(fat);
-            when(mockStats.getFiber()).thenReturn(fiber);
-            when(mockStats.getPrice()).thenReturn(price);
-            
-            return mockStats;
-        }
-
         List<CategoryStats> prepareCategoryStats() {
             List<CategoryStats> categoryStats = new ArrayList<>(3);
-            categoryStats.add(mockStats(Category.BREAKFAST, 100.0, 25.0, 40.0, 15.0, 5.0, 3.0));
-            categoryStats.add(mockStats(Category.LUNCH, 120.0, 30.0, 50.0, 10.0, 3.0, 4.0));
-            categoryStats.add(mockStats(Category.DINNER, 80.0, 15.0, 30.0, 5.0, 2.0, 3.0));
+            categoryStats.add(new CategoryStatsImpl(Category.BREAKFAST, 100.0, 25.0, 40.0, 15.0, 5.0, 3.0));
+            categoryStats.add(new CategoryStatsImpl(Category.LUNCH, 120.0, 30.0, 50.0, 10.0, 3.0, 4.0));
+            categoryStats.add(new CategoryStatsImpl(Category.DINNER, 80.0, 15.0, 30.0, 5.0, 2.0, 3.0));
             return categoryStats;
         }
 
@@ -198,6 +184,20 @@ public class DayServiceUnitTests {
             // Assert
             StatsImpl target = new StatsImpl(300.0, 70.0, 120.0, 30.0, 10.0, 10.0);
             assertThat(result).isEqualTo(dayMapper.toSummaryResponse(categoryStats, target, found.retrieveGoals()));
+
+            assertThat(categoryStats).hasSizeGreaterThan(3);  // More than 3 elements.
+            assertThat(categoryStats).extracting(
+                CategoryStats::getCategory,
+                CategoryStats::getCalories,
+                CategoryStats::getProtein,
+                CategoryStats::getCarbs,
+                CategoryStats::getFat,
+                CategoryStats::getFiber,
+                CategoryStats::getPrice
+            ).contains(
+                tuple(Category.UNSORTED, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+                // Not checking other empty categories because the actual number and names might change.
+            );
         }
 
         @Test
