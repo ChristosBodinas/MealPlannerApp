@@ -1,7 +1,10 @@
 package org.example.mealplannerapp.embeddable;
 
 import jakarta.persistence.Embeddable;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * An embeddable class that represents the intensity level of a given
@@ -23,5 +26,5 @@ public class ExerciseLevel {
      * Calories burned per minute.
      */
     private double caloriesPerMinute;
-    
+
 }

@@ -1,4 +1,4 @@
- package org.example.mealplannerapp.repository;
+package org.example.mealplannerapp.repository;
 
 import org.example.mealplannerapp.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

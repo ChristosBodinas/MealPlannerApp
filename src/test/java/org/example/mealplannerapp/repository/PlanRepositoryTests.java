@@ -1,13 +1,5 @@
 package org.example.mealplannerapp.repository;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
-import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
-import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
-
-import java.util.List;
-import java.util.Optional;
-
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Plan;
 import org.example.mealplannerapp.entity.User;
@@ -21,6 +13,14 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
+import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
+import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
 
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop",
@@ -63,7 +63,7 @@ public class PlanRepositoryTests {
 
     private Plan preparePlan(User owner) {
         Plan plan = defaultPlanBuilder().user(owner).build();
-        
+
         Day day1 = defaultDayBuilder().plan(plan).position(1).build();
         plan.getDays().add(day1);
 
@@ -161,7 +161,7 @@ public class PlanRepositoryTests {
 
             // Act
             List<Plan> result = planRepository.fetchShallowByUserAndText(myUser.getId(), "mallow");
-            
+
             // Assert
             assertThat(result).extracting(Plan::getId).containsExactly(matches.getId());
 
@@ -239,5 +239,5 @@ public class PlanRepositoryTests {
         }
 
     }
-    
+
 }

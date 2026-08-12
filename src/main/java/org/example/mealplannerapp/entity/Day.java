@@ -1,9 +1,8 @@
 package org.example.mealplannerapp.entity;
 
-import org.example.mealplannerapp.projection.impl.GoalsImpl;
-
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.mealplannerapp.projection.impl.GoalsImpl;
 
 /**
  * An entity that represents a day in a given meal plan and the
@@ -64,12 +63,12 @@ public class Day {
 
     public GoalsImpl retrieveGoals() {
         return new GoalsImpl(
-            targetCalories,
-            targetProtein,
-            targetCarbs,
-            targetFat,
-            targetFiber
+                targetCalories,
+                targetProtein,
+                targetCarbs,
+                targetFat,
+                targetFiber
         );
     }
-    
+
 }

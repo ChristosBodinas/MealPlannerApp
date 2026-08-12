@@ -1,11 +1,6 @@
 package org.example.mealplannerapp.service;
 
 import lombok.AllArgsConstructor;
-
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.example.mealplannerapp.dto.day.request.DayGoalsRequest;
 import org.example.mealplannerapp.dto.day.request.GoalsListRequest;
 import org.example.mealplannerapp.dto.plan.request.PlanCreateRequest;
@@ -13,9 +8,12 @@ import org.example.mealplannerapp.dto.plan.request.PlanEditRequest;
 import org.example.mealplannerapp.dto.plan.response.ListedPlanResponse;
 import org.example.mealplannerapp.dto.plan.response.PlanResponse;
 import org.example.mealplannerapp.dto.plan.response.PlanSummaryResponse;
+import org.example.mealplannerapp.dto.plan.response.ShoppingItemResponse;
 import org.example.mealplannerapp.entity.Day;
+import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.Plan;
 import org.example.mealplannerapp.entity.User;
+import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.exception.ServiceValidationException;
 import org.example.mealplannerapp.mapper.PlanMapper;
@@ -26,6 +24,9 @@ import org.example.mealplannerapp.repository.EntryRepository;
 import org.example.mealplannerapp.repository.PlanRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -45,7 +46,7 @@ public class PlanService {
     private void verifyDailyGoalsAddUp(Plan plan, List<DayGoalsRequest> requests) {
         boolean mismatch = false;
         double epsilon = 0.01;
-        
+
         if (requests.stream().mapToDouble(DayGoalsRequest::targetCalories).sum() - plan.getTargetCalories() > epsilon) {
             mismatch = true;
         } else if (requests.stream().mapToDouble(DayGoalsRequest::targetProtein).sum() - plan.getTargetProtein() > epsilon) {
@@ -107,10 +108,10 @@ public class PlanService {
     @Transactional
     public PlanResponse editPlan(User user, Long planId, PlanEditRequest request) {
         verifyMacroRatiosFit(request.proteinRatio(), request.carbsRatio());
-        
+
         Plan plan = planRepository.fetchByIdVerified(user.getId(), planId)
-            .orElseThrow(() -> new ResourceNotFoundException("Requested plan (id: " + planId + ") not found."));
-        
+                .orElseThrow(() -> new ResourceNotFoundException("Requested plan (id: " + planId + ") not found."));
+
         planMapper.update(plan, request);
         plan.computeNutritionGoals(request.proteinRatio(), request.carbsRatio());
 
@@ -124,7 +125,7 @@ public class PlanService {
     @Transactional
     public void redistributeGoals(User user, Long planId, GoalsListRequest request) {
         Plan plan = planRepository.fetchByIdVerified(user.getId(), planId)
-            .orElseThrow(() -> new ResourceNotFoundException("Requested plan (id: " + planId + ") not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Requested plan (id: " + planId + ") not found."));
 
         verifyDailyGoalsAddUp(plan, request.dayGoalsRequests());
 
@@ -148,22 +149,22 @@ public class PlanService {
 
     public PlanResponse retrievePlan(User user, Long planId) {
         Plan plan = planRepository.fetchByIdVerified(user.getId(), planId)
-            .orElseThrow(() -> new ResourceNotFoundException("Requested plan (id: " + planId + ") not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Requested plan (id: " + planId + ") not found."));
 
         return planMapper.toResponse(plan);
     }
 
     public List<ListedPlanResponse> searchPlans(User user, String search) {
         return planRepository.fetchShallowByUserAndText(user.getId(), search)
-            .stream()
-            .map(planMapper::toListedResponse)
-            .toList();
+                .stream()
+                .map(planMapper::toListedResponse)
+                .toList();
     }
 
     // summarizePlan
     public PlanSummaryResponse summarizePlan(User user, Long planId) {
         Plan plan = planRepository.fetchByIdVerified(user.getId(), planId)
-            .orElseThrow(() -> new ResourceNotFoundException("Requested plan (id: " + planId + ") not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Requested plan (id: " + planId + ") not found."));
 
         Goals planGoals = plan.retrieveGoals();
 
@@ -173,8 +174,32 @@ public class PlanService {
     }
 
     // generateShoppingList
-    public void generateShoppingList(User user, Long planId) {
-        // TODO: Write this method.
+    public List<ShoppingItemResponse> generateShoppingList(User user, Long planId) {
+        record FoodAndVendor(Food food, String vendor) {}
+        record GramsAndPrice(double grams, double price) {}
+
+        if (!planRepository.existsByIdVerified(user.getId(), planId)) {
+            throw new ResourceNotFoundException("Requested plan (id: " + planId + ") not found.");
+        }
+
+        Map<FoodAndVendor, GramsAndPrice> shoppingMap = entryRepository.fetchFoodEntriesWithPricesByPlan(planId)
+                .stream()
+                .collect(Collectors.groupingBy(
+                        e -> new FoodAndVendor(e.getFood(), e.getVendor()),
+                        Collectors.teeing(
+                                Collectors.summingDouble(FoodEntry::getGrams),
+                                Collectors.summingDouble(FoodEntry::getPrice),
+                                GramsAndPrice::new)));
+
+        return shoppingMap.entrySet().stream()
+                .map(entry -> new ShoppingItemResponse(
+                        entry.getKey().food().getName(),
+                        entry.getKey().food().getBrand(),
+                        entry.getKey().vendor(),
+                        entry.getValue().grams(),
+                        entry.getValue().price()))
+                .sorted(Comparator.comparing(ShoppingItemResponse::vendor))
+                .toList();
     }
-    
+
 }

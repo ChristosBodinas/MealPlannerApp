@@ -26,6 +26,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link FoodEntry} entities.
+     *
      * @return a FoodEntry builder with all fields except {@code id}, {@code day}, and {@code food} filled out
      */
     public static FoodEntry.FoodEntryBuilder<?, ?> defaultFoodEntryBuilder() {
@@ -39,6 +40,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link ExerciseEntry} entities.
+     *
      * @return a ExerciseEntry builder with all fields except {@code id}, {@code day}, and {@code exercise} filled out
      */
     public static ExerciseEntry.ExerciseEntryBuilder<?, ?> defaultExerciseEntryBuilder() {
@@ -51,6 +53,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link FoodEntryCreateRequest} DTOs.
+     *
      * @return a FoodEntryCreateRequest builder with all fields except {@code foodId} filled out
      */
     public static FoodEntryCreateRequest.FoodEntryCreateRequestBuilder defaultFoodEntryCreateRequestBuilder() {
@@ -63,6 +66,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link ExerciseEntryCreateRequest} DTOs.
+     *
      * @return an ExerciseEntryCreateRequest builder with all fields except {@code exerciseId} filled out
      */
     public static ExerciseEntryCreateRequest.ExerciseEntryCreateRequestBuilder defaultExerciseEntryCreateRequestBuilder() {
@@ -74,6 +78,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link FoodEntryEditRequest} DTOs.
+     *
      * @return a FoodEntryEditRequest with all fields filled out
      */
     public static FoodEntryEditRequest.FoodEntryEditRequestBuilder defaultFoodEntryEditRequestBuilder() {
@@ -85,6 +90,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link ExerciseEntryEditRequest} DTOs.
+     *
      * @return an ExerciseEntryEditRequest builder with all fields filled out
      */
     public static ExerciseEntryEditRequest.ExerciseEntryEditRequestBuilder defaultExerciseEntryEditRequestBuilder() {
@@ -95,6 +101,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link EntryMoveRequest} DTOs.
+     *
      * @return an EntryMoveRequest builder with both fields filled out
      */
     public static EntryMoveRequest.EntryMoveRequestBuilder defaultEntryMoveRequestBuilder() {
@@ -105,6 +112,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link EntryDuplicateRequest} DTOs.
+     *
      * @return an EntryDuplicateRequest builder with {@code category} filled out and {@code entryId} unset
      */
     public static EntryDuplicateRequest.EntryDuplicateRequestBuilder defaultEntryDuplicateRequestBuilder() {
@@ -114,6 +122,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link FoodEntryResponse} DTOs.
+     *
      * @return a FoodEntryResponse builder with all fields except {@code id} and {@code foodResponse} filled out
      */
     public static FoodEntryResponse.FoodEntryResponseBuilder defaultFoodEntryResponseBuilder() {
@@ -127,6 +136,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link ExerciseEntryResponse} DTOs.
+     *
      * @return an ExerciseEntryResponse builder with all fields except {@code id} and {@code exerciseResponse} filled out
      */
     public static ExerciseEntryResponse.ExerciseEntryResponseBuilder defaultExerciseEntryResponseBuilder() {

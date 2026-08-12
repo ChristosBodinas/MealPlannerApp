@@ -1,8 +1,7 @@
 package org.example.mealplannerapp.dto.plan.request;
 
-import org.example.mealplannerapp.common.ActivityLevel;
-
 import jakarta.validation.constraints.*;
+import org.example.mealplannerapp.common.ActivityLevel;
 
 /**
  * Request DTO for creating new plans.

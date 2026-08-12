@@ -1,19 +1,5 @@
 package org.example.mealplannerapp.repository;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
-import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
-
-import static org.example.mealplannerapp.fixture.ExerciseTestFixtures.defaultExerciseBuilder;
-import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.example.mealplannerapp.entity.Exercise;
 import org.example.mealplannerapp.entity.User;
 import org.hibernate.Hibernate;
@@ -21,6 +7,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.example.mealplannerapp.fixture.ExerciseTestFixtures.defaultExerciseBuilder;
+import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
 
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop",
@@ -186,7 +184,7 @@ public class ExerciseRepositoryTests {
     @Nested
     @DisplayName("deleteByIdVerified")
     class DeleteByIdVerified {
-        
+
         @BeforeEach
         void prepareTests() {
             prepareMyUser();
@@ -250,5 +248,5 @@ public class ExerciseRepositoryTests {
         }
 
     }
-    
+
 }

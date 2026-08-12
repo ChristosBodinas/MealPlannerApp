@@ -43,8 +43,9 @@ public class EntryService {
     /**
      * Creates a new {@link Entry} entity using data from {@code request} and owned by {@code user},
      * places it in the {@link Day} with identifier {@code dayId}, then saves it to the database.
-     * @param user the user making the request
-     * @param dayId the identifier of the day in which to place the entry
+     *
+     * @param user    the user making the request
+     * @param dayId   the identifier of the day in which to place the entry
      * @param request the submitted entry data
      * @return a response containing the full data of the new entry and its referenced item (food, exercise, or meal)
      * @throws ResourceNotFoundException if the given day or referenced item does not exist or belongs to another user
@@ -67,7 +68,7 @@ public class EntryService {
                 break;
             case ExerciseEntryCreateRequest x:
                 Exercise exercise = exerciseRepository.fetchByIdVerified(user.getId(), x.exerciseId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Requested exercise (id: " + x.exerciseId() + ") not found."));
+                        .orElseThrow(() -> new ResourceNotFoundException("Requested exercise (id: " + x.exerciseId() + ") not found."));
                 ((ExerciseEntry) entry).setExercise(exercise);
                 break;
         }
@@ -84,8 +85,9 @@ public class EntryService {
      * then saves it to the database.
      * <p>The new entry's snapshot values are calculated from scratch, so they might differ from the original's
      * if the latter are outdated.</p>
-     * @param user the user making the request
-     * @param dayId the identifier of the day in which to place the entry
+     *
+     * @param user    the user making the request
+     * @param dayId   the identifier of the day in which to place the entry
      * @param request the submitted duplication data
      * @return a response containing the full data of the new entry and its referenced item (food, exercise, or meal)
      * @throws ResourceNotFoundException if the given day or entry does not exist or belongs to another user
@@ -111,7 +113,8 @@ public class EntryService {
     /**
      * Finds the {@link Entry} entity identified by {@code entryId} and owned by {@code user}, and updates its
      * quantity and display parameters, then recalculates its snapshot values to account for the change.
-     * @param user the user making the request
+     *
+     * @param user    the user making the request
      * @param entryId the identifier of the entry to be edited
      * @param request the submitted entry data
      * @return a response containing the full data of the edited entry and its referenced item (food, exercise, or meal)
@@ -132,16 +135,17 @@ public class EntryService {
      * Finds the {@link Entry} entity identified by {@code entryId} and owned by {@code user}, and updates its
      * category and position according to {@code request}. Other entries in the initial and final category also
      * have their positions changed to close gaps and make room respectively.
-     * @param user the user making the request
+     *
+     * @param user    the user making the request
      * @param entryId the identifier of the entry to be moved
      * @param request the submitted movement data
-     * @throws ResourceNotFoundException if the entry does not exist or belongs to another user
+     * @throws ResourceNotFoundException  if the entry does not exist or belongs to another user
      * @throws ServiceValidationException if the desired position is out of bounds for the target category
      */
     @Transactional
     public void moveEntry(User user, Long entryId, EntryMoveRequest request) {
         Entry entry = entryRepository.fetchByIdVerified(user.getId(), entryId)
-            .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Requested entry (id: " + entryId + ") not found."));
 
         Long dayId = entry.getDay().getId();
         int currentPosition = entry.getPosition();
@@ -182,7 +186,8 @@ public class EntryService {
     /**
      * Finds the {@link Entry} entity identified by {@code entryId} and owned by {@code user}, and deletes it
      * from the database. Afterwards, moves the other entries in the same {@link Day} and category to close the gap.
-     * @param user the user making the request
+     *
+     * @param user    the user making the request
      * @param entryId the identifier of the entry to be deleted
      * @throws ResourceNotFoundException if the entry does not exist or belongs to another user
      */
@@ -203,7 +208,8 @@ public class EntryService {
     /**
      * Retrieves the full data of the {@link Entry} entity identified by {@code entryId} and owned by
      * {@code user}, including its associated units and prices.
-     * @param user   the user making the request
+     *
+     * @param user    the user making the request
      * @param entryId the identifier of the entry to be retrieved
      * @return a response containing the full data of the requested entry and its referenced item (food, exercise, or meal)
      * @throws ResourceNotFoundException if the entry does not exist or belongs to another user

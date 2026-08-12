@@ -59,7 +59,7 @@ public class FoodEntry extends Entry {
         setFiber(food.getFiberPer100g() * grams / 100.0);
 
         Map<String, Double> pricesPer100g = food.computePricesPer100g();
-        if(vendor != null && pricesPer100g.containsKey(vendor)) {
+        if (vendor != null && pricesPer100g.containsKey(vendor)) {
             setPrice(pricesPer100g.get(vendor) * grams / 100);
         } else {
             setPrice(0.0);

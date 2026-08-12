@@ -25,20 +25,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
-import static org.example.mealplannerapp.fixture.DayTestFixtures.*;
-import static org.example.mealplannerapp.fixture.EntryTestFixtures.*;
-
 import static org.assertj.core.api.Assertions.*;
+import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
+import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultExerciseEntryBuilder;
+import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultFoodEntryBuilder;
+import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
+import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class DayServiceUnitTests {
@@ -95,8 +93,8 @@ public class DayServiceUnitTests {
 
             // Act
             assertThatCode(() -> dayService.deleteAllEntries(myUser, DAY_ID))
-                .doesNotThrowAnyException();
-            
+                    .doesNotThrowAnyException();
+
             // Assert
             verify(entryRepository).deleteByDay(DAY_ID);
         }
@@ -109,7 +107,7 @@ public class DayServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> dayService.deleteAllEntries(myUser, DAY_ID))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
     }
@@ -149,7 +147,7 @@ public class DayServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> dayService.retrieveAllEntries(myUser, DAY_ID))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
     }
@@ -187,16 +185,16 @@ public class DayServiceUnitTests {
 
             assertThat(categoryStats).hasSizeGreaterThan(3);  // More than 3 elements.
             assertThat(categoryStats).extracting(
-                CategoryStats::getCategory,
-                CategoryStats::getCalories,
-                CategoryStats::getProtein,
-                CategoryStats::getCarbs,
-                CategoryStats::getFat,
-                CategoryStats::getFiber,
-                CategoryStats::getPrice
+                    CategoryStats::getCategory,
+                    CategoryStats::getCalories,
+                    CategoryStats::getProtein,
+                    CategoryStats::getCarbs,
+                    CategoryStats::getFat,
+                    CategoryStats::getFiber,
+                    CategoryStats::getPrice
             ).contains(
-                tuple(Category.UNSORTED, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-                // Not checking other empty categories because the actual number and names might change.
+                    tuple(Category.UNSORTED, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+                    // Not checking other empty categories because the actual number and names might change.
             );
         }
 
@@ -208,11 +206,11 @@ public class DayServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> dayService.summarizeDay(myUser, DAY_ID))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
 
         }
 
     }
 
-    
+
 }

@@ -16,6 +16,7 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
      * Verifies that the {@link Food} with identifier {@code foodId} is owned by the {@link User}
      * with identifier {@code userId}, and if so, fetches it and eagerly loads its associated units
      * and prices.
+     *
      * @param userId the identifier of the food's owner
      * @param foodId the identifier of the requested food
      * @return the requested food with its associated units and prices, or empty if no such food
@@ -34,6 +35,7 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
      * Fetches every {@code Food} that is owned by the {@link User} with identifier {@code userId}
      * whose name or brand contains the given {@code text}. Case-insensitive. Does not fetch the
      * associated units and prices.
+     *
      * @param userId the identifier of the foods' owner
      * @param text   the text to search for
      * @return a list of matching foods, or an empty list if none match
@@ -50,6 +52,7 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
      * Verifies that the {@link Food} with identifier {@code foodId} is owned by the {@link User}
      * with identifier {@code userId}, and if so, deletes it from the database along with its
      * associated units and prices.
+     *
      * @param userId the identifier of the food's owner
      * @param foodId the identifier of the food to be deleted
      * @return the number of rows deleted (0 if no matching food was found, 1 otherwise)
@@ -60,5 +63,5 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
             @Param("userId") Long userId,
             @Param("foodId") Long foodId
     );
-    
+
 }

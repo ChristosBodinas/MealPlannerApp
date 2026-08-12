@@ -1,11 +1,10 @@
 package org.example.mealplannerapp.entity;
 
-import java.util.Set;
-
-import org.example.mealplannerapp.embeddable.ExerciseLevel;
-
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.mealplannerapp.embeddable.ExerciseLevel;
+
+import java.util.Set;
 
 /**
  * An entity that represents information about a particular exercise.
@@ -22,7 +21,7 @@ public class Exercise {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
     private Long id;
-    
+
     /**
      * User who owns the exercise.
      */
@@ -44,5 +43,5 @@ public class Exercise {
     @AttributeOverride(name = "name", column = @Column(nullable = false, length = 20))
     @AttributeOverride(name = "caloriesPerMinute", column = @Column(nullable = false))
     private Set<ExerciseLevel> levels;
-    
+
 }

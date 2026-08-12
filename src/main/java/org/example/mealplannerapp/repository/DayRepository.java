@@ -2,7 +2,6 @@ package org.example.mealplannerapp.repository;
 
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.User;
-import org.hibernate.annotations.Changelog.ModifiedEntities;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +16,7 @@ public interface DayRepository extends JpaRepository<Day, Long> {
     /**
      * Verifies that the {@link Day} with identifier {@code dayId} is owned by the {@link User}
      * with identifier {@code userId}, and if so, fetches it from the database.
+     *
      * @param userId
      * @param dayId
      * @return
@@ -30,6 +30,7 @@ public interface DayRepository extends JpaRepository<Day, Long> {
     /**
      * Verifies that a {@link Day} with identifier {@code dayId} exists and is owned by the
      * {@link User} with identifier {@code userId}.
+     *
      * @param userId the identifier of the day's owner
      * @param dayId  the identifier of the requested day
      * @return true if the given day exists for the given user, or false otherwise
@@ -40,11 +41,11 @@ public interface DayRepository extends JpaRepository<Day, Long> {
             @Param("dayId") Long dayId
     );
 
-        // TODO: Javadoc and test.
-        @Modifying
-        @Query("DELETE FROM Day d WHERE d.plan.id = :planId")
-    int deleteByPlan(
-        @Param("planId") Long planId
+    // TODO: Javadoc and test.
+    @Modifying
+    @Query("DELETE FROM Day d WHERE d.plan.id = :planId")
+    void deleteByPlan(
+            @Param("planId") Long planId
     );
 
 }

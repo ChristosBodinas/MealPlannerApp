@@ -47,11 +47,11 @@ public class ExerciseEntry extends Entry {
     public void snapshotNutritionAndPriceInfo() {
 
         double caloriesPerMinute = getExercise().getLevels()
-            .stream()
-            .filter(l -> l.getName().equals(getLevel()))
-            .findFirst()
-            .map(ExerciseLevel::getCaloriesPerMinute)
-            .orElse(0.0);
+                .stream()
+                .filter(l -> l.getName().equals(getLevel()))
+                .findFirst()
+                .map(ExerciseLevel::getCaloriesPerMinute)
+                .orElse(0.0);
 
         setCalories(-1 * caloriesPerMinute * duration);
         setProtein(0.0);

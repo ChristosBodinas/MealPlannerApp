@@ -1,7 +1,8 @@
 package org.example.mealplannerapp.controller;
 
-import java.util.List;
-
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.example.mealplannerapp.dto.exercise.request.ExerciseRequest;
 import org.example.mealplannerapp.dto.exercise.response.ExerciseResponse;
 import org.example.mealplannerapp.dto.exercise.response.ListedExerciseResponse;
@@ -12,9 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -24,8 +23,8 @@ public class ExerciseController {
 
     @PostMapping("/exercises")
     public ResponseEntity<ExerciseResponse> createExercise(
-        @AuthenticationPrincipal AuthUser authUser,
-        @Valid @RequestBody ExerciseRequest request
+            @AuthenticationPrincipal AuthUser authUser,
+            @Valid @RequestBody ExerciseRequest request
     ) {
         ExerciseResponse response = exerciseService.createExercise(authUser.getUser(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -33,9 +32,9 @@ public class ExerciseController {
 
     @PutMapping("/exercises/{exerciseId}")
     public ResponseEntity<ExerciseResponse> updateExercise(
-        @AuthenticationPrincipal AuthUser authUser,
-        @PathVariable Long exerciseId,
-        @Valid @RequestBody ExerciseRequest request
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long exerciseId,
+            @Valid @RequestBody ExerciseRequest request
     ) {
         ExerciseResponse response = exerciseService.updateExercise(authUser.getUser(), exerciseId, request);
         return ResponseEntity.ok(response);
@@ -43,8 +42,8 @@ public class ExerciseController {
 
     @DeleteMapping("/exercises/{exerciseId}")
     public ResponseEntity<Void> deleteExercise(
-        @AuthenticationPrincipal AuthUser authUser,
-        @PathVariable Long exerciseId
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long exerciseId
     ) {
         exerciseService.deleteExercise(authUser.getUser(), exerciseId);
         return ResponseEntity.noContent().build();
@@ -52,8 +51,8 @@ public class ExerciseController {
 
     @GetMapping("/exercises/{exerciseId}")
     public ResponseEntity<ExerciseResponse> retrieveExercise(
-        @AuthenticationPrincipal AuthUser authUser,
-        @PathVariable Long exerciseId
+            @AuthenticationPrincipal AuthUser authUser,
+            @PathVariable Long exerciseId
     ) {
         ExerciseResponse response = exerciseService.retrievExercise(authUser.getUser(), exerciseId);
         return ResponseEntity.ok(response);
@@ -61,11 +60,11 @@ public class ExerciseController {
 
     @GetMapping("/exercises")
     public ResponseEntity<List<ListedExerciseResponse>> searchExercises(
-        @AuthenticationPrincipal AuthUser authUser,
-        @RequestParam String search
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam String search
     ) {
         List<ListedExerciseResponse> responses = exerciseService.searchExercises(authUser.getUser(), search);
         return ResponseEntity.ok(responses);
     }
-    
+
 }

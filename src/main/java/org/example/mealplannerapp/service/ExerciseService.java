@@ -1,8 +1,6 @@
 package org.example.mealplannerapp.service;
 
-import java.util.List;
-import java.util.Set;
-
+import lombok.AllArgsConstructor;
 import org.example.mealplannerapp.dto.exercise.request.ExerciseRequest;
 import org.example.mealplannerapp.dto.exercise.request.LevelRequest;
 import org.example.mealplannerapp.dto.exercise.response.ExerciseResponse;
@@ -16,7 +14,8 @@ import org.example.mealplannerapp.repository.ExerciseRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import lombok.AllArgsConstructor;
+import java.util.List;
+import java.util.Set;
 
 @Service
 @AllArgsConstructor
@@ -48,7 +47,7 @@ public class ExerciseService {
         verifyUniqueLevels(request);
 
         Exercise exercise = exerciseRepository.fetchByIdVerified(user.getId(), exerciseId)
-            .orElseThrow(() -> new ResourceNotFoundException("Requested exercise (id: " + exerciseId + ") not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Requested exercise (id: " + exerciseId + ") not found."));
         exerciseMapper.update(exercise, request);
 
         return exerciseMapper.toResponse(exercise);
@@ -63,16 +62,16 @@ public class ExerciseService {
 
     public ExerciseResponse retrievExercise(User user, Long exerciseId) {
         Exercise exercise = exerciseRepository.fetchByIdVerified(user.getId(), exerciseId)
-            .orElseThrow(() -> new ResourceNotFoundException("Requested exercise (id: " + exerciseId + ") not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Requested exercise (id: " + exerciseId + ") not found."));
 
         return exerciseMapper.toResponse(exercise);
     }
 
     public List<ListedExerciseResponse> searchExercises(User user, String search) {
         return exerciseRepository.fetchShallowByUserAndText(user.getId(), search)
-            .stream()
-            .map(exerciseMapper::toListedResponse)
-            .toList();
+                .stream()
+                .map(exerciseMapper::toListedResponse)
+                .toList();
     }
-    
+
 }

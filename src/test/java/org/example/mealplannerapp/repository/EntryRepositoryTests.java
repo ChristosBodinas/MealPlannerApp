@@ -6,7 +6,6 @@ import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.ExerciseEntry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.projection.CategoryStats;
-import org.example.mealplannerapp.projection.CategoryStats;
 import org.example.mealplannerapp.projection.Placement;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
@@ -462,18 +461,18 @@ public class EntryRepositoryTests {
         void prepareTests() {
             prepareMyUser();
         }
-        
+
         FoodEntry prepareFoodEntryToSum(
-            Category category,
-            double calories, double protein, double carbs,
-            double fat, double fiber, double price
+                Category category,
+                double calories, double protein, double carbs,
+                double fat, double fiber, double price
         ) {
             Food food = defaultFoodBuilder().user(myUser).build();
             FoodEntry entry = defaultFoodEntryBuilder()
-                .day(myDay).food(food).category(category)
-                .calories(calories).protein(protein).carbs(carbs)
-                .fat(fat).fiber(fiber).price(price)
-                .build();
+                    .day(myDay).food(food).category(category)
+                    .calories(calories).protein(protein).carbs(carbs)
+                    .fat(fat).fiber(fiber).price(price)
+                    .build();
 
             entityManager.persist(food);
             entityManager.persist(entry);
@@ -496,16 +495,16 @@ public class EntryRepositoryTests {
 
             // Assert
             assertThat(result).extracting(
-                CategoryStats::getCategory,
-                CategoryStats::getCalories,
-                CategoryStats::getProtein,
-                CategoryStats::getCarbs,
-                CategoryStats::getFat,
-                CategoryStats::getFiber,
-                CategoryStats::getPrice
+                    CategoryStats::getCategory,
+                    CategoryStats::getCalories,
+                    CategoryStats::getProtein,
+                    CategoryStats::getCarbs,
+                    CategoryStats::getFat,
+                    CategoryStats::getFiber,
+                    CategoryStats::getPrice
             ).contains(
-                tuple(Category.BREAKFAST, 15.0, 17.0, 14.0, 18.0, 13.0, 17.0),
-                tuple(Category.DINNER, 33.0, 38.0, 35.0, 25.0, 27.0, 32.0)
+                    tuple(Category.BREAKFAST, 15.0, 17.0, 14.0, 18.0, 13.0, 17.0),
+                    tuple(Category.DINNER, 33.0, 38.0, 35.0, 25.0, 27.0, 32.0)
             );
         }
 
@@ -515,7 +514,7 @@ public class EntryRepositoryTests {
             // Arrange
             FoodEntry breakfast1 = prepareFoodEntryToSum(Category.BREAKFAST, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0);
             FoodEntry breakfast2 = prepareFoodEntryToSum(Category.BREAKFAST, 5.0, 7.0, 4.0, 8.0, 3.0, 7.0);
-            
+
             Day invalidDay = prepareMySecondDay();
             breakfast2.setDay(invalidDay);
             flushAndClear();
@@ -524,16 +523,16 @@ public class EntryRepositoryTests {
             List<CategoryStats> result = entryRepository.sumSnapshotsByDayGroupedByCategory(myDay.getId());
 
             // Assert
-            assertThat(result).extracting(                
-                CategoryStats::getCategory,
-                CategoryStats::getCalories,
-                CategoryStats::getProtein,
-                CategoryStats::getCarbs,
-                CategoryStats::getFat,
-                CategoryStats::getFiber,
-                CategoryStats::getPrice
+            assertThat(result).extracting(
+                    CategoryStats::getCategory,
+                    CategoryStats::getCalories,
+                    CategoryStats::getProtein,
+                    CategoryStats::getCarbs,
+                    CategoryStats::getFat,
+                    CategoryStats::getFiber,
+                    CategoryStats::getPrice
             ).contains(
-                tuple(Category.BREAKFAST, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0)
+                    tuple(Category.BREAKFAST, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0)
             );
         }
 
@@ -811,7 +810,7 @@ public class EntryRepositoryTests {
         void prepareTests() {
             prepareMyUser();
         }
-        
+
         @Test
         @DisplayName("Deletes all entries that belong to the given day and only those entries.")
         void correctEntriesDeleted() {

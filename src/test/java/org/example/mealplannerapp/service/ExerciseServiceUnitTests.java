@@ -1,16 +1,5 @@
 package org.example.mealplannerapp.service;
 
-import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
-import static org.example.mealplannerapp.fixture.ExerciseTestFixtures.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
 import org.example.mealplannerapp.dto.exercise.request.ExerciseRequest;
 import org.example.mealplannerapp.dto.exercise.request.LevelRequest;
 import org.example.mealplannerapp.dto.exercise.response.ExerciseResponse;
@@ -32,7 +21,14 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.*;
+
 import static org.assertj.core.api.Assertions.*;
+import static org.example.mealplannerapp.fixture.ExerciseTestFixtures.defaultExerciseBuilder;
+import static org.example.mealplannerapp.fixture.ExerciseTestFixtures.defaultExerciseRequestBuilder;
+import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ExerciseServiceUnitTests {
@@ -42,7 +38,7 @@ public class ExerciseServiceUnitTests {
     private ExerciseRepository exerciseRepository;
     @Captor
     private ArgumentCaptor<Exercise> exerciseCaptor;
-    
+
     // VARIABLES
     private ExerciseMapper exerciseMapper;
     private ExerciseService exerciseService;
@@ -55,11 +51,11 @@ public class ExerciseServiceUnitTests {
     // HELPER METHODS
     private ExerciseRequest requestWithDuplicateLevels() {
         return ExerciseRequest.builder()
-            .name("Unimportant")
-            .levels(new HashSet<>(Set.of(
-                new LevelRequest("Slow", 5.7),
-                new LevelRequest("Slow", 8.6))))
-            .build();
+                .name("Unimportant")
+                .levels(new HashSet<>(Set.of(
+                        new LevelRequest("Slow", 5.7),
+                        new LevelRequest("Slow", 8.6))))
+                .build();
     }
 
     // BEFORE EACH
@@ -146,7 +142,7 @@ public class ExerciseServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> exerciseService.updateExercise(myUser, EXERCISE_ID, request))
-                .isInstanceOf(ServiceValidationException.class);
+                    .isInstanceOf(ServiceValidationException.class);
             verifyNoInteractions(spyMapper);
 
         }
@@ -161,7 +157,7 @@ public class ExerciseServiceUnitTests {
 
             // Act + ASsert
             assertThatThrownBy(() -> exerciseService.updateExercise(myUser, EXERCISE_ID, request))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
     }
@@ -178,8 +174,8 @@ public class ExerciseServiceUnitTests {
 
             // Act
             assertThatCode(() -> exerciseService.deleteExercise(myUser, EXERCISE_ID))
-                .doesNotThrowAnyException();
-            
+                    .doesNotThrowAnyException();
+
             // Assert
             verify(exerciseRepository).deleteByIdVerified(USER_ID, EXERCISE_ID);
         }
@@ -192,7 +188,7 @@ public class ExerciseServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> exerciseService.deleteExercise(myUser, EXERCISE_ID))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
     }
@@ -224,7 +220,7 @@ public class ExerciseServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> exerciseService.retrievExercise(myUser, EXERCISE_ID))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
     }
@@ -238,10 +234,10 @@ public class ExerciseServiceUnitTests {
 
             for (int i = 1; i <= number; i++) {
                 Exercise exercise = defaultExerciseBuilder()
-                    .id((long) i)
-                    .user(myUser)
-                    .name("Listed Exercise #" + i)
-                    .build();
+                        .id((long) i)
+                        .user(myUser)
+                        .name("Listed Exercise #" + i)
+                        .build();
                 exercises.add(exercise);
             }
 

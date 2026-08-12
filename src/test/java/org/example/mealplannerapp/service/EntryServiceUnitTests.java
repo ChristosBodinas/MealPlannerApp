@@ -12,11 +12,7 @@ import org.example.mealplannerapp.dto.entry.response.ExerciseEntryResponse;
 import org.example.mealplannerapp.dto.entry.response.FoodEntryResponse;
 import org.example.mealplannerapp.embeddable.ExerciseLevel;
 import org.example.mealplannerapp.embeddable.FoodPrice;
-import org.example.mealplannerapp.entity.Day;
-import org.example.mealplannerapp.entity.Exercise;
-import org.example.mealplannerapp.entity.Food;
-import org.example.mealplannerapp.entity.Plan;
-import org.example.mealplannerapp.entity.User;
+import org.example.mealplannerapp.entity.*;
 import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.ExerciseEntry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
@@ -50,8 +46,8 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.*;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayBuilder;
 import static org.example.mealplannerapp.fixture.EntryTestFixtures.*;
-import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBuilder;
 import static org.example.mealplannerapp.fixture.ExerciseTestFixtures.defaultExerciseBuilder;
+import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodBuilder;
 import static org.example.mealplannerapp.fixture.PlanTestFixtures.defaultPlanBuilder;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUserBuilder;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -184,17 +180,17 @@ public class EntryServiceUnitTests {
      */
     private Exercise prepareExerciseWithTestValues() {
         return defaultExerciseBuilder()
-            .id(EXERCISE_ID)
-            .user(myUser)
-            .levels(new HashSet<>(Set.of(new ExerciseLevel(TEST_LEVEL, TEST_CALORIES_PER_MINUTE))))
-            .build();
+                .id(EXERCISE_ID)
+                .user(myUser)
+                .levels(new HashSet<>(Set.of(new ExerciseLevel(TEST_LEVEL, TEST_CALORIES_PER_MINUTE))))
+                .build();
     }
 
     /**
      * Method for creating an ExerciseEntry to be used in testing ExerciseEntry snapshot calculation.
      */
     private ExerciseEntry prepareExerciseEntryWithExpectedValues(Exercise exercise) {
-            return defaultExerciseEntryBuilder()
+        return defaultExerciseEntryBuilder()
                 .id(ENTRY_ID)
                 .day(myDay)
                 .category(TEST_CATEGORY)
@@ -270,7 +266,7 @@ public class EntryServiceUnitTests {
             void foodEntryCreated() {
                 // Arrange
                 Food food = prepareFoodWithTestValues();
-                FoodEntry saved = prepareMyFoodEntry(); 
+                FoodEntry saved = prepareMyFoodEntry();
 
                 when(foodRepository.fetchByIdVerified(USER_ID, FOOD_ID)).thenReturn(Optional.of(food));
                 when(entryRepository.countByDayAndCategory(DAY_ID, TEST_CATEGORY)).thenReturn(TEST_COUNT);
@@ -316,11 +312,11 @@ public class EntryServiceUnitTests {
             @BeforeEach
             void prepareTests() {
                 request = defaultExerciseEntryCreateRequestBuilder()
-                    .exerciseId(EXERCISE_ID)
-                    .category(TEST_CATEGORY)
-                    .duration(TEST_DURATION)
-                    .level(TEST_LEVEL)
-                    .build();
+                        .exerciseId(EXERCISE_ID)
+                        .category(TEST_CATEGORY)
+                        .duration(TEST_DURATION)
+                        .level(TEST_LEVEL)
+                        .build();
 
                 when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.of(myDay));
             }
@@ -347,9 +343,9 @@ public class EntryServiceUnitTests {
                 ExerciseEntry created = (ExerciseEntry) entryCaptor.getValue();
 
                 assertThat(created)
-                    .usingRecursiveComparison()
-                    .ignoringFields("id")
-                    .isEqualTo(prepareExerciseEntryWithExpectedValues(exercise));
+                        .usingRecursiveComparison()
+                        .ignoringFields("id")
+                        .isEqualTo(prepareExerciseEntryWithExpectedValues(exercise));
             }
 
             @Test
@@ -360,7 +356,7 @@ public class EntryServiceUnitTests {
 
                 // Act + Assert
                 assertThatThrownBy(() -> entryService.createEntry(myUser, DAY_ID, request))
-                    .isInstanceOf(ResourceNotFoundException.class);
+                        .isInstanceOf(ResourceNotFoundException.class);
                 verify(entryRepository, never()).save(any(Entry.class));
             }
 
@@ -510,13 +506,13 @@ public class EntryServiceUnitTests {
                 ExerciseEntry copied = (ExerciseEntry) entryCaptor.getValue();
 
                 assertThat(copied)
-                    .usingRecursiveComparison()
-                    .ignoringFields("id", "day", "category", "position")
-                    .isEqualTo(original);
+                        .usingRecursiveComparison()
+                        .ignoringFields("id", "day", "category", "position")
+                        .isEqualTo(original);
 
                 assertThat(copied.getDay()).isEqualTo(myOtherDay);
                 assertThat(copied.getCategory()).isEqualTo(OTHER_CATEGORY);
-                assertThat(copied.getPosition()).isEqualTo(OTHER_COUNT + 1);                
+                assertThat(copied.getPosition()).isEqualTo(OTHER_COUNT + 1);
             }
 
             @Test
@@ -533,7 +529,7 @@ public class EntryServiceUnitTests {
                 when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.of(outdatedOriginal));
                 when(dayRepository.fetchByIdVerified(USER_ID, OTHER_DAY_ID)).thenReturn(Optional.of(myOtherDay));
                 when(entryRepository.countByDayAndCategory(OTHER_DAY_ID, OTHER_CATEGORY)).thenReturn(OTHER_COUNT);
-                when(entryRepository.save(any(ExerciseEntry.class))).thenReturn(saved);               
+                when(entryRepository.save(any(ExerciseEntry.class))).thenReturn(saved);
 
                 // Act
                 entryService.duplicateEntry(myUser, OTHER_DAY_ID, request);
@@ -569,14 +565,14 @@ public class EntryServiceUnitTests {
 
         ExerciseEntry prepareExerciseEntryToUpdate(Exercise exercise) {
             return defaultExerciseEntryBuilder()
-                .id(ENTRY_ID)
-                .day(myDay)
-                .category(TEST_CATEGORY)
-                .position(TEST_COUNT + 1)
-                .exercise(exercise)
-                .duration(OTHER_DURATION)
-                .level(OTHER_LEVEL)
-                .build();
+                    .id(ENTRY_ID)
+                    .day(myDay)
+                    .category(TEST_CATEGORY)
+                    .position(TEST_COUNT + 1)
+                    .exercise(exercise)
+                    .duration(OTHER_DURATION)
+                    .level(OTHER_LEVEL)
+                    .build();
         }
 
         @Test
@@ -610,10 +606,10 @@ public class EntryServiceUnitTests {
         void exerciseEntryEdited() {
             // Arrange
             ExerciseEntryEditRequest request = defaultExerciseEntryEditRequestBuilder()
-                .duration(TEST_DURATION)
-                .level(TEST_LEVEL)
-                .build();
-            
+                    .duration(TEST_DURATION)
+                    .level(TEST_LEVEL)
+                    .build();
+
             Exercise exercise = prepareExerciseWithTestValues();
             ExerciseEntry entry = prepareExerciseEntryToUpdate(exercise);
 
@@ -626,8 +622,8 @@ public class EntryServiceUnitTests {
             assertThat(result).isEqualTo(entryMapper.toResponse(entry));
 
             assertThat(entry)
-                .usingRecursiveComparison()
-                .isEqualTo(prepareExerciseEntryWithExpectedValues(exercise));
+                    .usingRecursiveComparison()
+                    .isEqualTo(prepareExerciseEntryWithExpectedValues(exercise));
         }
 
         @Test
@@ -658,15 +654,15 @@ public class EntryServiceUnitTests {
 
         EntryMoveRequest prepareSpecificRequest(Category category, int desiredPosition) {
             return EntryMoveRequest.builder()
-                .category(category)
-                .desiredPosition(desiredPosition)
-                .build();
+                    .category(category)
+                    .desiredPosition(desiredPosition)
+                    .build();
         }
 
         static Stream<Arguments> provideInvalidInputs() {
             return Stream.of(
-                argumentSet("Same category", TEST_CATEGORY, TEST_COUNT + 1),
-                argumentSet("Different category", OTHER_CATEGORY, TEST_COUNT + 2)
+                    argumentSet("Same category", TEST_CATEGORY, TEST_COUNT + 1),
+                    argumentSet("Different category", OTHER_CATEGORY, TEST_COUNT + 2)
             );
         }
 
@@ -682,7 +678,7 @@ public class EntryServiceUnitTests {
 
             // Act
             assertThatCode(() -> entryService.moveEntry(myUser, ENTRY_ID, request))
-                .doesNotThrowAnyException();
+                    .doesNotThrowAnyException();
 
             // Assert
             verify(entryRepository).shiftDownByDayAndCategory(DAY_ID, TEST_CATEGORY, TEST_POSITION, HIGHER_POSITION);
@@ -704,7 +700,7 @@ public class EntryServiceUnitTests {
 
             // Act
             assertThatCode(() -> entryService.moveEntry(myUser, ENTRY_ID, request))
-                .doesNotThrowAnyException();
+                    .doesNotThrowAnyException();
 
             // Assert
             verify(entryRepository).shiftUpByDayAndCategory(DAY_ID, TEST_CATEGORY, LOWER_POSITION, TEST_POSITION);
@@ -726,8 +722,8 @@ public class EntryServiceUnitTests {
 
             // Act
             assertThatCode(() -> entryService.moveEntry(myUser, ENTRY_ID, request))
-                .doesNotThrowAnyException();
-            
+                    .doesNotThrowAnyException();
+
             // Assert
             verify(entryRepository).shiftUpByDayAndCategory(DAY_ID, OTHER_CATEGORY, HIGHER_POSITION, null);
             verify(entryRepository).shiftDownByDayAndCategory(DAY_ID, TEST_CATEGORY, TEST_POSITION, null);
@@ -745,7 +741,7 @@ public class EntryServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> entryService.moveEntry(myUser, ENTRY_ID, request))
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .isInstanceOf(ResourceNotFoundException.class);
             verifyNoMoreInteractions(entryRepository);
         }
 
@@ -760,7 +756,7 @@ public class EntryServiceUnitTests {
 
             // Act
             assertThatThrownBy(() -> entryService.moveEntry(myUser, ENTRY_ID, request))
-                .isInstanceOf(ServiceValidationException.class);
+                    .isInstanceOf(ServiceValidationException.class);
             verifyNoMoreInteractions(entryRepository);
         }
 
@@ -777,7 +773,7 @@ public class EntryServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> entryService.moveEntry(myUser, ENTRY_ID, request))
-                .isInstanceOf(ServiceValidationException.class);
+                    .isInstanceOf(ServiceValidationException.class);
 
             verifyNoMoreInteractions(entryRepository);
             assertThat(entry.getCategory()).isEqualTo(TEST_CATEGORY);

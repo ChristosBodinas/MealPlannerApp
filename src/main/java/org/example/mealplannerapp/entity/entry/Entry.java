@@ -90,6 +90,7 @@ public abstract class Entry {
      * Creates a new, unpersisted {@link Entry} with the same values in all fields except
      * {@code id}, {@code day}, {@code category}, {@code position}, which are intentionally
      * left unset.
+     *
      * @return a new entry that is identical to the old one except for the id, day, category,
      * and position
      */

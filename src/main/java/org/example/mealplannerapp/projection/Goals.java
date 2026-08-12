@@ -15,5 +15,5 @@ public interface Goals {
     double getTargetFat();
 
     double getTargetFiber();
-    
+
 }

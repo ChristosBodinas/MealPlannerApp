@@ -1,11 +1,11 @@
 package org.example.mealplannerapp.entity;
 
-import java.util.Set;
-
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.mealplannerapp.common.ActivityLevel;
 import org.example.mealplannerapp.projection.impl.GoalsImpl;
+
+import java.util.Set;
 
 
 /**
@@ -117,11 +117,11 @@ public class Plan {
 
     public GoalsImpl retrieveGoals() {
         return new GoalsImpl(
-            targetCalories,
-            targetProtein,
-            targetCarbs,
-            targetFat,
-            targetFiber
+                targetCalories,
+                targetProtein,
+                targetCarbs,
+                targetFat,
+                targetFiber
         );
     }
 

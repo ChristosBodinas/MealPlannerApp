@@ -1,6 +1,7 @@
 package org.example.mealplannerapp.common;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor

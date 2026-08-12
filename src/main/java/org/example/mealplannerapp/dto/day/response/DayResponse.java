@@ -1,7 +1,7 @@
 package org.example.mealplannerapp.dto.day.response;
 
 public record DayResponse(
-    Long id,
-    int position
+        Long id,
+        int position
 ) {
 }
