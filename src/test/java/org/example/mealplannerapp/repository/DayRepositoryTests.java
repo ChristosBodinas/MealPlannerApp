@@ -78,7 +78,6 @@ public class DayRepositoryTests {
     }
 
     // TESTS PROPER
-
     @Nested
     @DisplayName("fetchByIdVerified")
     class FetchByIdVerified {

@@ -29,8 +29,6 @@ public class DayService {
     private final EntryMapper entryMapper;
     private final DayMapper dayMapper;
 
-    // TODO: Javadocs for all.
-
     /**
      * Deletes all {@link Entry} entities that belong to the {@link Day} identified by {@code dayId}
      * and owned by {@code user}.
@@ -94,5 +92,7 @@ public class DayService {
         return dayMapper.toSummaryResponse(categoryStats, dayStats, dayGoals);
         
     }
+
+    // TODO: Modify these methods to find Days by planId and day Position?
 
 }

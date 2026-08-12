@@ -2,8 +2,12 @@ package org.example.mealplannerapp.repository;
 
 import org.example.mealplannerapp.common.Category;
 import org.example.mealplannerapp.entity.Day;
+import org.example.mealplannerapp.entity.Exercise;
+import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.entity.entry.Entry;
+import org.example.mealplannerapp.entity.entry.ExerciseEntry;
+import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.projection.CategoryStats;
 import org.example.mealplannerapp.projection.Placement;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -168,5 +172,19 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
     int deleteByDay(
         @Param("dayId") Long dayId
     );
+
+    /**
+     * Deletes all {@link Entry} entities that belong to the {@link Plan} with identifier {@code planId}
+     * from the database.
+     * @param planId the identifier of the plan whose entries to delete
+     * @return the number of rows deleted
+     */
+        @Modifying
+        @Query("DELETE FROM Entry e WHERE e.day.plan.id = :planId")
+    int deleteByPlan(
+        @Param("planId") Long planId
+    );
+
+    // TODO: test deleteByPlan
 
 }
