@@ -7,6 +7,7 @@ import org.example.mealplannerapp.dto.entry.request.edit.EntryEditRequest;
 import org.example.mealplannerapp.dto.entry.request.edit.ExerciseEntryEditRequest;
 import org.example.mealplannerapp.dto.entry.request.edit.FoodEntryEditRequest;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
+import org.example.mealplannerapp.dto.entry.response.ExerciseEntryResponse;
 import org.example.mealplannerapp.dto.entry.response.FoodEntryResponse;
 import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.ExerciseEntry;
@@ -43,6 +44,7 @@ public interface EntryMapper {
 
     // GENERATE RESPONSE
     @SubclassMapping(source = FoodEntry.class, target = FoodEntryResponse.class)
+    @SubclassMapping(source = ExerciseEntry.class, target = ExerciseEntryResponse.class)
     EntryResponse toResponse(Entry entry);
 
 }

@@ -1,17 +1,23 @@
 package org.example.mealplannerapp.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import org.example.mealplannerapp.common.Category;
 import org.example.mealplannerapp.dto.day.response.DaySummaryResponse;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Exercise;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
+import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.mapper.DayMapper;
 import org.example.mealplannerapp.mapper.EntryMapper;
 import org.example.mealplannerapp.projection.CategoryStats;
+import org.example.mealplannerapp.projection.impl.CategoryStatsImpl;
 import org.example.mealplannerapp.projection.impl.GoalsImpl;
 import org.example.mealplannerapp.projection.impl.StatsImpl;
 import org.example.mealplannerapp.repository.DayRepository;
@@ -28,6 +34,22 @@ public class DayService {
     private final DayRepository dayRepository;
     private final EntryMapper entryMapper;
     private final DayMapper dayMapper;
+
+    private void fillMissingCategoryStats(List<CategoryStats> categoryStats) {
+        Map<Category, CategoryStats> categoryMap = categoryStats
+                .stream()
+                .collect(Collectors.toMap(CategoryStats::getCategory, Function.identity()));
+
+        for (Category category : Category.values()) {
+            categoryMap.putIfAbsent(category, new CategoryStatsImpl(
+                    category, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+        }
+
+        categoryStats.clear();
+        for (Category category : Category.values()) {
+            categoryStats.add(categoryMap.get(category));
+        }
+    }
 
     /**
      * Deletes all {@link Entry} entities that belong to the {@link Day} identified by {@code dayId}
@@ -87,10 +109,11 @@ public class DayService {
             categoryStats.stream().mapToDouble(CategoryStats::getPrice).sum()
         );
 
+        fillMissingCategoryStats(categoryStats);
+
         GoalsImpl dayGoals = day.retrieveGoals();
 
         return dayMapper.toSummaryResponse(categoryStats, dayStats, dayGoals);
-        
     }
 
     // TODO: Modify these methods to find Days by planId and day Position?

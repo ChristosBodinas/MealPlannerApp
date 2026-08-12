@@ -477,7 +477,7 @@ public class EntryServiceUnitTests {
                 FoodEntry copied = (FoodEntry) entryCaptor.getValue();
 
                 assertThat(copied.getCalories()).isNotCloseTo(outdatedOriginal.getCalories(), within(0.01));
-                assertThat(copied.getCalories()).isCloseTo(-1 * TEST_CALORIES_PER_MINUTE * TEST_DURATION, within(0.01));
+                assertThat(copied.getCalories()).isCloseTo(TEST_CALORIES_PER_100G * TEST_GRAMS / 100.0, within(0.01));
             }
 
         }
@@ -544,7 +544,7 @@ public class EntryServiceUnitTests {
                 ExerciseEntry copied = (ExerciseEntry) entryCaptor.getValue();
 
                 assertThat(copied.getCalories()).isNotCloseTo(outdatedOriginal.getCalories(), within(0.01));
-                assertThat(copied.getCalories()).isCloseTo(TEST_CALORIES_PER_100G * TEST_GRAMS / 100.0, within(0.01));
+                assertThat(copied.getCalories()).isCloseTo(-1 * TEST_CALORIES_PER_MINUTE * TEST_DURATION, within(0.01));
             }
         }
 
@@ -559,7 +559,7 @@ public class EntryServiceUnitTests {
                     .id(ENTRY_ID)
                     .day(myDay)
                     .category(TEST_CATEGORY)
-                    .position(TEST_POSITION)
+                    .position(TEST_COUNT + 1)
                     .food(food)
                     .grams(OTHER_GRAMS)
                     .unit(OTHER_UNIT)
@@ -572,7 +572,7 @@ public class EntryServiceUnitTests {
                 .id(ENTRY_ID)
                 .day(myDay)
                 .category(TEST_CATEGORY)
-                .position(TEST_POSITION)
+                .position(TEST_COUNT + 1)
                 .exercise(exercise)
                 .duration(OTHER_DURATION)
                 .level(OTHER_LEVEL)

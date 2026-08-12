@@ -53,7 +53,7 @@ public class ExerciseEntry extends Entry {
             .map(ExerciseLevel::getCaloriesPerMinute)
             .orElse(0.0);
 
-        setCalories(-1 * caloriesPerMinute / duration);
+        setCalories(-1 * caloriesPerMinute * duration);
         setProtein(0.0);
         setCarbs(0.0);
         setFat(0.0);

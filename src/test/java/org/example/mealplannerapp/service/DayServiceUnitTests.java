@@ -193,6 +193,8 @@ public class DayServiceUnitTests {
             // Act
             DaySummaryResponse result = dayService.summarizeDay(myUser, DAY_ID);
 
+            // TODO: Modify to check for zero-value stats.
+
             // Assert
             StatsImpl target = new StatsImpl(300.0, 70.0, 120.0, 30.0, 10.0, 10.0);
             assertThat(result).isEqualTo(dayMapper.toSummaryResponse(categoryStats, target, found.retrieveGoals()));

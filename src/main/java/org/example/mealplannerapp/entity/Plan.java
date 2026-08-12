@@ -4,6 +4,7 @@ import java.util.Set;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.mealplannerapp.common.ActivityLevel;
 
 
 /**
@@ -49,12 +50,16 @@ public class Plan {
     private double startWeight;
 
     /**
-     * Desired change in user weight.
+     * Desired loss in user weight.
      */
     @Column(nullable = false)
-    private double targetChange;
+    private double targetLoss;
 
-    // TODO: Activity Levels
+    /**
+     * User's activity level throughout the entire plan.
+     */
+    @Column(nullable = false)
+    private ActivityLevel activityLevel;
 
     /**
      * Target amount (in Kcal) of calories across the entire plan.
@@ -86,13 +91,27 @@ public class Plan {
     @Column(nullable = false)
     private double targetFiber;
 
-    public computeNutritionGoals() {
-        // Basal Metabolic Rate
+    public void computeNutritionGoals(double proteinRatio, double carbsRatio) {
+        // Basal Metabolic Rate (Daily)
         double bmr = 10 * startWeight + 6.25 * user.getHeight() - 5 * user.deriveAgeInYears();
         bmr += user.getSex().getBmrOffset();
 
-        // TODO: Write the rest of the method.
+        // Total Daily Energy Expenditure (Daily)
+        double tdee = bmr * activityLevel.getActivityFactor();
 
+        // Target Loss in Kcal (Plan)
+        double deficit = targetLoss * 7700;
+
+        // Average Calorie Budget (Plan)
+        double targetCalories = tdee * days.size() - deficit;
+
+        // Macronutrient Goals (Plan)
+        targetProtein = targetCalories * proteinRatio / 4;
+        targetCarbs = targetCalories * carbsRatio / 4;
+        targetFat = targetCalories * (1 - proteinRatio - carbsRatio) / 9;
+
+        // Fiber Goal (Plan)
+        targetFiber = user.getSex().getFiberIntake() * days.size();
     }
 
 }

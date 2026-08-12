@@ -75,6 +75,7 @@ public class PlanRepositoryTests {
     }
 
     // BEFORE EACH
+    @BeforeEach
     void prepareAllTests() {
         prepareMyUser();
     }
@@ -153,7 +154,6 @@ public class PlanRepositoryTests {
         @DisplayName("Returns owned plans with at least a partial name match when given a non-empty string.")
         void ownedPlanNameMatches() {
             // Arrange
-            prepareOtherUser();
             Plan matches = preparePlanWithText(myUser, "marshmallows");
             Plan noMatch = preparePlanWithText(myUser, "marshmelons");
             Plan notOwned = preparePlanWithText(otherUser, "marshmallows");
@@ -163,9 +163,9 @@ public class PlanRepositoryTests {
             List<Plan> result = planRepository.fetchShallowByUserAndText(myUser.getId(), "mallow");
             
             // Assert
-            assertThat(result).containsExactly(matches);
+            assertThat(result).extracting(Plan::getId).containsExactly(matches.getId());
 
-            Plan fetched = result.get(0);
+            Plan fetched = result.getFirst();
             assertThat(Hibernate.isInitialized(fetched.getDays())).isFalse();
         }
 
@@ -175,14 +175,14 @@ public class PlanRepositoryTests {
             // Arrange
             Plan owned1 = preparePlanWithText(myUser, "a");
             Plan owned2 = preparePlanWithText(myUser, "b");
-            Plan notOwned = preparePlanWithText(myUser, "c");
+            Plan notOwned = preparePlanWithText(otherUser, "c");
             flushAndClear();
 
             // Act
             List<Plan> result = planRepository.fetchShallowByUserAndText(myUser.getId(), "");
 
             // Assert
-            assertThat(result).containsExactlyInAnyOrder(owned1, owned2);
+            assertThat(result).extracting(Plan::getId).containsExactlyInAnyOrder(owned1.getId(), owned2.getId());
 
             assertThat(Hibernate.isInitialized(result.get(0).getDays())).isFalse();
             assertThat(Hibernate.isInitialized(result.get(1).getDays())).isFalse();
