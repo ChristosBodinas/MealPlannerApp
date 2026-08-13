@@ -62,8 +62,8 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
     );
 
     @Query("SELECT e FROM FoodEntry e " +
-            "JOIN FETCH Food f " +
-            "INNER JOIN FETCH f.prices p " +
+            "JOIN FETCH e.food f " +
+            "LEFT JOIN FETCH f.prices p " +
             "WHERE e.day.plan.id = :planId")
     List<FoodEntry> fetchFoodEntriesWithPricesByPlan(
             @Param("planId") Long planId
@@ -200,11 +200,10 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
      * from the database.
      *
      * @param planId the identifier of the plan whose entries to delete
-     * @return the number of rows deleted
      */
     @Modifying
     @Query("DELETE FROM Entry e WHERE e.day.plan.id = :planId")
-    int deleteByPlan(
+    void deleteByPlan(
             @Param("planId") Long planId
     );
 
