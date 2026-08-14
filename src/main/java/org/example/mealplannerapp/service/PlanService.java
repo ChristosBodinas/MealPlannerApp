@@ -59,7 +59,7 @@ public class PlanService {
             mismatch = true;
         }
 
-        if (mismatch = true) {
+        if (mismatch) {
             throw new ServiceValidationException("Daily goals do not correctly add up to total plan goals.");
         }
     }

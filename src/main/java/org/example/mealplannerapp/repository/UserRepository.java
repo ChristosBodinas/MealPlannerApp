@@ -15,4 +15,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> fetchByUsername(
             @Param("username") String username
     );
+
+    Optional<User> findByAuthId(String authId);
 }

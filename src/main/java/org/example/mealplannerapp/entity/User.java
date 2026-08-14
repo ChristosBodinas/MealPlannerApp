@@ -24,6 +24,9 @@ public class User {
     @Setter(AccessLevel.NONE)
     private Long id;
 
+    @Column(name = "auth_id", unique = true, nullable = false)
+    private String authId;
+
     /**
      * Internal name. Used for authentication.
      */
