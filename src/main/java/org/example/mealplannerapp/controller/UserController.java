@@ -1,5 +1,6 @@
 package org.example.mealplannerapp.controller;
 
+import jakarta.validation.Valid;
 import org.example.mealplannerapp.dto.user.UserDetailsRequest;
 import org.example.mealplannerapp.dto.user.UserDetailsResponse;
 import org.example.mealplannerapp.entity.User;

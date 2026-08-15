@@ -30,11 +30,13 @@ public class Exercise {
     @Column(nullable = false, length = 50)
     private String name;
 
+    // TODO: javadoc (here or at the embeddable)
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "exercise_level", joinColumns = @JoinColumn(name = "exercise_id", nullable = false), 
-        uniqueConstraints = @UniqueConstraint(name = "UniqueLevelPerName", columnNames = {"exercise_id", "level_name"}))
-    @AttributeOverride(name = "levelName", column = @Column(name = "level_name", nullable = false, length = 10))
+    @CollectionTable(name = "exercise_level",
+            joinColumns = @JoinColumn(name = "exercise_id", nullable = false),
+            uniqueConstraints = @UniqueConstraint(name = "NoDuplicateDescPerExercise", columnNames = {"exercise_id", "intensity_desc"}))
+    @AttributeOverride(name = "intensityDesc", column = @Column(name = "intensity_desc", nullable = false, length = 10))
     @AttributeOverride(name = "caloriesPerMinute", column = @Column(name = "calories_per_minute", nullable = false, precision = 5, scale = 2))
     private Set<ExerciseLevel> levels;
-    
+
 }

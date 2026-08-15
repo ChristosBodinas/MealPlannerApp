@@ -18,9 +18,9 @@ import lombok.Setter;
 public class ExerciseLevel {
 
     /**
-     * Description of the intensity level.
+     * Intensity level description.
      */
-    private String name;
+    private String intensityDesc;
 
     /**
      * Calories (in Kcal) burned per minute at the particular intensity level.
