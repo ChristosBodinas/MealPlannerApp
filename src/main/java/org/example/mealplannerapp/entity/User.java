@@ -32,7 +32,6 @@ public class User {
      * Identifier used for authentication.
      */
     @Column(name = "auth_id", nullable = false, unique = true)
-    @Setter(AccessLevel.NONE)
     private String authId;
 
     /**

@@ -16,11 +16,12 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class KeycloakJwtAuthConverter implements Converter<Jwt, AbstractAuthenticationToken> {
-    private final UserProvisioningService userProvisioningService;
+
+    private final IdentityService identityService;
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
-        User user = userProvisioningService.provisionFromJwt(jwt);
+        User user = identityService.provisionFromJwt(jwt);
         Collection<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
         return new JwtAuthenticationToken(jwt, authorities, user.getId().toString());
     }

@@ -17,7 +17,8 @@ public class SecurityConfig {
                 .permitAll()
                 .anyRequest()
                 .authenticated())
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)));
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(
+                        jwt -> jwt.jwtAuthenticationConverter(converter)));
         return http.build();
     }
 }
