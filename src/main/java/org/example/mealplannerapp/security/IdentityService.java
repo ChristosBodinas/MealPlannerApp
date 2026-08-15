@@ -2,11 +2,6 @@ package org.example.mealplannerapp.security;
 
 import lombok.RequiredArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
-import org.example.mealplannerapp.common.Gender;
-import org.example.mealplannerapp.common.Sex;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.repository.UserRepository;
 import org.springframework.security.oauth2.jwt.Jwt;

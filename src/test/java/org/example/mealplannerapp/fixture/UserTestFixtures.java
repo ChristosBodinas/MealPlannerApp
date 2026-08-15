@@ -2,8 +2,6 @@ package org.example.mealplannerapp.fixture;
 
 import org.example.mealplannerapp.common.Gender;
 import org.example.mealplannerapp.common.Sex;
-import org.example.mealplannerapp.dto.user.UserDetailsRequest;
-import org.example.mealplannerapp.dto.user.UserDetailsResponse;
 import org.example.mealplannerapp.entity.User;
 
 import java.math.BigDecimal;
@@ -31,22 +29,4 @@ public final class UserTestFixtures {
                 .height(DEFAULT_HEIGHT);
     }
 
-    public static UserDetailsRequest.UserDetailsRequestBuilder defaultUserDetailsRequest() {
-        return UserDetailsRequest.builder()
-                .nickname(DEFAULT_NICKNAME)
-                .gender(DEFAULT_GENDER)
-                .sex(DEFAULT_SEX)
-                .birthDate(DEFAULT_BIRTH_DATE)
-                .height(DEFAULT_HEIGHT);
-    }
-
-    public static UserDetailsResponse.UserDetailsResponseBuilder defaultUserDetailsResponse() {
-        return UserDetailsResponse.builder()
-                .username(DEFAULT_USERNAME)
-                .nickname(DEFAULT_NICKNAME)
-                .gender(DEFAULT_GENDER)
-                .sex(DEFAULT_SEX)
-                .birthDate(DEFAULT_BIRTH_DATE)
-                .height(DEFAULT_HEIGHT);
-    }
 }

@@ -8,12 +8,7 @@ import org.example.mealplannerapp.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
 import lombok.AllArgsConstructor;
 
 @RestController
@@ -42,6 +37,7 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    // TODO: Remove this from the final version.
     @GetMapping("/hello")
     public ResponseEntity<String> hello(
             @AuthenticationPrincipal Jwt jwt

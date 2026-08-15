@@ -20,58 +20,63 @@ import static org.example.mealplannerapp.fixture.UserTestFixtures.*;
 
 public class UserServiceUnitTests {
 
+    // CLASS FIELDS
     private UserService userService;
     private UserMapper userMapper;
+
     private User myUser;
 
+    // HELPER METHODS
+    private Gender anyOtherGender(Gender initialGender) {
+        return EnumSet.allOf(Gender.class)
+            .stream()
+            .filter(gender -> gender != initialGender)
+            .findFirst()
+            .orElse(null);
+    }
+
+    private Sex anyOtherSex(Sex initialSex) {
+        return initialSex == Sex.MALE ? Sex.FEMALE : Sex.MALE;
+    }
+
+    // TESTS PROPER
     @BeforeEach
     void prepareAllTests() {
         userMapper = new UserMapperImpl();
         userService = new UserService(userMapper);
+
         myUser = defaultUser().build();
     }
 
     @Nested
     @DisplayName("editUserDetails")
     class EditUserDetails {
-        private UserDetailsRequest request;
-
-        private Gender otherGender(Gender currentGender) {
-            return EnumSet.allOf(currentGender.getDeclaringClass())
-                    .stream()
-                    .filter(gender -> gender != currentGender)
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        @BeforeEach
-        void prepareTests() {
-
-            request = UserDetailsRequest.builder()
-                    .nickname(myUser.getNickname() + "_edited")
-                    .gender(otherGender(myUser.getGender()))
-                    .sex(myUser.getSex() == Sex.MALE ? Sex.FEMALE : Sex.MALE)
-                    .birthDate(myUser.getBirthDate().plusYears(3))
-                    .height(myUser.getHeight().add(new BigDecimal("10.0")))
-                    .build();
-        }
 
         @Test
-        @DisplayName("Edits user details.")
+        @DisplayName("Updates the current user's details to match request data and returns the updated details.")
         void detailsEdited() {
+            // Arrange
+            UserDetailsRequest request = UserDetailsRequest.builder()
+                .nickname(myUser.getNickname() + "_edited")
+                .gender(anyOtherGender(myUser.getGender()))
+                .sex(anyOtherSex(myUser.getSex()))
+                .birthDate(myUser.getBirthDate().plusYears(3))
+                .height(myUser.getHeight().add(new BigDecimal("15.0")))
+                .build();
+
             // Act
             UserDetailsResponse response = userService.editUserDetails(myUser, request);
 
-            // AssertThat
+            // Assert
             assertThat(myUser)
-                    .as("User details now match request data.")
-                    .usingRecursiveComparison()
-                    .ignoringFields("id", "authId", "username")
-                    .isEqualTo(request);
+                .as("User details should now match request data.")
+                .usingRecursiveComparison()
+                .ignoringFields("id", "authId", "username")
+                .isEqualTo(request);
 
             assertThat(response)
-                    .as("Method output matches mapper output.")
-                    .isEqualTo(userMapper.toResponse(myUser));
+                .as("Method output should match mapper output.")
+                .isEqualTo(userMapper.toResponse(myUser));
         }
 
     }
@@ -81,17 +86,15 @@ public class UserServiceUnitTests {
     class RetrieveUserDetails {
 
         @Test
-        @DisplayName("Returns user details.")
+        @DisplayName("Returns the current user's details.")
         void detailsRetrieved() {
-            // Arrange
-
             // Act
             UserDetailsResponse response = userService.retrieveUserDetails(myUser);
 
             // Assert
             assertThat(response)
-                    .as("Method output matches mapper output.")
-                    .isEqualTo(userMapper.toResponse(myUser));
+                .as("Method output should match mapper output.")
+                .isEqualTo(userMapper.toResponse(myUser));
         }
 
     }
