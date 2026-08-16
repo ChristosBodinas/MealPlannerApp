@@ -67,7 +67,7 @@ public class ExerciseRepositoryTests {
 
     // TESTS PROPER
     @BeforeEach
-    void prepareAllTests() {
+    private void prepareMyUser() {
         myUser = defaultUser().authId(MY_AUTH_ID).username(MY_USERNAME).build();
         entityManager.persist(myUser);
     }
@@ -144,10 +144,17 @@ public class ExerciseRepositoryTests {
     @DisplayName("fetchShallowByUserAndText")
     class FetchShallowByUserAndText {
 
+        private Pageable pageable;
+
         private Exercise prepareExerciseWithText(User owner, String name) {
             Exercise exercise = defaultExercise().user(owner).name(name).build();
             entityManager.persist(exercise);
             return exercise;
+        }
+
+        @BeforeEach
+        private void preparePageable() {
+            pageable = PageRequest.of(0, 2);
         }
 
         @Test
@@ -157,8 +164,6 @@ public class ExerciseRepositoryTests {
             Exercise match = prepareExerciseWithText(myUser, "_A_myText_B_");
             Exercise noMatch = prepareExerciseWithText(myUser, "_A_nope_B_");
             flushAndClear();
-
-            Pageable pageable = PageRequest.of(0, 2);
 
             // Act
             Page<Exercise> result = exerciseRepository.fetchShallowByUserAndText(myUser.getId(), "myText", pageable);
@@ -178,8 +183,6 @@ public class ExerciseRepositoryTests {
             Exercise notOwned = prepareExerciseWithText(otherUser, "A_myText_B_");
             flushAndClear();
 
-            Pageable pageable = PageRequest.of(0, 2);
-
             // Act
             Page<Exercise> result = exerciseRepository.fetchShallowByUserAndText(myUser.getId(), "myText", pageable);
 
@@ -194,8 +197,6 @@ public class ExerciseRepositoryTests {
             // Arrange
             Exercise match = prepareExerciseWithText(myUser, "_A_myText_B_");
             flushAndClear();
-
-            Pageable pageable = PageRequest.of(0, 1);
 
             // Act
             Page<Exercise> result = exerciseRepository.fetchShallowByUserAndText(myUser.getId(), "myText", pageable);
@@ -217,8 +218,6 @@ public class ExerciseRepositoryTests {
             Exercise owned2 = prepareExerciseWithText(myUser, "b");
             flushAndClear();
 
-            Pageable pageable = PageRequest.of(0, 2);
-
             // Act
             Page<Exercise> result = exerciseRepository.fetchShallowByUserAndText(myUser.getId(), null, pageable);
 
@@ -234,8 +233,6 @@ public class ExerciseRepositoryTests {
             Exercise owned1 = prepareExerciseWithText(myUser, "a");
             Exercise owned2 = prepareExerciseWithText(myUser, "b");
             flushAndClear();
-
-            Pageable pageable = PageRequest.of(0, 2);
 
             // Act
             Page<Exercise> result = exerciseRepository.fetchShallowByUserAndText(myUser.getId(), "", pageable);

@@ -41,7 +41,7 @@ public class UserServiceUnitTests {
 
     // TESTS PROPER
     @BeforeEach
-    void prepareAllTests() {
+    private void prepareServiceAndUser() {
         userMapper = new UserMapperImpl();
         userService = new UserService(userMapper);
 
