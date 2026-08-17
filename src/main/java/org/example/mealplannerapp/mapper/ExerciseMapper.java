@@ -23,7 +23,7 @@ public interface ExerciseMapper {
     @Mapping(target = "levels", source = "levels", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT)
     Exercise toExercise(ExerciseRequest request);
 
-    void update(@MappingTarget Exercise exercise, ExerciseRequest request);
+    void update(@MappingTarget Exercise exercise, ExerciseRequest request); // TODO: Does this need @Mapping?
 
     ExerciseResponse toResponse(Exercise exercise);
     ListedExerciseResponse toListedResponse(Exercise exercise);

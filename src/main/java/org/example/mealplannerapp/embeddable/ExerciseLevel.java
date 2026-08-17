@@ -14,7 +14,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder    // TODO: Should probably remove this and AllArgsConstructor?
 public class ExerciseLevel {
 
     /**

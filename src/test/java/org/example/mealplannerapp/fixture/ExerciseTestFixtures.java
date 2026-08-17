@@ -1,5 +1,7 @@
 package org.example.mealplannerapp.fixture;
 
+import org.example.mealplannerapp.dto.exercise.request.ExerciseRequest;
+import org.example.mealplannerapp.dto.exercise.request.LevelRequest;
 import org.example.mealplannerapp.embeddable.ExerciseLevel;
 import org.example.mealplannerapp.entity.Exercise;
 
@@ -21,6 +23,15 @@ public final class ExerciseTestFixtures {
                 .levels(new HashSet<>(Set.of(
                         new ExerciseLevel(DEFAULT_LEVEL_DESC_1, DEFAULT_CALORIES_PER_MINUTE_1),
                         new ExerciseLevel(DEFAULT_LEVEL_DESC_2, DEFAULT_CALORIES_PER_MINUTE_2)
+                )));
+    }
+
+    public static ExerciseRequest.ExerciseRequestBuilder defauExerciseRequest() {
+            return ExerciseRequest.builder()
+                .name(DEFAULT_NAME)
+                .levels(new HashSet<>(Set.of(
+                    new LevelRequest(DEFAULT_LEVEL_DESC_1, DEFAULT_CALORIES_PER_MINUTE_1),
+                    new LevelRequest(DEFAULT_LEVEL_DESC_2, DEFAULT_CALORIES_PER_MINUTE_2)
                 )));
     }
 
