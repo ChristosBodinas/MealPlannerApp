@@ -30,7 +30,7 @@ import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUser;
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 public class ExerciseRepositoryTests {
 
-    // TODO: Decide whether to keep the preconditions or not.
+    // TODO: Review messages.
 
     // CONSTANTS
     private static final String MY_AUTH_ID = "alice_auth";
@@ -106,10 +106,6 @@ public class ExerciseRepositoryTests {
             // Arrange
             flushAndClear();
 
-            assertThat(exerciseRepository.existsById(999L))
-                    .as("Precondition: Requested exercise should not exist.")
-                    .isFalse();
-
             // Act
             Optional<Exercise> result = exerciseRepository.fetchByIdVerified(myUser.getId(), 999L);
 
@@ -124,10 +120,6 @@ public class ExerciseRepositoryTests {
             prepareOtherUser();
             Exercise exercise = prepareExercise(otherUser);
             flushAndClear();
-
-            assertThat(exerciseRepository.existsById(exercise.getId()))
-                    .as("Precondition: Requested exercise should exist.")
-                    .isTrue();
 
             // Act
             Optional<Exercise> result = exerciseRepository.fetchByIdVerified(myUser.getId(), exercise.getId());
@@ -239,6 +231,7 @@ public class ExerciseRepositoryTests {
             assertThat(result).as("Method should return all owned exercises.")
                     .extracting(Exercise::getId).containsExactlyInAnyOrder(owned1.getId(), owned2.getId());
         }
+
     }
 
     @Nested
@@ -275,8 +268,6 @@ public class ExerciseRepositoryTests {
         void idNotFound_returnsZero() {
             // Arrange
             flushAndClear();
-            assertThat(exerciseRepository.existsById(999L)).as("Precondition: Requested exercise should not exist.")
-                    .isFalse();
 
             // Act
             int result = exerciseRepository.deleteByIdVerified(myUser.getId(), 999L);
@@ -292,9 +283,6 @@ public class ExerciseRepositoryTests {
             prepareOtherUser();
             Exercise exercise = prepareExercise(otherUser);
             flushAndClear();
-
-            assertThat(exerciseRepository.existsById(exercise.getId())).as("Precondition: Requested exercise should exist.")
-                    .isTrue();
 
             // Act
             int result = exerciseRepository.deleteByIdVerified(myUser.getId(), exercise.getId());
