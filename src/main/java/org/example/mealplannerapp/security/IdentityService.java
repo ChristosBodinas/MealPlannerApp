@@ -20,9 +20,10 @@ public class IdentityService {
         String username = jwt.getClaimAsString("preferred_username");
 
         User presentUser = userRepository.fetchByAuthId(authId).orElseGet(() -> {
-            User newUser = new User();
-            newUser.setAuthId(authId);
-            newUser.setUsername(username);
+            User newUser = User.builder()
+                    .authId(authId)
+                    .username(username)
+                    .build();
             return userRepository.save(newUser);
         });
 

@@ -1,6 +1,7 @@
 package org.example.mealplannerapp.entity;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -104,8 +105,10 @@ public class Food {
     public Map<String, BigDecimal> computePrices100g() {
         return prices.stream().collect(Collectors.toMap(
             FoodPrice::getVendorName,
-            p -> p.getPurchasePrice().divide(p.getPurchaseGrams().multiply(BigDecimal.valueOf(100)))
-        )); // TODO: Verify syntax.
+            p -> p.getPurchasePrice()
+                    .divide(p.getPurchaseGrams(), 2, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100))
+        ));
     }
     
 }

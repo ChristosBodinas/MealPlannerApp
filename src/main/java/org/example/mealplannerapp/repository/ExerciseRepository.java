@@ -29,8 +29,6 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
             Pageable pageable
     );
 
-    // TODO: What happens above if text = null?
-
     @Modifying
     @Query("DELETE FROM Exercise x WHERE x.user.id = :exerciseId AND x.id = :exerciseId")
     int deleteByIdVerified(

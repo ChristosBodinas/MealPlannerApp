@@ -38,14 +38,4 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    // TODO: Remove this from the final version.
-    @GetMapping("/hello")
-    public ResponseEntity<String> hello(
-            @AuthenticationPrincipal Jwt jwt
-    ) {
-        User user = identityService.provisionFromJwt(jwt);
-        String message = "Hello " + user.getUsername();
-        return ResponseEntity.ok(message);
-    }
-
 }

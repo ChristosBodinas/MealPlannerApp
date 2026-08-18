@@ -21,8 +21,6 @@ import lombok.*;
 @Builder
 public class User {
 
-    // TODO: Setter protection for authId and username, but then?
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.NONE)
@@ -32,6 +30,7 @@ public class User {
      * Identifier used for authentication.
      */
     @Column(name = "auth_id", nullable = false, unique = true)
+    @Setter(AccessLevel.NONE)
     private String authId;
 
     /**

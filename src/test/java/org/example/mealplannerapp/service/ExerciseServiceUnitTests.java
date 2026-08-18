@@ -1,19 +1,5 @@
 package org.example.mealplannerapp.service;
 
-import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUser;
-import static org.example.mealplannerapp.fixture.ExerciseTestFixtures.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
 import org.example.mealplannerapp.dto.exercise.request.ExerciseRequest;
 import org.example.mealplannerapp.dto.exercise.request.LevelRequest;
 import org.example.mealplannerapp.dto.exercise.response.ExerciseResponse;
@@ -37,19 +23,27 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import java.math.BigDecimal;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.example.mealplannerapp.fixture.ExerciseTestFixtures.defauExerciseRequest;
+import static org.example.mealplannerapp.fixture.ExerciseTestFixtures.defaultExercise;
+import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUser;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ExerciseServiceUnitTests {
 
-    // CLASS CONSTANTS
+    // CONSTANTS
     private static final long USER_ID = 1L;
     private static final long EXERCISE_ID = 99L;
 
-    // CLASS FIELDS
+    // VARIABLES
     private ExerciseService exerciseService;
     private ExerciseMapper exerciseMapper;
     @Mock private ExerciseRepository exerciseRepository;
@@ -58,12 +52,12 @@ public class ExerciseServiceUnitTests {
     private User myUser;
 
     // HELPER METHODS
-    private ExerciseRequest prepareInvalidRequest() {        
+    private ExerciseRequest prepareInvalidRequest() {
         return defauExerciseRequest()
-            .levels(new HashSet<>(Set.of(
-                new LevelRequest("dupe", new BigDecimal("5.0")),
-                new LevelRequest("dupe", new BigDecimal("7.0")))))
-            .build();
+                .levels(new HashSet<>(Set.of(
+                        new LevelRequest("dupe", new BigDecimal("5.0")),
+                        new LevelRequest("dupe", new BigDecimal("7.0")))))
+                .build();
     }
 
     // TESTS PROPER
@@ -81,11 +75,11 @@ public class ExerciseServiceUnitTests {
 
         @Test
         @DisplayName("Given a valid ExerciseRequest, creates and saves a new Exercise owned by the current user, " +
-            "and returns an ExerciseResponse.")
+                "and returns an ExerciseResponse.")
         void validData_createsExerciseAndReturnsResponse() {
             // Arrange
             ExerciseRequest request = defauExerciseRequest().build();
-            Exercise saved = defaultExercise().build();
+            Exercise saved = defaultExercise().id(EXERCISE_ID).user(myUser).build();
 
             when(exerciseRepository.save(any(Exercise.class))).thenReturn(saved);
 
@@ -94,15 +88,17 @@ public class ExerciseServiceUnitTests {
 
             // Assert
             assertThat(response).as("Method output should match mapper output.")
-                .isEqualTo(exerciseMapper.toResponse(saved));
+                    .isEqualTo(exerciseMapper.toResponse(saved));
 
             verify(exerciseRepository).save(captor.capture());
             Exercise created = captor.getValue();
 
             assertThat(created).as("Created exercise fields should match request data.")
-                .usingRecursiveComparison()
-                .ignoringFields("id", "user")
-                .isEqualTo(request);
+                    .usingRecursiveComparison()
+                    .ignoringFields("id", "user")
+                    .isEqualTo(request);
+
+            // TODO: owner set properly check
         }
 
         @Test
@@ -113,11 +109,11 @@ public class ExerciseServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> exerciseService.createExercise(myUser, request))
-                .as("Method should throw a DuplicateValueException.")
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .as("Method should throw a DuplicateValueException.")
+                    .isInstanceOf(DuplicateValueException.class);
 
             verify(exerciseRepository, never().description("Nothing should be saved to the database."))
-                .save(any(Exercise.class));
+                    .save(any(Exercise.class));
         }
 
     }
@@ -131,20 +127,19 @@ public class ExerciseServiceUnitTests {
 
             for (ExerciseLevel level : exercise.getLevels()) {
                 levelRequests.add(new LevelRequest(
-                    level.getIntensityDesc() + "_edited",
-                    level.getCaloriesPerMinute().add(new BigDecimal("15.0"))
-                ));
+                        level.getIntensityDesc() + "_edited",
+                        level.getCaloriesPerMinute().add(new BigDecimal("15.0"))));
             }
 
             return ExerciseRequest.builder()
-                .name(exercise.getName() + "_edited")
-                .levels(levelRequests)
-                .build();
+                    .name(exercise.getName() + "_edited")
+                    .levels(levelRequests)
+                    .build();
         }
 
         @Test
         @DisplayName("Given a valid exerciseId owned by the current user and a valid ExerciseRequest, " +
-            "updates the requested exercise and returns an ExerciseResponse.")
+                "updates the requested exercise and returns an ExerciseResponse.")
         void validIdAndData_updatesExerciseAndReturnsResponse() {
             // Arrange
             Exercise fetched = defaultExercise().id(EXERCISE_ID).user(myUser).build();
@@ -157,12 +152,12 @@ public class ExerciseServiceUnitTests {
 
             // Assert
             assertThat(response).as("Method output should match mapper output.")
-                .isEqualTo(exerciseMapper.toResponse(fetched));
+                    .isEqualTo(exerciseMapper.toResponse(fetched));
 
             assertThat(fetched).as("Updated exercise fields should match request fields.")
-                .usingRecursiveComparison()
-                .ignoringFields("id", "user")
-                .isEqualTo(request);
+                    .usingRecursiveComparison()
+                    .ignoringFields("id", "user")
+                    .isEqualTo(request);
         }
 
         @Test
@@ -175,8 +170,8 @@ public class ExerciseServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> exerciseService.updateExercise(myUser, EXERCISE_ID, request))
-                .as("Method should throw a ResourceNotFoundException.")
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .as("Method should throw a ResourceNotFoundException.")
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
         @Test
@@ -187,8 +182,8 @@ public class ExerciseServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> exerciseService.updateExercise(myUser, EXERCISE_ID, request))
-                .as("Method should throw a DuplicateValueException.")
-                .isInstanceOf(DuplicateValueException.class);
+                    .as("Method should throw a DuplicateValueException.")
+                    .isInstanceOf(DuplicateValueException.class);
         }
 
     }
@@ -205,8 +200,8 @@ public class ExerciseServiceUnitTests {
 
             // Act + Assert
             assertThatCode(() -> exerciseService.deleteExercise(myUser, EXERCISE_ID))
-                .as("Method should complete without throwing any exceptions.")
-                .doesNotThrowAnyException();
+                    .as("Method should complete without throwing any exceptions.")
+                    .doesNotThrowAnyException();
 
             verify(exerciseRepository).deleteByIdVerified(USER_ID, EXERCISE_ID);
         }
@@ -219,8 +214,8 @@ public class ExerciseServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> exerciseService.deleteExercise(myUser, EXERCISE_ID))
-                .as("Method should throw a ResourceNotFoundException.")
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .as("Method should throw a ResourceNotFoundException.")
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
     }
@@ -231,7 +226,7 @@ public class ExerciseServiceUnitTests {
 
         @Test
         @DisplayName("Given a valid exerciseId owned by the current user, " +
-            "returns the requested ExerciseResponse.")
+                "returns the requested ExerciseResponse.")
         void validId_returnsExerciseResponse() {
             // Arrange
             Exercise fetched = defaultExercise().id(EXERCISE_ID).user(myUser).build();
@@ -243,7 +238,7 @@ public class ExerciseServiceUnitTests {
 
             // Assert
             assertThat(response).as("Method output should match mapper output.")
-                .isEqualTo(exerciseMapper.toResponse(fetched));
+                    .isEqualTo(exerciseMapper.toResponse(fetched));
         }
 
         @Test
@@ -254,8 +249,8 @@ public class ExerciseServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> exerciseService.retrieveExercise(myUser, EXERCISE_ID))
-                .as("Method should throw a ResourceNotFoundException.")
-                .isInstanceOf(ResourceNotFoundException.class);
+                    .as("Method should throw a ResourceNotFoundException.")
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
     }
 
@@ -264,13 +259,14 @@ public class ExerciseServiceUnitTests {
     class SearchExercises {
 
         @Test
-        @DisplayName("Returns a List of ListedExerciseResponse DTOs.")  // TODO: Rephrase?
+        @DisplayName("Returns a Page of ListedExerciseResponse DTOs.")
+            // TODO: Rephrase?
         void returnsMatchingExercises() {
             // Arrange
             List<Exercise> exercises = new ArrayList<>(List.of(
-                defaultExercise().name("match1").user(myUser).build(),
-                defaultExercise().name("match2").user(myUser).build(),
-                defaultExercise().name("match3").user(myUser).build()
+                    defaultExercise().name("match1").user(myUser).build(),
+                    defaultExercise().name("match2").user(myUser).build(),
+                    defaultExercise().name("match3").user(myUser).build()
             ));
 
             Pageable pageable = PageRequest.of(0, 3);
@@ -283,9 +279,9 @@ public class ExerciseServiceUnitTests {
 
             // Assert
             assertThat(response).as("Method output should match mapper output.")
-                .isEqualTo(exercisesPage.map(exerciseMapper::toListedResponse));
+                    .isEqualTo(exercisesPage.map(exerciseMapper::toListedResponse));
         }
 
     }
-    
+
 }

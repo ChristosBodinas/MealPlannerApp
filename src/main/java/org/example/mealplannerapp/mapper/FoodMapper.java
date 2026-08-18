@@ -28,9 +28,11 @@ public interface FoodMapper {
     // MAIN METHODS
     @Mapping(target = "units", source = "units", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT)
     @Mapping(target = "prices", source = "prices", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT)
-    Food toFood(FoodRequest request);   // TODO: @Mapping for brand?
+    Food toFood(FoodRequest request);
 
-    void update(@MappingTarget Food food, FoodRequest request); // TODO: @Mapping?
+    @Mapping(target = "units", source = "units", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT)
+    @Mapping(target = "prices", source = "prices", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_DEFAULT)
+    void update(@MappingTarget Food food, FoodRequest request);
 
     FoodResponse toResponse(Food food);
     ListedFoodResponse toListedResponse(Food food);

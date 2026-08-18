@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.example.mealplannerapp.fixture.ExerciseTestFixtures.defaultExercise;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUser;
 
-@DataJpaTest(properties = {
+@DataJpaTest(properties = { // TODO: Learn what these settings do.
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.sql.init.mode=never",
         "spring.jpa.properties.hibernate.globally_quoted_identifiers=true"
@@ -32,21 +32,19 @@ public class ExerciseRepositoryTests {
 
     // TODO: Decide whether to keep the preconditions or not.
 
-    // BEANS
-    @Autowired TestEntityManager entityManager;
-    @Autowired ExerciseRepository exerciseRepository;
-
-    // CLASS FIELDS
-    private User myUser;
-    private User otherUser;
-
-    // CLASS CONSTANTS
+    // CONSTANTS
     private static final String MY_AUTH_ID = "alice_auth";
     private static final String MY_USERNAME = "Alice1";
 
     private static final String OTHER_AUTH_ID = "bob_auth";
     private static final String OTHER_USERNAME = "Bob2";
 
+    // VARIABLES
+    @Autowired private TestEntityManager entityManager;
+    @Autowired private ExerciseRepository exerciseRepository;
+
+    private User myUser;
+    private User otherUser;
 
     // HELPER METHODS
     private void flushAndClear() {
@@ -67,7 +65,7 @@ public class ExerciseRepositoryTests {
 
     // TESTS PROPER
     @BeforeEach
-    private void prepareMyUser() {
+    void prepareMyUser() {
         myUser = defaultUser().authId(MY_AUTH_ID).username(MY_USERNAME).build();
         entityManager.persist(myUser);
     }
@@ -104,7 +102,7 @@ public class ExerciseRepositoryTests {
 
         @Test
         @DisplayName("Given an exerciseId that does not exist, returns empty.")
-            void idNotFound_returnsEmpty() {
+        void idNotFound_returnsEmpty() {
             // Arrange
             flushAndClear();
 
@@ -153,7 +151,7 @@ public class ExerciseRepositoryTests {
         }
 
         @BeforeEach
-        private void preparePageable() {
+        void preparePageable() {
             pageable = PageRequest.of(0, 2);
         }
 

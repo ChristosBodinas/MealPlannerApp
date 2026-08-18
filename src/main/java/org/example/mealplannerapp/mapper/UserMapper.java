@@ -4,7 +4,6 @@ import org.example.mealplannerapp.dto.user.UserDetailsRequest;
 import org.example.mealplannerapp.dto.user.UserDetailsResponse;
 import org.example.mealplannerapp.entity.User;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")

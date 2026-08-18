@@ -30,7 +30,7 @@ public class Exercise {
     @Column(nullable = false, length = 50)
     private String name;
 
-    // TODO: javadoc (here or at the embeddable)
+    // Available intensity levels and the calories each burns per minute of exercise.
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "exercise_level",
             joinColumns = @JoinColumn(name = "exercise_id", nullable = false),

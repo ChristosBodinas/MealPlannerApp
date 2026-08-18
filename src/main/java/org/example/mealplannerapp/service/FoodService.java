@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @AllArgsConstructor
@@ -49,6 +50,7 @@ public class FoodService {
         return foodMapper.toResponse(saved);
     }
 
+    @Transactional
     public FoodResponse updateFood(
         User user, Long foodId, FoodRequest request
     ) {
@@ -62,6 +64,7 @@ public class FoodService {
         return foodMapper.toResponse(fetched);
     }
 
+    @Transactional
     public void deleteFood(
         User user, Long foodId
     ) {

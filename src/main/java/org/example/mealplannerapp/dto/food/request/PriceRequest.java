@@ -11,7 +11,7 @@ public record PriceRequest(
     String vendorName,
 
     @NotNull(message = "Purchase price cannot be null.")
-    @PositiveOrZero(message = "Purchase price cannot be a negative number.")    // TODO: We let this be zero to facilitate logging foods the user has free access to.
+    @PositiveOrZero(message = "Purchase price cannot be a negative number.")    // Zero allows for foods the user can get for free.
     @Digits(integer = 3, fraction = 2, message = "Purchase price cannot have more than 3 integer digits and 2 decimal places.")
     BigDecimal purchasePrice,
 

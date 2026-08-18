@@ -77,8 +77,8 @@ public class ExerciseController {
     @GetMapping("/exercises")
     public ResponseEntity<Page<ListedExerciseResponse>> searchExercises(
         @AuthenticationPrincipal Jwt jwt,
-        @RequestParam(required = true) String searchText,   // TODO: Clarify that the required=false enables null values.
-        @PageableDefault(size = 20, sort = "name ASC", direction = Sort.Direction.ASC)  // TODO: Understand this.
+        @RequestParam(required = false) String searchText,
+        @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC)
         Pageable pageable
     ) {
         User user = identityService.provisionFromJwt(jwt);
