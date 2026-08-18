@@ -93,12 +93,13 @@ public class ExerciseServiceUnitTests {
             verify(exerciseRepository).save(captor.capture());
             Exercise created = captor.getValue();
 
+            assertThat(created).as("New exercise should belong to the current user.")
+                .isEqualTo(myUser);
+
             assertThat(created).as("Created exercise fields should match request data.")
                     .usingRecursiveComparison()
                     .ignoringFields("id", "user")
                     .isEqualTo(request);
-
-            // TODO: owner set properly check
         }
 
         @Test
@@ -260,7 +261,6 @@ public class ExerciseServiceUnitTests {
 
         @Test
         @DisplayName("Returns a Page of ListedExerciseResponse DTOs.")
-            // TODO: Rephrase?
         void returnsMatchingExercises() {
             // Arrange
             List<Exercise> exercises = new ArrayList<>(List.of(

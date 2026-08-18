@@ -25,11 +25,10 @@ public class ExerciseService {
     private final ExerciseRepository exerciseRepository;
     private final ExerciseMapper exerciseMapper;
 
-    // TODO: Can this be improved?
     private void verifyUniqueLevels(ExerciseRequest request) {
         if (request.levels() != null && request.levels().size() >
         request.levels().stream().map(LevelRequest::intensityDesc).distinct().count()) {
-            throw new DuplicateValueException("text"); // TODO: edit text
+            throw new DuplicateValueException("Cannot have multiple intensity levels with the same description.");
         }
     }
 

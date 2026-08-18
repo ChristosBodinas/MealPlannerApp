@@ -1,6 +1,5 @@
 package org.example.mealplannerapp.repository;
 
-import org.example.mealplannerapp.entity.Exercise;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +14,7 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFood;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUser;
 
-@DataJpaTest(properties = { // TODO: Learn what these settings do.
+@DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.sql.init.mode=never",
         "spring.jpa.properties.hibernate.globally_quoted_identifiers=true"
@@ -31,16 +30,15 @@ public class FoodRepositoryTests {
     private static final String OTHER_USERNAME = "Bob2";
 
     // VARIABLES
-    @Autowired
-    private TestEntityManager entityManager;
-    @Autowired private ExerciseRepository exerciseRepository;
+    @Autowired private TestEntityManager entityManager;
+    @Autowired private FoodRepository foodRepository;
 
     private User myUser;
     private User otherUser;
 
     // HELPER METHODS
     private void flushAndClear() {
-        entityManager.flush();  // TODO: Explain.
+        entityManager.flush();
         entityManager.clear();
     }
 

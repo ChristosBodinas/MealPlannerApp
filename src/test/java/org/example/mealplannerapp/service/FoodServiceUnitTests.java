@@ -41,6 +41,7 @@ import static org.example.mealplannerapp.fixture.FoodTestFixtures.defaultFoodReq
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUser;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.description;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -111,7 +112,7 @@ public class FoodServiceUnitTests {
             Food created = captor.getValue();
 
             assertThat(created.getUser()).as("New food should be owned by the current user.")
-                    .isEqualTo(myUser);    // TODO: does this work? why?
+                    .isEqualTo(myUser);
 
             assertThat(created).as("New food fields should match request data.")
                     .usingRecursiveComparison()
@@ -227,7 +228,8 @@ public class FoodServiceUnitTests {
             assertThatCode(() -> foodService.deleteFood(myUser, FOOD_ID))
                     .as("Method should complete without exceptions.")
                     .doesNotThrowAnyException();
-            verify(foodRepository).deleteByIdVerified(USER_ID, FOOD_ID);    // TODO: add description
+            verify(foodRepository, description("Repository's deleteByIdVerified method should be called"))
+                .deleteByIdVerified(USER_ID, FOOD_ID);
         }
 
         @Test

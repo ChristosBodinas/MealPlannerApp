@@ -25,16 +25,19 @@ public class FoodService {
     private final FoodRepository foodRepository;
     private final FoodMapper foodMapper;
 
-    // TODO: Can this be improved?
     private void verifyUniqueUnitsAndVendors(FoodRequest request) {
-        if (request.units() != null && request.units().size() > 
-        request.units().stream().map(UnitRequest::name).distinct().count()) {
-            throw new DuplicateValueException("text");   // TODO: edit text
+        if (request.units() != null && request.units().size() > request.units().stream()
+            .map(UnitRequest::name)
+            .distinct()
+            .count()) {
+            throw new DuplicateValueException("Cannot have multiple units with the same name.");
         }
 
-        if (request.prices() != null && request.prices().size() >
-        request.prices().stream().map(PriceRequest::vendorName).distinct().count()) {
-            throw new DuplicateValueException("text");
+        if (request.prices() != null && request.prices().size() > request.prices().stream()
+            .map(PriceRequest::vendorName)
+            .distinct()
+            .count()) {
+            throw new DuplicateValueException("Cannot have multiple vendors with the same name.");
         }
     }
 
