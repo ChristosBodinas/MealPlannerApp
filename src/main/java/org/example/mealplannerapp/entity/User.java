@@ -49,14 +49,14 @@ public class User {
      * Gender identity by which the app addresses the user.
      */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true)    // TODO: length
+    @Column(nullable = true, length = 10)
     private Gender gender;
 
     /**
      * User's biological sex. Used in nutrition-related calculations.
      */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true)    // TODO: length
+    @Column(nullable = true, length = 10)
     private Sex sex;
 
     /**

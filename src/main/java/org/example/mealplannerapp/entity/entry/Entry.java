@@ -42,7 +42,7 @@ public abstract class Entry {
      * Category to which the entry belongs.
      */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 15)  // TODO: length change?
+    @Column(nullable = false, length = 10)
     private Category category;
 
     /**

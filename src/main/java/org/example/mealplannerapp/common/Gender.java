@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum Gender {
     MALE("Male", "he/him"),
     FEMALE("Female", "she/her"),
-    NON_BINARY("Non-Binary", "they/them");
+    ENBY("Non-Binary", "they/them");
 
     private final String displayName;
     private final String pronouns;
