@@ -5,7 +5,6 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
-// TODO: Javadocs.
 @Embeddable
 @Getter
 @Setter

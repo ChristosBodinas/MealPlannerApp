@@ -33,5 +33,4 @@ public record UserDetailsRequest(
         @Digits(integer = 3, fraction = 2, message = "User's height must have at most 3 integer digits and 2 decimal digits.")
         BigDecimal height
 ) {
-
 }

@@ -18,12 +18,16 @@ public class UserService {
     private final UserMapper userMapper;
 
     @Transactional
-    public UserDetailsResponse editUserDetails(User user, UserDetailsRequest request) {
+    public UserDetailsResponse editUserDetails(
+            User user, UserDetailsRequest request
+    ) {
         userMapper.update(user, request);
         return userMapper.toResponse(user);
     }
 
-    public UserDetailsResponse retrieveUserDetails(User user) {
+    public UserDetailsResponse retrieveUserDetails(
+            User user
+    ) {
         return userMapper.toResponse(user);
     }
 }

@@ -19,5 +19,4 @@ public record UserDetailsResponse(
         LocalDate birthDate,
         BigDecimal height
 ) {
-
 }
