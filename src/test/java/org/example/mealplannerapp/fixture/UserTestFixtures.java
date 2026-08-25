@@ -10,13 +10,13 @@ import java.time.LocalDate;
 public final class UserTestFixtures {
 
     // CONSTANTS
-    private final static String DEFAULT_AUTH_ID = "FakeAuthId";
-    private final static String DEFAULT_USERNAME = "FakeUsername";
-    private final static String DEFAULT_NICKNAME = "Alice";
-    private final static Gender DEFAULT_GENDER = Gender.MALE;
-    private final static Sex DEFAULT_SEX = Sex.MALE;
-    private final static LocalDate DEFAULT_BIRTH_DATE = LocalDate.of(2000, 1, 1);
-    private final static BigDecimal DEFAULT_HEIGHT = new BigDecimal("180.0");
+    private static final String DEFAULT_AUTH_ID = "FakeAuthId";
+    private static final String DEFAULT_USERNAME = "FakeUsername";
+    private static final String DEFAULT_NICKNAME = "Alice";
+    private static final Gender DEFAULT_GENDER = Gender.MALE;
+    private static final Sex DEFAULT_SEX = Sex.MALE;
+    private static final LocalDate DEFAULT_BIRTH_DATE = LocalDate.of(2000, 1, 1);
+    private static final BigDecimal DEFAULT_HEIGHT = new BigDecimal("180.0");
 
     /**
      * Builds a {@link User} entity fixture for testing.
