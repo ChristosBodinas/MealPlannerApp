@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 import java.util.List;
 
+// TODO: Javadocs.
 @Component
 @RequiredArgsConstructor
 public class KeycloakJwtAuthConverter implements Converter<Jwt, AbstractAuthenticationToken> {

@@ -1,5 +1,7 @@
 package org.example.mealplannerapp.fixture;
 
+import org.example.mealplannerapp.dto.exercise.request.ExerciseRequest;
+import org.example.mealplannerapp.dto.exercise.request.LevelRequest;
 import org.example.mealplannerapp.embeddable.EffortLevel;
 import org.example.mealplannerapp.entity.Exercise;
 
@@ -30,6 +32,22 @@ public class ExerciseTestFixtures {
         ));
 
         return Exercise.builder()
+                .name(DEFAULT_NAME)
+                .levels(defaultLevels);
+    }
+
+    /**
+     * Builds a {@link ExerciseRequest} DTO fixture for testing.
+     *
+     * @return an ExerciseRequest builder with default values in all fields
+     */
+    public static ExerciseRequest.ExerciseRequestBuilder defaultExerciseRequest() {
+        Set<LevelRequest> defaultLevels = new HashSet<>(Set.of(
+                new LevelRequest(DEFAULT_LEVEL_NAME_1, DEFAULT_BURN_RATE_1),
+                new LevelRequest(DEFAULT_LEVEL_NAME_2, DEFAULT_BURN_RATE_2)
+        ));
+
+        return ExerciseRequest.builder()
                 .name(DEFAULT_NAME)
                 .levels(defaultLevels);
     }
