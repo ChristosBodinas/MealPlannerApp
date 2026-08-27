@@ -2,6 +2,8 @@ package org.example.mealplannerapp.dto.food.request;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import lombok.Builder;
+
 import org.example.mealplannerapp.entity.Food;
 
 import java.math.BigDecimal;
@@ -10,6 +12,7 @@ import java.util.Set;
 /**
  * Request DTO for submitting {@link Food} creation/update data.
  */
+@Builder
 public record FoodRequest(
 
         @NotBlank(message = "Food name must contain at least 1 character.")
