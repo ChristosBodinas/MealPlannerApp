@@ -2,12 +2,12 @@ package org.example.mealplannerapp.controller;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.example.mealplannerapp.dto.exercise.request.ExerciseRequest;
-import org.example.mealplannerapp.dto.exercise.response.ExerciseResponse;
-import org.example.mealplannerapp.dto.exercise.response.ListedExerciseResponse;
+import org.example.mealplannerapp.dto.food.request.FoodRequest;
+import org.example.mealplannerapp.dto.food.response.FoodResponse;
+import org.example.mealplannerapp.dto.food.response.ListedFoodResponse;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.security.IdentityService;
-import org.example.mealplannerapp.service.ExerciseService;
+import org.example.mealplannerapp.service.FoodService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -20,66 +20,66 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @AllArgsConstructor
-public class ExerciseController {
+public class FoodController {
 
     private final IdentityService identityService;
-    private final ExerciseService exerciseService;
+    private final FoodService foodService;
 
-    @PostMapping("/exercises")
-    public ResponseEntity<ExerciseResponse> createExercise(
+    @PostMapping("/foods")
+    public ResponseEntity<FoodResponse> createFood(
             @AuthenticationPrincipal Jwt jwt,
-            @Valid @RequestBody ExerciseRequest request
+            @Valid @RequestBody FoodRequest request
     ) {
         User user = identityService.provisionFromJwt(jwt);
-        ExerciseResponse response = exerciseService.createExercise(user, request);
+        FoodResponse response = foodService.createFood(user, request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
 
-    @PutMapping("/exercises/{exerciseId}")
-    public ResponseEntity<ExerciseResponse> updateExercise(
+    @PutMapping("/foods/{foodId}")
+    public ResponseEntity<FoodResponse> updateFood(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable Long exerciseId,
-            @Valid @RequestBody ExerciseRequest request
+            @PathVariable Long foodId,
+            @Valid @RequestBody FoodRequest request
     ) {
         User user = identityService.provisionFromJwt(jwt);
-        ExerciseResponse response = exerciseService.updateExercise(user, exerciseId, request);
+        FoodResponse response = foodService.updateFood(user, foodId, request);
 
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/exercises/{exerciseId}")
-    public ResponseEntity<Void> deleteExercise(
+    @DeleteMapping("/foods/{foodId}")
+    public ResponseEntity<Void> deleteFood(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable Long exerciseId
+            @PathVariable Long foodId
     ) {
         User user = identityService.provisionFromJwt(jwt);
-        exerciseService.deleteExercise(user, exerciseId);
+        foodService.deleteFood(user, foodId);
 
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/exercises/{exerciseId}")
-    public ResponseEntity<ExerciseResponse> retrieveExercise(
+    @GetMapping("/foods/{foodId}")
+    public ResponseEntity<FoodResponse> retrieveFood(
             @AuthenticationPrincipal Jwt jwt,
-            @PathVariable Long exerciseId
+            @PathVariable Long foodId
     ) {
         User user = identityService.provisionFromJwt(jwt);
-        ExerciseResponse response = exerciseService.retrieveExercise(user, exerciseId);
+        FoodResponse response = foodService.retrieveFood(user, foodId);
 
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/exercises")
-    public ResponseEntity<Page<ListedExerciseResponse>> searchExercises(
+    @GetMapping("/foods")
+    public ResponseEntity<Page<ListedFoodResponse>> searchFoods(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam(required = false) String searchText,
             @PageableDefault(size = 20, sort = "name", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         User user = identityService.provisionFromJwt(jwt);
-        Page<ListedExerciseResponse> response = exerciseService.searchExercises(user, searchText, pageable);
+        Page<ListedFoodResponse> response = foodService.searchFoods(user, searchText, pageable);
 
         return ResponseEntity.ok(response);
     }

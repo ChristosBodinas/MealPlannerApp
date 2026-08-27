@@ -16,6 +16,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
+
 /**
  * A service responsible for handling create, read, update, delete,
  * and text search operations on {@link Exercise} entities.
@@ -28,11 +32,11 @@ public class ExerciseService {
     private final ExerciseMapper exerciseMapper;
 
     private void throwIfDuplicateLevelNames(ExerciseRequest request) {
-        if (request.levels() != null) {
-            long uniqueCount = request.levels().stream().map(LevelRequest::name).distinct().count();
-            if (request.levels().size() > uniqueCount) {
-                throw new DuplicateValueException("Cannot have multiple effort levels with the same name.");
-            }
+        Set<LevelRequest> levels = Optional.ofNullable(request.levels())
+                .orElse(Collections.emptySet());
+
+        if (levels.size() > levels.stream().map(LevelRequest::name).distinct().count()) {
+            throw new DuplicateValueException("Cannot have multiple effort levels with the same name.");
         }
     }
 
