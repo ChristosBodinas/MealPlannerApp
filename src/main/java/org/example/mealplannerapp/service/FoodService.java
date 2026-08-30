@@ -66,7 +66,7 @@ public class FoodService {
         food.setUser(user);
 
         Food saved = foodRepository.save(food);
-        return foodMapper.toResponse(food);
+        return foodMapper.toResponse(saved);
     }
 
     /**

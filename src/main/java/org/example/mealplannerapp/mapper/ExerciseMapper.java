@@ -2,9 +2,9 @@ package org.example.mealplannerapp.mapper;
 
 import org.example.mealplannerapp.dto.exercise.request.ExerciseRequest;
 import org.example.mealplannerapp.dto.exercise.request.LevelRequest;
-import org.example.mealplannerapp.dto.exercise.response.ListedExerciseResponse;
 import org.example.mealplannerapp.dto.exercise.response.ExerciseResponse;
 import org.example.mealplannerapp.dto.exercise.response.LevelResponse;
+import org.example.mealplannerapp.dto.exercise.response.ListedExerciseResponse;
 import org.example.mealplannerapp.embeddable.EffortLevel;
 import org.example.mealplannerapp.entity.Exercise;
 import org.mapstruct.Mapper;
