@@ -24,33 +24,33 @@ public record FoodRequest(
 
         @NotNull(message = "Calories per 100 grams cannot be null.")
         @PositiveOrZero(message = "Calories per 100 grams cannot be a negative number.")
-        @Digits(integer = 3, fraction = 2, message = "Calories per 100 grams must have at most 3 integer digits and 2 decimal digits.")
+        @Digits(integer = 3, fraction = 2, message = "Calories per 100 grams must have at most 3 integer digits and 2 decimal places.")
         BigDecimal calories100g,
 
         @NotNull(message = "Protein per 100 grams cannot be null.")
         @PositiveOrZero(message = "Protein per 100 grams cannot be a negative number.")
-        @Digits(integer = 3, fraction = 2, message = "Protein per 100 grams must have at most 3 integer digits and 2 decimal digits.")
+        @Digits(integer = 3, fraction = 2, message = "Protein per 100 grams must have at most 3 integer digits and 2 decimal places.")
         BigDecimal protein100g,
 
         @NotNull(message = "Carbs per 100 grams cannot be null.")
         @PositiveOrZero(message = "Carbs per 100 grams cannot be a negative number.")
-        @Digits(integer = 3, fraction = 2, message = "Carbs per 100 grams must have at most 3 integer digits and 2 decimal digits.")
+        @Digits(integer = 3, fraction = 2, message = "Carbs per 100 grams must have at most 3 integer digits and 2 decimal places.")
         BigDecimal carbs100g,
 
         @NotNull(message = "Fat per 100 grams cannot be null.")
         @PositiveOrZero(message = "Fat per 100 grams cannot be a negative number.")
-        @Digits(integer = 3, fraction = 2, message = "Fat per 100 grams must have at most 3 integer digits and 2 decimal digits.")
+        @Digits(integer = 3, fraction = 2, message = "Fat per 100 grams must have at most 3 integer digits and 2 decimal places.")
         BigDecimal fat100g,
 
         @NotNull(message = "Fiber per 100 grams cannot be null.")
         @PositiveOrZero(message = "Fiber per 100 grams cannot be a negative number.")
-        @Digits(integer = 3, fraction = 2, message = "Fiber per 100 grams must have at most 3 integer digits and 2 decimal digits.")
+        @Digits(integer = 3, fraction = 2, message = "Fiber per 100 grams must have at most 3 integer digits and 2 decimal places.")
         BigDecimal fiber100g,
 
         @NotNull(message = "Edible ratio cannot be null.")
         @DecimalMin(value = "0.00", message = "Edible ratio cannot be less than 0.")
         @DecimalMax(value = "1.00", message = "Edible ratio cannot be greater than 1.")
-        @Digits(integer = 1, fraction = 2, message = "Edible ratio must have at most 1 integer digit and 2 decimal digits.")
+        @Digits(integer = 1, fraction = 2, message = "Edible ratio must have at most 1 integer digit and 2 decimal places.")
         BigDecimal edibleRatio,
 
         Set<@Valid UnitRequest> units,

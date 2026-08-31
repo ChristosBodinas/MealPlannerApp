@@ -2,7 +2,6 @@ package org.example.mealplannerapp.entity;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.example.mealplannerapp.common.ActivityLevel;
@@ -35,8 +34,7 @@ public class Plan {
 
     @OneToMany(mappedBy = "plan", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)    // TODO: Cascade good or bad?
     @OrderBy("position ASC")
-    @Builder.Default
-    private Set<Day> days = new LinkedHashSet<>();
+    private Set<Day> days;
 
     @Column(nullable = false, length = 50)
     private String name;
@@ -100,7 +98,7 @@ public class Plan {
     @Column(name = "target_fat", nullable = false, precision = 6, scale = 2)
     private BigDecimal targetFat;
 
-    public void computeNutritionGoals() {
+    public void computeNutritionTargets(int numberOfDays) {
         // Basal Metabolic Rate
         BigDecimal bmr = startWeight.multiply(new BigDecimal("10.0"))
                 .add(user.getHeight().multiply(new BigDecimal("6.25")))
@@ -112,11 +110,11 @@ public class Plan {
 
         // Average Daily Deficit
         BigDecimal avgDeficit = desiredWeightLoss.multiply(BigDecimal.valueOf(7700))
-                .divide(BigDecimal.valueOf(days.size()), RoundingMode.HALF_UP);
+                .divide(BigDecimal.valueOf(numberOfDays), RoundingMode.HALF_UP);
 
         // Plan Wide Nutrition Targets
         targetCalories = tdee.subtract(avgDeficit)
-                .multiply(BigDecimal.valueOf(days.size()));
+                .multiply(BigDecimal.valueOf(numberOfDays));
         targetProtein = targetCalories.multiply(proteinRatio)
                 .divide(new BigDecimal(4), RoundingMode.HALF_UP);
         targetCarbs = targetCalories.multiply(carbsRatio)

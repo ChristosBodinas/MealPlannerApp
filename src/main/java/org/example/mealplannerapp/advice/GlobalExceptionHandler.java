@@ -1,6 +1,8 @@
 package org.example.mealplannerapp.advice;
 
 import org.example.mealplannerapp.exception.DuplicateValueException;
+import org.example.mealplannerapp.exception.IncompleteProfileException;
+import org.example.mealplannerapp.exception.InvalidTotalException;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +36,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateValueException.class)
     public ResponseEntity<String> handleDuplicateValue(
             DuplicateValueException e
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+    }
+
+    @ExceptionHandler(IncompleteProfileException.class)
+    public ResponseEntity<String> handleIncompleteProfile(
+            IncompleteProfileException e
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_CONTENT)
+                .body(e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidTotalException.class)
+    public ResponseEntity<String> handleInvalidTotal(
+            InvalidTotalException e
     ) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)

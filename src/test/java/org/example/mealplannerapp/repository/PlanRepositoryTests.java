@@ -61,13 +61,12 @@ public class PlanRepositoryTests {
 
     private Plan prepareDefaultPlan(User owner) {
         Plan plan = defaultPlan().user(owner).build();
+        plan.computeNutritionTargets(3);
 
         for (int i = 1; i <= 3; i++) {
             Day day = defaultDay().plan(plan).position(i).build();
             plan.getDays().add(day);
         }
-
-        plan.computeNutritionGoals();
 
         entityManager.persist(plan);
         return plan;
@@ -143,13 +142,12 @@ public class PlanRepositoryTests {
 
         private Plan prepareNamedPlan(User owner, String name) {
             Plan plan = defaultPlan().user(owner).name(name).build();
+            plan.computeNutritionTargets(3);
 
             for (int i = 1; i <= 3; i++) {
                 Day day = defaultDay().plan(plan).position(i).build();
                 plan.getDays().add(day);
             }
-
-            plan.computeNutritionGoals();
 
             entityManager.persist(plan);
             return plan;

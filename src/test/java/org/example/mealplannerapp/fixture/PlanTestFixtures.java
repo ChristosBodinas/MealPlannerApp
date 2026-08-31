@@ -4,6 +4,7 @@ import org.example.mealplannerapp.common.ActivityLevel;
 import org.example.mealplannerapp.entity.Plan;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
 
 public class PlanTestFixtures {
 
@@ -25,7 +26,7 @@ public class PlanTestFixtures {
     public static Plan.PlanBuilder defaultPlan() {
         return Plan.builder()
                 .name(DEFAULT_NAME)
-                //.days(new LinkedHashSet<>())
+                .days(new LinkedHashSet<>())
                 .startWeight(DEFAULT_START_WEIGHT)
                 .desiredWeightLoss(DEFAULT_DESIRED_WEIGHT_LOSS)
                 .activityLevel(DEFAUL_ACTIVITY_LEVEL)

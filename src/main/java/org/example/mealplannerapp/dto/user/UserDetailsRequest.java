@@ -30,7 +30,7 @@ public record UserDetailsRequest(
 
         @NotNull(message = "User's height cannot be null.")
         @Positive(message = "User's height must be a positive number.")
-        @Digits(integer = 3, fraction = 2, message = "User's height must have at most 3 integer digits and 2 decimal digits.")
+        @Digits(integer = 3, fraction = 2, message = "User's height must have at most 3 integer digits and 2 decimal places.")
         BigDecimal height
 ) {
 }

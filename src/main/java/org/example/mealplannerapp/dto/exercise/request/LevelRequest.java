@@ -16,7 +16,7 @@ public record LevelRequest(
 
         @NotNull(message = "Calories burned per minute cannot be null.")
         @Positive(message = "Calories burned per minute must be a positive number.")
-        @Digits(integer = 3, fraction = 2, message = "Calories burned per minute must have at most 3 integer digits and 2 decimal digits.")
+        @Digits(integer = 3, fraction = 2, message = "Calories burned per minute must have at most 3 integer digits and 2 decimal places.")
         BigDecimal burnRate
 ) {
 }
