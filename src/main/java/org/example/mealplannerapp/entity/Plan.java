@@ -98,19 +98,28 @@ public class Plan {
     @Column(name = "target_fat", nullable = false, precision = 6, scale = 2)
     private BigDecimal targetFat;
 
-    public void computeNutritionTargets(int numberOfDays) {
+    public BigDecimal computeTDEE() {
         // Basal Metabolic Rate
-        BigDecimal bmr = startWeight.multiply(new BigDecimal("10.0"))
-                .add(user.getHeight().multiply(new BigDecimal("6.25")))
+        BigDecimal bmr = startWeight.multiply(BigDecimal.valueOf(10.0))
+                .add(user.getHeight().multiply(BigDecimal.valueOf(6.25)))
                 .subtract(BigDecimal.valueOf((long) user.computeAgeInYears() * 5))
                 .add(BigDecimal.valueOf(user.getSex().getBmrOffset()));
 
         // Total Daily Energy Expenditure
-        BigDecimal tdee = bmr.multiply(BigDecimal.valueOf(activityLevel.getActivityFactor()));
+        return bmr.multiply(BigDecimal.valueOf(activityLevel.getActivityFactor()));
+    }
+
+    public BigDecimal computeAverageDailyDeficit(int numberOfDays) {
+        return desiredWeightLoss.multiply(BigDecimal.valueOf(7700))
+                .divide(BigDecimal.valueOf(numberOfDays), RoundingMode.HALF_UP);
+    }
+
+    public void computeNutritionTargets(int numberOfDays) {
+        // Total Daily Energy Expenditure
+        BigDecimal tdee = computeTDEE();
 
         // Average Daily Deficit
-        BigDecimal avgDeficit = desiredWeightLoss.multiply(BigDecimal.valueOf(7700))
-                .divide(BigDecimal.valueOf(numberOfDays), RoundingMode.HALF_UP);
+        BigDecimal avgDeficit = computeAverageDailyDeficit(numberOfDays);
 
         // Plan Wide Nutrition Targets
         targetCalories = tdee.subtract(avgDeficit)
