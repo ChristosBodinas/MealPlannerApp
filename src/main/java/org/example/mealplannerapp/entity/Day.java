@@ -5,8 +5,11 @@ import java.math.BigDecimal;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * An entity that represents a particular day of a meal plan.
+ */
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(name = "UniqueIndexPerPlan", columnNames = {"plan", "index"}))
+@Table(uniqueConstraints = @UniqueConstraint(name = "UniqueIndexPerPlan", columnNames = {"plan_id", "position"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,10 +30,10 @@ public class Day {
     private Plan plan;
 
     /**
-     * One-based within the plan. Cannot be reordered.
+     * One-based position within the plan. Cannot be changed after creation.
      */
     @Column(nullable = false)
-    private int index;
+    private int position;
 
     /**
      * Target calorie intake (in Kcal) for the day.

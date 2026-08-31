@@ -2,6 +2,7 @@ package org.example.mealplannerapp.entity;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.example.mealplannerapp.common.ActivityLevel;
@@ -9,6 +10,9 @@ import org.example.mealplannerapp.common.ActivityLevel;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * An entity that represents an entire meal plan.
+ */
 @Entity
 @Getter
 @Setter
@@ -30,8 +34,9 @@ public class Plan {
     private User user;
 
     @OneToMany(mappedBy = "plan", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)    // TODO: Cascade good or bad?
-    @OrderBy("index ASC")
-    private Set<Day> days;
+    @OrderBy("position ASC")
+    @Builder.Default
+    private Set<Day> days = new LinkedHashSet<>();
 
     @Column(nullable = false, length = 50)
     private String name;
