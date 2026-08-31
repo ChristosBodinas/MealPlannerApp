@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -81,6 +82,9 @@ public class ExerciseServiceUnitTests {
     @DisplayName("createExercise")
     class CreateExercise {
 
+        @Captor
+        private ArgumentCaptor<Exercise> captor;
+
         @Test
         @DisplayName("Given a valid request, creates a new exercise owned by the current user, " +
                 "and returns a response.")
@@ -98,7 +102,6 @@ public class ExerciseServiceUnitTests {
             assertThat(response).as("Method output should match mapper output")
                     .isEqualTo(exerciseMapper.toResponse(saved));
 
-            ArgumentCaptor<Exercise> captor = ArgumentCaptor.forClass(Exercise.class);
             verify(exerciseRepository, description("New exercise should be saved to the database."))
                     .save(captor.capture());
             Exercise created = captor.getValue();
@@ -109,6 +112,22 @@ public class ExerciseServiceUnitTests {
                     .usingRecursiveComparison()
                     .ignoringFields("id", "user")
                     .isEqualTo(request);
+        }
+
+        @Test
+        @DisplayName("Given a request with null levels, sets the new exercise's levels to empty.")
+        void nullLevelsToEmpty() {
+            // Arrange
+            ExerciseRequest request = defaultExerciseRequest().levels(null).build();
+
+            // Act
+            exerciseService.createExercise(myUser, request);
+
+            // Assert
+            verify(exerciseRepository).save(captor.capture());
+            Exercise created = captor.getValue();
+
+            assertThat(created.getLevels()).as("Levels should be empty.").isEmpty();
         }
 
         @Test
@@ -169,6 +188,23 @@ public class ExerciseServiceUnitTests {
                     .ignoringFields("id", "user")
                     .isEqualTo(request);
 
+        }
+
+        @Test
+        @DisplayName("Given a request with null levels, sets the exercise's levels to empty.")
+        void nullLevelsToEmpty() {
+            // Arrange
+            Exercise fetched = defaultExercise().id(EXERCISE_ID).user(myUser).build();
+            ExerciseRequest request = defaultExerciseRequest().levels(null).build();
+
+            when(exerciseRepository.fetchByIdVerified(USER_ID, EXERCISE_ID)).thenReturn(Optional.of(fetched));
+
+            // Act
+            exerciseService.updateExercise(myUser, EXERCISE_ID, request);
+
+            // Assert
+            assertThat(fetched.getLevels()).as("Updated levels set should be empty.")
+                    .isEmpty();
         }
 
         @Test

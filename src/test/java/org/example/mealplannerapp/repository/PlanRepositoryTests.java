@@ -189,7 +189,7 @@ public class PlanRepositoryTests {
             Page<Plan> result = planRepository.fetchShallowByUserAndText(myUser.getId(), "myText", pageable);
 
             // Assert
-            assertThat(result).as("Method output shouold contain only the plan owned by the current user.")
+            assertThat(result).as("Method output should contain only the plan owned by the current user.")
                     .extracting(Plan::getId).containsExactly(owned.getId());
         }
 

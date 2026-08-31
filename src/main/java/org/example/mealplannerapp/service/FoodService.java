@@ -105,6 +105,7 @@ public class FoodService {
      * @throws ResourceNotFoundException if {@code foodId} does not correspond to an existing
      *                                   food owned by {@code user}
      */
+    @Transactional
     public void deleteFood(
             User user, Long foodId
     ) {

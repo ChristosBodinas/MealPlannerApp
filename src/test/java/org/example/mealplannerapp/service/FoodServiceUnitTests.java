@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -86,6 +87,9 @@ public class FoodServiceUnitTests {
     @DisplayName("createFood")
     class CreateFood {
 
+        @Captor
+        private ArgumentCaptor<Food> captor;
+
         @Test
         @DisplayName("Given a valid request, creates a new food owned by the current user, " +
                 "and returns a response.")
@@ -103,7 +107,6 @@ public class FoodServiceUnitTests {
             assertThat(response).as("Method output should match mapper output.")
                     .isEqualTo(foodMapper.toResponse(saved));
 
-            ArgumentCaptor<Food> captor = ArgumentCaptor.forClass(Food.class);
             verify(foodRepository, description("New food should be saved to the database."))
                     .save(captor.capture());
             Food created = captor.getValue();
@@ -115,6 +118,23 @@ public class FoodServiceUnitTests {
                     .usingRecursiveComparison()
                     .ignoringFields("id", "user")
                     .isEqualTo(request);
+        }
+
+        @Test
+        @DisplayName("Given a request with null units/vendors, sets the new food's units/vendors to empty.")
+        void nullUnitsAndVendorsToEmpty() {
+            // Arrange
+            FoodRequest request = defaultFoodRequest().units(null).vendors(null).build();
+
+            // Act
+            foodService.createFood(myUser, request);
+
+            // Assert
+            verify(foodRepository).save(captor.capture());
+            Food created = captor.getValue();
+
+            assertThat(created.getUnits()).as("Units should be empty.").isEmpty();
+            assertThat(created.getVendors()).as("Vendors should be empty.").isEmpty();
         }
 
         @ParameterizedTest(name = "Given a request with duplicate {0} names, throws a DuplicateValueException.")
@@ -187,6 +207,24 @@ public class FoodServiceUnitTests {
                     .usingRecursiveComparison()
                     .ignoringFields("id", "user")
                     .isEqualTo(request);
+        }
+
+        @Test
+        @DisplayName("Given a request with null units/vendors, sets the food's units/vendors to empty.")
+        void nullUnitsAndPricesToEmpty() {
+            // Arrange
+            Food fetched = defaultFood().id(FOOD_ID).user(myUser).build();
+            FoodRequest request = defaultFoodRequest().units(null).vendors(null).build();
+
+            when(foodRepository.fetchByIdVerified(USER_ID, FOOD_ID)).thenReturn(Optional.of(fetched));
+
+            // Act
+            foodService.updateFood(myUser, FOOD_ID, request);
+
+            // Assert
+            assertThat(fetched.getUnits()).as("Units should be empty.").isEmpty();
+            assertThat(fetched.getVendors()).as("Vendors should be empty.").isEmpty();
+
         }
 
         @ParameterizedTest(name = "Given a request with duplicate {0} names, throws a DuplicateValueException.")
