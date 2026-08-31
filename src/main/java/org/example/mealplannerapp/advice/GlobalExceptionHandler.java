@@ -1,9 +1,6 @@
 package org.example.mealplannerapp.advice;
 
-import org.example.mealplannerapp.exception.DuplicateValueException;
-import org.example.mealplannerapp.exception.IncompleteProfileException;
-import org.example.mealplannerapp.exception.InvalidTotalException;
-import org.example.mealplannerapp.exception.ResourceNotFoundException;
+import org.example.mealplannerapp.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -54,6 +51,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidTotalException.class)
     public ResponseEntity<String> handleInvalidTotal(
             InvalidTotalException e
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+    }
+
+    @ExceptionHandler(PlanNotFeasibleException.class)
+    public ResponseEntity<String> handlePlanNotFeasible(
+            PlanNotFeasibleException e
     ) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
