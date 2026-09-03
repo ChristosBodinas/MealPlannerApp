@@ -8,10 +8,7 @@ import org.example.mealplannerapp.dto.plan.response.PlanResponse;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Plan;
 import org.example.mealplannerapp.entity.User;
-import org.example.mealplannerapp.exception.IncompleteProfileException;
-import org.example.mealplannerapp.exception.InvalidTotalException;
-import org.example.mealplannerapp.exception.PlanNotFeasibleException;
-import org.example.mealplannerapp.exception.ResourceNotFoundException;
+import org.example.mealplannerapp.exception.*;
 import org.example.mealplannerapp.mapper.PlanMapper;
 import org.example.mealplannerapp.repository.PlanRepository;
 import org.springframework.data.domain.Page;
@@ -22,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.LinkedHashSet;
+import java.util.function.BiConsumer;
 
 @Service
 @AllArgsConstructor
@@ -49,10 +47,10 @@ public class PlanService {
     }
 
     private void throwIfPlanNotFeasible(Plan plan, int numberOfDays) {
-        BigDecimal TDEE = plan.computeTDEE();
+        BigDecimal tdee = plan.computeTDEE();
         BigDecimal averageDailyDeficit = plan.computeAverageDailyDeficit(numberOfDays);
 
-        if (TDEE.compareTo(averageDailyDeficit) <= 0) {
+        if (tdee.compareTo(averageDailyDeficit) <= 0) {
             throw new PlanNotFeasibleException("The suggested plan is not nutritionally feasible.");
         }
     }
@@ -76,9 +74,9 @@ public class PlanService {
         throwIfInvalidRatios(request.proteinRatio(), request.carbsRatio(), request.fatRatio());
 
         Plan plan = planMapper.toPlan(request);
-        throwIfPlanNotFeasible(plan, request.numberOfDays());
-
         plan.setUser(user);
+
+        throwIfPlanNotFeasible(plan, request.numberOfDays());
         plan.computeNutritionTargets(request.numberOfDays());
 
         plan.setDays(new LinkedHashSet<>(request.numberOfDays()));
@@ -88,23 +86,34 @@ public class PlanService {
             plan.getDays().add(day);
         }
 
-        planRepository.save(plan);
-        return planMapper.toResponse(plan);
+        Plan saved = planRepository.save(plan);
+        return planMapper.toResponse(saved);
     }
 
-    // TODO: THIS IS WIP.
     @Transactional
     public PlanResponse editPlanParameters(
             User user, Long planId, EditPlanRequest request
     ) {
-        // TODO: Insert check to ensure all ratios are present and assign them if so.
-        throwIfInvalidRatios(request.proteinRatio(), request.carbsRatio(), request.fatRatio());
+
+        boolean allRatiosAreNull = request.proteinRatio() == null && request.carbsRatio() == null && request.fatRatio() == null;
+        boolean allRatiosAreNonNull = request.proteinRatio() != null && request.carbsRatio() != null && request.fatRatio() != null;
+
+        BiConsumer<Plan, EditPlanRequest> mapperMethod;
+
+        if (allRatiosAreNull) {
+            mapperMethod = planMapper::updateExcludeRatios;
+        } else if (allRatiosAreNonNull) {
+            throwIfInvalidRatios(request.proteinRatio(), request.carbsRatio(), request.fatRatio());
+            mapperMethod = planMapper::updateIncludeRatios;
+        } else {
+            throw new IncompleteRequestException("Ratios were only partially filled out.");
+        }
 
         Long userId = user.getId();
         Plan plan = planRepository.fetchByIdVerified(userId, planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Requested plan (id: " + planId + ") not found."));
 
-        planMapper.update(plan, request);
+        mapperMethod.accept(plan, request);
 
         int numberOfDays = plan.getDays().size();
 

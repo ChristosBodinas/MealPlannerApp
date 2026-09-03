@@ -48,6 +48,15 @@ public class GlobalExceptionHandler {
                 .body(e.getMessage());
     }
 
+    @ExceptionHandler(IncompleteRequestException.class)
+    public ResponseEntity<String> handleIncompleteRequest(
+            IncompleteRequestException e
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+    }
+
     @ExceptionHandler(InvalidTotalException.class)
     public ResponseEntity<String> handleInvalidTotal(
             InvalidTotalException e

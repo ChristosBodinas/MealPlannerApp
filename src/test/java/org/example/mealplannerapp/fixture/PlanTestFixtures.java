@@ -12,12 +12,12 @@ public class PlanTestFixtures {
 
     private static final String DEFAULT_NAME = "My Diet";
     private static final BigDecimal DEFAULT_START_WEIGHT = BigDecimal.valueOf(90.0);
-    private static final BigDecimal DEFAULT_DESIRED_WEIGHT_LOSS = BigDecimal.valueOf(0.5);
+    private static final BigDecimal DEFAULT_DESIRED_WEIGHT_LOSS = BigDecimal.valueOf(0.2);
     private static final ActivityLevel DEFAULT_ACTIVITY_LEVEL = ActivityLevel.LIGHT;
     private static final BigDecimal DEFAULT_PROTEIN_RATIO = BigDecimal.valueOf(0.2);
     private static final BigDecimal DEFAULT_CARBS_RATIO = BigDecimal.valueOf(0.4);
     private static final BigDecimal DEFAULT_FAT_RATIO = BigDecimal.valueOf(0.4);
-    private static final int DEFAULT_NUMBER_OF_DAYS = 3;
+    private static final int DEFAULT_NUMBER_OF_DAYS = 5;
 
     /**
      * Builds a {@link Plan} entity fixture for testing.

@@ -32,7 +32,7 @@ public class Plan {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "plan", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)    // TODO: Cascade good or bad?
+    @OneToMany(mappedBy = "plan", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @OrderBy("position ASC")
     private Set<Day> days;
 
@@ -53,7 +53,7 @@ public class Plan {
     private BigDecimal desiredWeightLoss;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "activity_level", nullable = false)  // TODO: length
+    @Column(name = "activity_level", nullable = false, length = 12)
     private ActivityLevel activityLevel;
 
     /**
