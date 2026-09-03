@@ -23,8 +23,8 @@ public class PlanTestFixtures {
      * Builds a {@link Plan} entity fixture for testing.
      *
      * @return a Plan builder with null {@code id} and {@code user}, an empty {@code days} set,
-     * and default values in all parameter fields. Nutrition target fields must be calculated
-     * separately.
+     * and default values in all parameter fields. Nutrition target fields are arbitrarily set to 1,
+     * which allows the plan to be persisted before any days are added.
      */
     public static Plan.PlanBuilder defaultPlan() {
         return Plan.builder()
@@ -35,7 +35,11 @@ public class PlanTestFixtures {
                 .activityLevel(DEFAULT_ACTIVITY_LEVEL)
                 .proteinRatio(DEFAULT_PROTEIN_RATIO)
                 .carbsRatio(DEFAULT_CARBS_RATIO)
-                .fatRatio(DEFAULT_FAT_RATIO);
+                .fatRatio(DEFAULT_FAT_RATIO)
+                .targetCalories(BigDecimal.ONE)
+                .targetProtein(BigDecimal.ONE)
+                .targetCarbs(BigDecimal.ONE)
+                .targetFat(BigDecimal.ONE);
     }
 
     /**
