@@ -40,14 +40,14 @@ public class FoodEntry extends Entry {
 
     /**
      * Name of unit last used as a reference.
-     * If null, the entry's quantity should be displayed in grams.
+     * If null or invalid, the entry's quantity should be displayed in grams.
      */
     @Column(name = "unit_name", length = 10)
     private String unitName;
 
     /**
      * Name of vendor selected for price calculation.
-     * If null, the entry's price snapshot will be set to 0.
+     * If null or invalid, the entry's price snapshot will be set to 0.
      */
     @Column(name = "vendor_name", length = 10)
     private String vendorName;

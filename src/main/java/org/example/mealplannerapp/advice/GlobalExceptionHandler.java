@@ -30,6 +30,15 @@ public class GlobalExceptionHandler {
                 .body(errors);
     }
 
+    @ExceptionHandler(DeletedReferenceException.class)
+    public ResponseEntity<String> handleDeletedRefernce(
+            DeletedReferenceException e
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR) // TODO: Double check.
+                .body(e.getMessage());
+    }
+
     @ExceptionHandler(DuplicateValueException.class)
     public ResponseEntity<String> handleDuplicateValue(
             DuplicateValueException e
@@ -63,6 +72,15 @@ public class GlobalExceptionHandler {
     ) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+    }
+
+    @ExceptionHandler(MappingMismatchException.class)
+    public ResponseEntity<String> handleMappingMismatch(
+            MappingMismatchException e
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST) // TODO: Double check.
                 .body(e.getMessage());
     }
 

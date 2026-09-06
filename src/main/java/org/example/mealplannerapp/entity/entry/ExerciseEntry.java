@@ -39,7 +39,7 @@ public class ExerciseEntry extends Entry {
 
     /**
      * Name of intensity level selected for calories calculation.
-     * If null, the entry's calories snapshot will be set to 0.
+     * If null or invalid, the entry's calories snapshot will be set to 0.
      */
     @Column(length = 10)
     private String levelName;

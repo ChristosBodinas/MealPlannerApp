@@ -14,7 +14,6 @@ import java.math.BigDecimal;
  * entry creation and update.
  */
 @Entity
-@Table(uniqueConstraints = @UniqueConstraint(name = "UniquePositionPerDayAndCategory", columnNames = {"day_id", "category", "position"}))
 @Inheritance(strategy = InheritanceType.JOINED)
 @Getter
 @Setter
