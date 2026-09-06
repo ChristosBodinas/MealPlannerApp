@@ -6,7 +6,10 @@ import org.example.mealplannerapp.embeddable.ReferenceUnit;
 import org.example.mealplannerapp.embeddable.VendorData;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * An entity that represents a particular food, including its
@@ -97,5 +100,14 @@ public class Food {
     @AttributeOverride(name = "purchasePrice", column = @Column(name = "purchase_price", nullable = false, precision = 5, scale = 2))
     @AttributeOverride(name = "purchaseGrams", column = @Column(name = "purchase_grams", nullable = false, precision = 6, scale = 2))
     private Set<VendorData> vendors;
+
+    public Map<String, BigDecimal> computePrices100g() {
+        return vendors.stream().collect(Collectors.toMap(
+                VendorData::getName,
+                v -> v.getPurchasePrice()
+                        .divide(v.getPurchaseGrams().multiply(edibleRatio), RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100))
+        ));
+    }
 
 }
