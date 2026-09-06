@@ -88,7 +88,7 @@ public abstract class Entry {
     private BigDecimal price;
 
     /**
-     * Calculates the {@link Entry}'s nutrition and price snapshot values anew.
+     * Calculates the {@link Entry}'s name, nutrition, and price snapshot values anew.
      */
     public abstract void snapshotInfo();
 

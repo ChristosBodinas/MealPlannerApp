@@ -47,6 +47,8 @@ public class ExerciseEntry extends Entry {
     @Override
     public void snapshotInfo() {
 
+        setName(exercise.getName());
+
         BigDecimal caloriesPerMinute = getExercise().getLevels()
                 .stream()
                 .filter(l -> l.getName().equals(levelName))

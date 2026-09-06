@@ -54,6 +54,13 @@ public class FoodEntry extends Entry {
 
     @Override
     public void snapshotInfo() {
+
+        if (food.getBrand() == null) {
+            setName(food.getName());
+        } else {
+            setName(food.getBrand() + ", " + food.getName());
+        }
+
         setCalories(food.getCalories100g().multiply(grams)
                 .divide(BigDecimal.valueOf(100), RoundingMode.HALF_UP));
         setProtein(food.getProtein100g().multiply(grams)
