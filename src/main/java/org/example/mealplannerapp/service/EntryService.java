@@ -156,11 +156,11 @@ public class EntryService {
 
         int count = entryRepository.countByDayAndCategory(dayId, request.category());
 
+        entry.snapshotInfo();
+
         entry.setDay(day);
         entry.setCategory(request.category());
         entry.setPosition(count + 1);
-
-        entry.snapshotInfo();
 
         Entry saved = entryRepository.save(entry);
         return entryMapper.toResponse(saved);

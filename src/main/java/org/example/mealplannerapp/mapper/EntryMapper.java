@@ -6,11 +6,13 @@ import org.example.mealplannerapp.dto.entry.response.FoodEntryResponse;
 import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.ExerciseEntry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
+import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.SubclassExhaustiveStrategy;
 import org.mapstruct.SubclassMapping;
 
 @Mapper(componentModel = "spring",
+        injectionStrategy = InjectionStrategy.CONSTRUCTOR,
         uses = {FoodMapper.class, ExerciseMapper.class},
         subclassExhaustiveStrategy = SubclassExhaustiveStrategy.RUNTIME_EXCEPTION)
 public interface EntryMapper {

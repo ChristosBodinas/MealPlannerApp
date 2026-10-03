@@ -10,6 +10,8 @@ import org.example.mealplannerapp.embeddable.ReferenceUnit;
 import org.example.mealplannerapp.embeddable.VendorData;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Food;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -32,6 +34,7 @@ public class FoodEntry extends Entry {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "food_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Food food;
 
     /**

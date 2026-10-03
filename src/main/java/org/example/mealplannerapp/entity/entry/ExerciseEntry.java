@@ -9,6 +9,8 @@ import lombok.experimental.SuperBuilder;
 import org.example.mealplannerapp.embeddable.EffortLevel;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Exercise;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
 
@@ -29,6 +31,7 @@ public class ExerciseEntry extends Entry {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exercise_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Exercise exercise;
 
     /**
