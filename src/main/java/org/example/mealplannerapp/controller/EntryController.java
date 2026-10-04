@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.example.mealplannerapp.dto.entry.request.DuplicateEntryRequest;
 import org.example.mealplannerapp.dto.entry.request.create.CreateEntryRequest;
+import org.example.mealplannerapp.dto.entry.request.edit.EditEntryRequest;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.security.IdentityService;
@@ -45,6 +46,17 @@ public class EntryController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    @PatchMapping("/entries/{entryId}")
+    public ResponseEntity<EntryResponse> editEntry(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long entryId,
+            @Valid @RequestBody EditEntryRequest request
+    ) {
+        User user = identityService.provisionFromJwt(jwt);
+        EntryResponse response = entryService.editEntry(user, entryId, request);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/entries/{entryId}")

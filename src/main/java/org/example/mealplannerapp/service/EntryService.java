@@ -5,6 +5,9 @@ import org.example.mealplannerapp.dto.entry.request.DuplicateEntryRequest;
 import org.example.mealplannerapp.dto.entry.request.create.CreateEntryRequest;
 import org.example.mealplannerapp.dto.entry.request.create.CreateExerciseEntryRequest;
 import org.example.mealplannerapp.dto.entry.request.create.CreateFoodEntryRequest;
+import org.example.mealplannerapp.dto.entry.request.edit.EditEntryRequest;
+import org.example.mealplannerapp.dto.entry.request.edit.EditExerciseEntryRequest;
+import org.example.mealplannerapp.dto.entry.request.edit.EditFoodEntryRequest;
 import org.example.mealplannerapp.dto.entry.response.EntryResponse;
 import org.example.mealplannerapp.embeddable.EffortLevel;
 import org.example.mealplannerapp.embeddable.ReferenceUnit;
@@ -17,6 +20,7 @@ import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.ExerciseEntry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 import org.example.mealplannerapp.exception.InvalidReferenceException;
+import org.example.mealplannerapp.exception.MappingMismatchException;
 import org.example.mealplannerapp.exception.ResourceNotFoundException;
 import org.example.mealplannerapp.mapper.EntryMapper;
 import org.example.mealplannerapp.projection.Placement;
@@ -140,6 +144,34 @@ public class EntryService {
     }
     //</editor-fold>
 
+    private void editFoodEntry(
+            FoodEntry entry, EditFoodEntryRequest request
+    ) {
+        throwIfInvalidUnit(request.unitName(), entry.getFood().getUnits());
+        throwIfInvalidVendor(request.vendorName(), entry.getFood().getVendors());
+
+        entry.setUnitName(request.unitName());
+        entry.setVendorName(request.vendorName());
+
+        if (request.unitName() == null) {
+            entry.setUnitQuantity(null);
+            entry.setGrams(request.quantity());
+        } else {
+            entry.setUnitQuantity(request.quantity());
+            entry.setGrams(request.quantity()
+                    .multiply(entry.getFood().mapUnitsToGrams().get(request.unitName())));
+        }
+    }
+
+    private void editExerciseEntry(
+            ExerciseEntry entry, EditExerciseEntryRequest request
+    ) {
+        throwIfInvalidLevel(request.levelName(), entry.getExercise().getLevels());
+
+        entry.setDuration(request.duration());
+        entry.setLevelName(request.levelName());
+    }
+
     public EntryResponse createEntry(
             User user, Long dayId, CreateEntryRequest request
     ) {
@@ -193,8 +225,6 @@ public class EntryService {
         return entryMapper.toResponse(saved);
     }
 
-    // TODO: editEntry
-    /*
     @Transactional
     public EntryResponse editEntry(
             User user, Long entryId, EditEntryRequest request
@@ -205,40 +235,21 @@ public class EntryService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Requested entry (id: " + entryId + ") not found."));
 
+        // Abort the duplication if the requested entry's referenced food/exercise no longer exists.
+        throwIfDeletedReference(entry);
+
+        // TODO: STUFF
         if (entry instanceof FoodEntry fe && request instanceof EditFoodEntryRequest fr) {
-            if (fe.getFood() == null) {
-                throw new InvalidReferenceException("wrong exception");
-            }
-
-            throwIfInvalidUnit(fr.unitName(), fe.getFood());
-            throwIfInvalidVendor(fr.vendorName(), fe.getFood());
-
-            if (fr.unitName() == null) {
-                fe.setUnitQuantity(null);
-                fe.setGrams(fr.quantity());
-            } else {
-                fe.setUnitQuantity(fr.quantity());
-                fe.setGrams(fr.quantity()
-                        .multiply(fe.getFood().mapUnitsToGrams().get(fr.unitName())));
-            }
-
+            editFoodEntry(fe, fr);
         } else if (entry instanceof ExerciseEntry xe && request instanceof EditExerciseEntryRequest xr) {
-            if (xe.getExercise() == null) {
-                throw new InvalidReferenceException("wrong exception");
-            }
-
-            throwIfInvalidLevel(xr.levelName(), xe.getExercise());
-
-            xe.setDuration(xr.duration());
-            xe.setLevelName(xr.levelName());
+            editExerciseEntry(xe, xr);
         } else {
-            throw new InvalidReferenceException("Mapping Mismatch Exception!");
+            throw new MappingMismatchException("Submitted data type does not match requested entry type.");
         }
 
         entry.snapshotInfo();
         return entryMapper.toResponse(entry);
     }
-    */
 
     @Transactional
     public void deleteEntry(

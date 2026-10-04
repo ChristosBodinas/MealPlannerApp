@@ -75,6 +75,15 @@ public class GlobalExceptionHandler {
                 .body(e.getMessage());
     }
 
+    @ExceptionHandler(MappingMismatchException.class)
+    public ResponseEntity<String> handleMappingMismatch(
+            MappingMismatchException e
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)     // TODO: Might there be a better status?
+                .body(e.getMessage());
+    }
+
     @ExceptionHandler(PlanNotFeasibleException.class)
     public ResponseEntity<String> handlePlanNotFeasible(
             PlanNotFeasibleException e
