@@ -13,6 +13,8 @@ import org.example.mealplannerapp.mapper.DayMapper;
 import org.example.mealplannerapp.mapper.DayMapperImpl;
 import org.example.mealplannerapp.mapper.PlanMapper;
 import org.example.mealplannerapp.mapper.PlanMapperImpl;
+import org.example.mealplannerapp.repository.DayRepository;
+import org.example.mealplannerapp.repository.EntryRepository;
 import org.example.mealplannerapp.repository.PlanRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -63,6 +65,12 @@ public class PlanServiceUnitTests {
     @Mock
     private PlanRepository planRepository;
 
+    @Mock
+    private DayRepository dayRepository;
+
+    @Mock
+    private EntryRepository entryRepository;
+
     // VARIABLES
     private User myUser;
 
@@ -84,7 +92,7 @@ public class PlanServiceUnitTests {
     void prepareServiceAndUser() {
         DayMapper dayMapper = new DayMapperImpl();
         planMapper = new PlanMapperImpl(dayMapper);
-        planService = new PlanService(planRepository, planMapper);
+        planService = new PlanService(planRepository, dayRepository, entryRepository, planMapper);
 
         myUser = defaultUser().id(USER_ID).build();
     }
