@@ -1,9 +1,9 @@
 package org.example.mealplannerapp.entity;
 
-import java.math.BigDecimal;
-
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
 
 /**
  * An entity that represents a particular day of a meal plan.

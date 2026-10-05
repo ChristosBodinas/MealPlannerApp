@@ -3,13 +3,16 @@ package org.example.mealplannerapp.service;
 import lombok.AllArgsConstructor;
 import org.example.mealplannerapp.dto.plan.request.CreatePlanRequest;
 import org.example.mealplannerapp.dto.plan.request.EditPlanRequest;
-import org.example.mealplannerapp.dto.plan.response.ListedPlanResponse;
-import org.example.mealplannerapp.dto.plan.response.PlanResponse;
+import org.example.mealplannerapp.dto.plan.response.*;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Plan;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.exception.*;
 import org.example.mealplannerapp.mapper.PlanMapper;
+import org.example.mealplannerapp.projection.DayStats;
+import org.example.mealplannerapp.projection.Stats;
+import org.example.mealplannerapp.repository.DayRepository;
+import org.example.mealplannerapp.repository.EntryRepository;
 import org.example.mealplannerapp.repository.PlanRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.function.BiConsumer;
 
 @Service
@@ -26,6 +30,8 @@ import java.util.function.BiConsumer;
 public class PlanService {
 
     private final PlanRepository planRepository;
+    private final DayRepository dayRepository;
+    private final EntryRepository entryRepository;
 
     private final PlanMapper planMapper;
 
@@ -128,7 +134,23 @@ public class PlanService {
         return planMapper.toResponse(plan);
     }
 
-    // retrievePlan
+    @Transactional
+    public void deletePlan(
+            User user, Long planId
+    ) {
+        Long userId = user.getId();
+
+        if (!planRepository.existsByIdVerified(userId, planId)) {
+            throw new ResourceNotFoundException(
+                    "Requested plan (id: " + planId + ") not found.");
+        }
+
+        entryRepository.deleteByPlan(planId);
+        dayRepository.deleteByPlan(planId);
+        planRepository.deleteById(planId);
+    }
+
+    @Transactional(readOnly = true)
     public PlanResponse retrievePlan(
             User user, Long planId
     ) {
@@ -139,12 +161,51 @@ public class PlanService {
         return planMapper.toResponse(plan);
     }
 
-    // searchPlans
+    @Transactional(readOnly = true)
     public Page<ListedPlanResponse> searchPlans(
             User user, String searchText, Pageable pageable
     ) {
         Long userId = user.getId();
         return planRepository.fetchShallowByUserAndText(userId, searchText, pageable)
                 .map(planMapper::toListedResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public PlanSummaryResponse summarizePlan(
+            User user, Long planId
+    ) {
+        Long userId = user.getId();
+
+        Plan plan = planRepository.fetchByIdVerified(userId, planId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Requested plan (id: " + planId + ") not found."));
+
+        List<DayStats> dayStats = entryRepository.summarizeDaysByPlan(planId);
+
+        Stats planStats = new Stats(
+                dayStats.stream().map(DayStats::calories).reduce(BigDecimal.ZERO, BigDecimal::add),
+                dayStats.stream().map(DayStats::protein).reduce(BigDecimal.ZERO, BigDecimal::add),
+                dayStats.stream().map(DayStats::carbs).reduce(BigDecimal.ZERO, BigDecimal::add),
+                dayStats.stream().map(DayStats::fat).reduce(BigDecimal.ZERO, BigDecimal::add),
+                dayStats.stream().map(DayStats::fiber).reduce(BigDecimal.ZERO, BigDecimal::add),
+                dayStats.stream().map(DayStats::price).reduce(BigDecimal.ZERO, BigDecimal::add)
+        );
+
+        return planMapper.toSummaryResponse(plan, planStats, dayStats);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ShopItemResponse> generateShoppingList(
+            User user, Long planId
+    ) {
+        Long userId = user.getId();
+
+        if (!planRepository.existsByIdVerified(userId, planId)) {
+            throw new ResourceNotFoundException("Requested plan (id: " + planId + ") not found.");
+        }
+
+        return entryRepository.extractShoppingListByPlan(planId).stream()
+                .map(planMapper::toShoppingListResponse)
+                .toList();
     }
 }

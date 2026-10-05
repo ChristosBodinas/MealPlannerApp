@@ -1,22 +1,20 @@
-package org.example.mealplannerapp.dto.entry.response;
+package org.example.mealplannerapp.dto.entry.response.listed;
 
 import org.example.mealplannerapp.common.Category;
-import org.example.mealplannerapp.dto.food.response.FoodResponse;
 import org.example.mealplannerapp.entity.Food;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
 
 import java.math.BigDecimal;
 
 /**
- * Response DTO for displaying {@link FoodEntry} data along
- * with the referenced {@link Food} data.
+ * Response DTO for displaying {@link FoodEntry} data without
+ * the referenced {@link Food} data.
  */
-public record FoodEntryResponse(
+public record ListedFoodEntryResponse(
         Long id,
         Category category,
         int position,
         String name,
-        FoodResponse food,
         BigDecimal grams,
         BigDecimal unitQuantity,
         String unitName,
@@ -27,5 +25,5 @@ public record FoodEntryResponse(
         BigDecimal fat,
         BigDecimal fiber,
         BigDecimal price
-) implements EntryResponse {
+) implements ListedEntryResponse {
 }

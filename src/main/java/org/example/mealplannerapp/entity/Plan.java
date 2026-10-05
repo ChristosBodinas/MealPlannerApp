@@ -1,13 +1,12 @@
 package org.example.mealplannerapp.entity;
 
+import jakarta.persistence.*;
+import lombok.*;
+import org.example.mealplannerapp.common.ActivityLevel;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Set;
-
-import org.example.mealplannerapp.common.ActivityLevel;
-
-import jakarta.persistence.*;
-import lombok.*;
 
 /**
  * An entity that represents an entire meal plan.

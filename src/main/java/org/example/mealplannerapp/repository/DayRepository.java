@@ -2,6 +2,7 @@ package org.example.mealplannerapp.repository;
 
 import org.example.mealplannerapp.entity.Day;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -21,6 +22,12 @@ public interface DayRepository extends JpaRepository<Day, Long> {
     boolean existsByIdVerified(
             @Param("userId") Long userId,
             @Param("dayId") Long dayId
+    );
+
+    @Modifying
+    @Query("DELETE FROM Day d WHERE d.plan.id = :planId")
+    void deleteByPlan(
+            @Param("planId") Long planId
     );
 
 }

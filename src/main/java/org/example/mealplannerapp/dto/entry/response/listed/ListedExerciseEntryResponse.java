@@ -1,22 +1,20 @@
-package org.example.mealplannerapp.dto.entry.response;
+package org.example.mealplannerapp.dto.entry.response.listed;
 
 import org.example.mealplannerapp.common.Category;
-import org.example.mealplannerapp.dto.exercise.response.ExerciseResponse;
 import org.example.mealplannerapp.entity.Exercise;
 import org.example.mealplannerapp.entity.entry.ExerciseEntry;
 
 import java.math.BigDecimal;
 
 /**
- * Response DTO for displaying {@link ExerciseEntry} data
- * along with the referenced {@link Exercise} data.
+ * Response DTO interface for displaying {@link ExerciseEntry} data without
+ * the referenced {@link Exercise} data.
  */
-public record ExerciseEntryResponse(
+public record ListedExerciseEntryResponse(
         Long id,
         Category category,
         int position,
         String name,
-        ExerciseResponse exercise,
         BigDecimal duration,
         String levelName,
         BigDecimal calories,
@@ -25,5 +23,5 @@ public record ExerciseEntryResponse(
         BigDecimal fat,
         BigDecimal fiber,
         BigDecimal price
-) implements EntryResponse {
+) implements ListedEntryResponse {
 }
