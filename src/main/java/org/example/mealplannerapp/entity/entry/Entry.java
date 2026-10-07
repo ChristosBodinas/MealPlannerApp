@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 // TODO: Decide whether to keep the unique constraint.
-@Table(uniqueConstraints = @UniqueConstraint(name="UniquePositionPerDayAndCategory", columnNames = {"day_id", "category", "position"}))
+@Table(uniqueConstraints = @UniqueConstraint(name = "UniquePositionPerDayAndCategory", columnNames = {"day_id", "category", "position"}))
 @Getter
 @Setter
 @NoArgsConstructor

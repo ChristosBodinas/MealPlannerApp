@@ -103,6 +103,20 @@ public class EntryServiceUnitTests {
         private final Category TEST_CATEGORY = Category.LUNCH;
         private final int TEST_COUNT = 4;
 
+        @Test
+        @DisplayName("Given a non-existent or non-owned dayId, throws a ResourceNotFoundException.")
+        void dayNotFound() {
+            // Arrange
+            CreateFoodEntryRequest request = CreateFoodEntryRequest.builder().build();
+
+            when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.createEntry(myUser, DAY_ID, request))
+                    .as("Method should throw a ResourceNotFoundException.")
+                    .isInstanceOf(ResourceNotFoundException.class);
+        }
+
         @Nested
         @DisplayName("with CreateFoodEntryRequest")
         class CreateFoodEntry {
@@ -421,20 +435,6 @@ public class EntryServiceUnitTests {
             }
         }
 
-        @Test
-        @DisplayName("Given a non-existent or non-owned dayId, throws a ResourceNotFoundException.")
-        void dayNotFound() {
-            // Arrange
-            CreateFoodEntryRequest request = CreateFoodEntryRequest.builder().build();
-
-            when(dayRepository.fetchByIdVerified(USER_ID, DAY_ID)).thenReturn(Optional.empty());
-
-            // Act + Assert
-            assertThatThrownBy(() -> entryService.createEntry(myUser, DAY_ID, request))
-                    .as("Method should throw a ResourceNotFoundException.")
-                    .isInstanceOf(ResourceNotFoundException.class);
-        }
-
     }
 
     @Nested
@@ -595,6 +595,20 @@ public class EntryServiceUnitTests {
             entry.setFat(BigDecimal.ONE.negate());
             entry.setFiber(BigDecimal.ONE.negate());
             entry.setProtein(BigDecimal.ONE.negate());
+        }
+
+        @Test
+        @DisplayName("Given a non-existent or non-owned entryId, throws a ResourceNotFoundException.")
+        void entryNotFound() {
+            // Arrange
+            EditFoodEntryRequest request = EditFoodEntryRequest.builder().build();
+
+            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> entryService.editEntry(myUser, ENTRY_ID, request))
+                    .as("Method should throw a ResourceNotFoundException.")
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
         @Nested
@@ -846,7 +860,7 @@ public class EntryServiceUnitTests {
 
                 // Assert
                 assertThat(response).as("Method should return an ExerciseEntryResponse.")
-                                .isInstanceOf(ExerciseEntryResponse.class);
+                        .isInstanceOf(ExerciseEntryResponse.class);
                 assertThat(response).as("Method output should match mapper output.")
                         .isEqualTo(entryMapper.toResponse(entry));
 
@@ -932,20 +946,6 @@ public class EntryServiceUnitTests {
                         .isEqualTo(original);
             }
 
-        }
-
-        @Test
-        @DisplayName("Given a non-existent or non-owned entryId, throws a ResourceNotFoundException.")
-        void entryNotFound() {
-            // Arrange
-            EditFoodEntryRequest request = EditFoodEntryRequest.builder().build();
-
-            when(entryRepository.fetchByIdVerified(USER_ID, ENTRY_ID)).thenReturn(Optional.empty());
-
-            // Act + Assert
-            assertThatThrownBy(() -> entryService.editEntry(myUser, ENTRY_ID, request))
-                    .as("Method should throw a ResourceNotFoundException.")
-                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
     }

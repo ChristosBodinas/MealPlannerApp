@@ -167,7 +167,7 @@ public class DayServiceUnitTests {
         private final int numCat = Category.values().length;
 
         private CategoryStats prepareCategoryStats(Category category, int calories, int protein,
-                                              int carbs, int fat, int fiber, int price) {
+                                                   int carbs, int fat, int fiber, int price) {
             return new CategoryStats(
                     category,
                     BigDecimal.valueOf(calories),
@@ -179,7 +179,7 @@ public class DayServiceUnitTests {
         }
 
         private CategoryStatsResponse prepareCategoryStatsResponse(Category category, int calories, int protein,
-                                                              int carbs, int fat, int fiber, int price) {
+                                                                   int carbs, int fat, int fiber, int price) {
             return new CategoryStatsResponse(
                     category,
                     BigDecimal.valueOf(calories),

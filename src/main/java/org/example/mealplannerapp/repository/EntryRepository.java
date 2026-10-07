@@ -3,7 +3,10 @@ package org.example.mealplannerapp.repository;
 
 import org.example.mealplannerapp.common.Category;
 import org.example.mealplannerapp.entity.entry.Entry;
-import org.example.mealplannerapp.projection.*;
+import org.example.mealplannerapp.projection.CategoryStats;
+import org.example.mealplannerapp.projection.DayStats;
+import org.example.mealplannerapp.projection.Placement;
+import org.example.mealplannerapp.projection.ShopItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -45,7 +48,7 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
             "(e.category, SUM(e.calories), SUM(e.protein), SUM(e.carbs), " +
             "SUM(e.fat), SUM(e.fiber), SUM(e.price)) " +
             "FROM Entry e WHERE e.day.id = :dayId " +
-            "GROUP BY e.category")
+            "GROUP BY e.category ORDER BY e.category")
     List<CategoryStats> summarizeCategoriesByDay(
             @Param("dayId") Long dayId
     );
@@ -54,15 +57,15 @@ public interface EntryRepository extends JpaRepository<Entry, Long> {
             "(e.day.id, SUM(e.calories), SUM(e.protein), SUM(e.carbs), " +
             "SUM(e.fat), SUM(e.fiber), SUM(e.price)) " +
             "FROM Entry e WHERE e.day.plan.id = :planId " +
-            "GROUP BY e.day")
+            "GROUP BY e.day ORDER BY e.day.position")
     List<DayStats> summarizeDaysByPlan(
             @Param("planId") Long planId
     );
 
-    @Query("SELECT new org.example.mealplannerapp.projection.ShoppingItem" +
+    @Query("SELECT new org.example.mealplannerapp.projection.ShopItem" +
             "(e.name, SUM(e.grams)) " +
             "FROM Entry e WHERE e.day.plan.id = :planId AND TYPE(e) = FoodEntry " +
-            "GROUP BY e.name")
+            "GROUP BY e.name ORDER BY e.name")
     List<ShopItem> extractShoppingListByPlan(
             @Param("planId") Long planId
     );

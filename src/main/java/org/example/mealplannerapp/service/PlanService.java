@@ -3,7 +3,10 @@ package org.example.mealplannerapp.service;
 import lombok.AllArgsConstructor;
 import org.example.mealplannerapp.dto.plan.request.CreatePlanRequest;
 import org.example.mealplannerapp.dto.plan.request.EditPlanRequest;
-import org.example.mealplannerapp.dto.plan.response.*;
+import org.example.mealplannerapp.dto.plan.response.ListedPlanResponse;
+import org.example.mealplannerapp.dto.plan.response.PlanResponse;
+import org.example.mealplannerapp.dto.plan.response.PlanSummaryResponse;
+import org.example.mealplannerapp.dto.plan.response.ShopItemResponse;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Plan;
 import org.example.mealplannerapp.entity.User;
@@ -200,15 +203,15 @@ public class PlanService {
         if (dayStats.size() < plan.getDays().size()) {
             completeDayStats = new ArrayList<>(plan.getDays().size());
             Map<Long, DayStats> mappedDayStats = dayStats.stream().collect(Collectors.toMap(
-                DayStats::id, Function.identity()));
+                    DayStats::id, Function.identity()));
 
             for (Day day : plan.getDays()) {
                 if (mappedDayStats.containsKey(day.getId())) {
                     completeDayStats.add(mappedDayStats.get(day.getId()));
                 } else {
                     completeDayStats.add(new DayStats(day.getId(),
-                    BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-                    BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
+                            BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                            BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
                 }
             }
         } else {

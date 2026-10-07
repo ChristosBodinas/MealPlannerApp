@@ -5,7 +5,10 @@ import org.example.mealplannerapp.entity.*;
 import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.entity.entry.ExerciseEntry;
 import org.example.mealplannerapp.entity.entry.FoodEntry;
+import org.example.mealplannerapp.projection.CategoryStats;
+import org.example.mealplannerapp.projection.DayStats;
 import org.example.mealplannerapp.projection.Placement;
+import org.example.mealplannerapp.projection.ShopItem;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,11 +21,13 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDay;
 import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultExerciseEntry;
 import static org.example.mealplannerapp.fixture.EntryTestFixtures.defaultFoodEntry;
@@ -111,6 +116,23 @@ public class EntryRepositoryTests {
         entityManager.persist(entry);
 
         return entry;
+    }
+
+    private void setEntryStats(Entry entry, int calories, int protein, int carbs, int fat, int fiber, int price) {
+        entry.setCalories(BigDecimal.valueOf(calories));
+        entry.setProtein(BigDecimal.valueOf(protein));
+        entry.setCarbs(BigDecimal.valueOf(carbs));
+        entry.setFat(BigDecimal.valueOf(fat));
+        entry.setFiber(BigDecimal.valueOf(fiber));
+        entry.setPrice(BigDecimal.valueOf(price));
+    }
+
+    private Plan prepareAdditionalPlan(User owner) {
+        Plan plan = defaultPlan().user(owner).build();
+        Day day = defaultDay().plan(plan).position(1).build();
+        plan.getDays().add(day);
+        entityManager.persist(plan);
+        return plan;
     }
 
     private Day prepareAdditionalDay(Plan plan) {
@@ -350,6 +372,262 @@ public class EntryRepositoryTests {
 
             // Assert
             assertThat(result).as("Method output should be empty.").isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("summarizeCategoriesByDay")
+    class SummarizeCategoriesByDay {
+
+        @Test
+        @DisplayName("The stats of entries in the same category are added up.")
+        void sameCategory() {
+            // Arrange
+            FoodEntry entry1 = prepareEntryPositional(myUser, myDay, Category.LUNCH, 1);
+            setEntryStats(entry1, 1, 2, 3, 4, 5, 6);
+            FoodEntry entry2 = prepareEntryPositional(myUser, myDay, Category.LUNCH, 2);
+            setEntryStats(entry2, 7, 8, 9, 10, 11, 12);
+            flushAndClear();
+
+            // Act
+            List<CategoryStats> result = entryRepository.summarizeCategoriesByDay(myDay.getId());
+
+            // Assert
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                    .isEqualTo(List.of(
+                            new CategoryStats(Category.LUNCH,
+                                    BigDecimal.valueOf(8), BigDecimal.valueOf(10), BigDecimal.valueOf(12),
+                                    BigDecimal.valueOf(14), BigDecimal.valueOf(16), BigDecimal.valueOf(18))
+                    ));
+        }
+
+        @Test
+        @DisplayName("Entries from different categories are not added up.")
+        void differentCategories() {
+            // Arrange
+            FoodEntry entry1 = prepareEntryPositional(myUser, myDay, Category.LUNCH, 1);
+            setEntryStats(entry1, 1, 2, 3, 4, 5, 6);
+            FoodEntry entry2 = prepareEntryPositional(myUser, myDay, Category.DINNER, 2);
+            setEntryStats(entry2, 7, 8, 9, 10, 11, 12);
+            flushAndClear();
+
+            // Act
+            List<CategoryStats> result = entryRepository.summarizeCategoriesByDay(myDay.getId());
+
+            // Assert
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                    .isEqualTo(List.of(
+                            new CategoryStats(Category.LUNCH,
+                                    BigDecimal.valueOf(1), BigDecimal.valueOf(2), BigDecimal.valueOf(3),
+                                    BigDecimal.valueOf(4), BigDecimal.valueOf(5), BigDecimal.valueOf(6)),
+                            new CategoryStats(Category.DINNER,
+                                    BigDecimal.valueOf(7), BigDecimal.valueOf(8), BigDecimal.valueOf(9),
+                                    BigDecimal.valueOf(10), BigDecimal.valueOf(11), BigDecimal.valueOf(12))
+                    ));
+
+        }
+
+        @Test
+        @DisplayName("Entries from other days are not included in the calculations.")
+        void otherDaysExcluded() {
+            // Arrange
+            Day invalidDay = prepareAdditionalDay(myPlan);
+            FoodEntry entry1 = prepareEntryPositional(myUser, myDay, Category.LUNCH, 1);
+            setEntryStats(entry1, 1, 2, 3, 4, 5, 6);
+            FoodEntry entry2 = prepareEntryPositional(myUser, invalidDay, Category.LUNCH, 2);
+            setEntryStats(entry2, 7, 8, 9, 10, 11, 12);
+            flushAndClear();
+
+            // Act
+            List<CategoryStats> result = entryRepository.summarizeCategoriesByDay(myDay.getId());
+
+            // Assert
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                    .isEqualTo(List.of(
+                            new CategoryStats(Category.LUNCH,
+                                    BigDecimal.valueOf(1), BigDecimal.valueOf(2), BigDecimal.valueOf(3),
+                                    BigDecimal.valueOf(4), BigDecimal.valueOf(5), BigDecimal.valueOf(6))
+                    ));
+        }
+    }
+
+    @Nested
+    @DisplayName("summarizeDaysByPlan")
+    class SummarizeDaysByPlan {
+
+        @Test
+        @DisplayName("The stats of entries from the same day are added up.")
+        void sameDay() {
+            // Arrange
+            FoodEntry entry1 = prepareEntryPositional(myUser, myDay, Category.LUNCH, 1);
+            setEntryStats(entry1, 1, 2, 3, 4, 5, 6);
+            FoodEntry entry2 = prepareEntryPositional(myUser, myDay, Category.SNACK, 1);
+            setEntryStats(entry2, 7, 8, 9, 10, 11, 12);
+            flushAndClear();
+
+            // Act
+            List<DayStats> result = entryRepository.summarizeDaysByPlan(myPlan.getId());
+
+            // Assert
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                    .isEqualTo(List.of(
+                            new DayStats(myDay.getId(),
+                                    BigDecimal.valueOf(8), BigDecimal.valueOf(10), BigDecimal.valueOf(12),
+                                    BigDecimal.valueOf(14), BigDecimal.valueOf(16), BigDecimal.valueOf(18))
+                    ));
+        }
+
+        @Test
+        @DisplayName("The stats of entries from different days are not added up.")
+        void differentDays() {
+            // Arrange
+            Day mySecondDay = prepareAdditionalDay(myPlan);
+            FoodEntry entry1 = prepareEntryPositional(myUser, myDay, Category.LUNCH, 1);
+            setEntryStats(entry1, 1, 2, 3, 4, 5, 6);
+            FoodEntry entry2 = prepareEntryPositional(myUser, mySecondDay, Category.SNACK, 1);
+            setEntryStats(entry2, 7, 8, 9, 10, 11, 12);
+            flushAndClear();
+
+            // Act
+            List<DayStats> result = entryRepository.summarizeDaysByPlan(myPlan.getId());
+
+            // Assert
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                    .isEqualTo(List.of(
+                            new DayStats(myDay.getId(),
+                                    BigDecimal.valueOf(1), BigDecimal.valueOf(2), BigDecimal.valueOf(3),
+                                    BigDecimal.valueOf(4), BigDecimal.valueOf(5), BigDecimal.valueOf(6)),
+                            new DayStats(mySecondDay.getId(),
+                                    BigDecimal.valueOf(7), BigDecimal.valueOf(8), BigDecimal.valueOf(9),
+                                    BigDecimal.valueOf(10), BigDecimal.valueOf(11), BigDecimal.valueOf(12))
+                    ));
+        }
+
+        @Test
+        @DisplayName("Entries from other plans are not included in the calculations.")
+        void otherPlansExcluded() {
+            // Arrange
+            Plan mySecondPlan = prepareAdditionalPlan(myUser);
+            Day mySecondDay = mySecondPlan.getDays().iterator().next();
+
+            FoodEntry entry1 = prepareEntryPositional(myUser, myDay, Category.LUNCH, 1);
+            setEntryStats(entry1, 1, 2, 3, 4, 5, 6);
+            FoodEntry entry2 = prepareEntryPositional(myUser, mySecondDay, Category.LUNCH, 1);
+            setEntryStats(entry2, 7, 8, 9, 10, 11, 12);
+            flushAndClear();
+
+            // Act
+            List<DayStats> result = entryRepository.summarizeDaysByPlan(myPlan.getId());
+
+            // Assert
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                    .isEqualTo(List.of(
+                            new DayStats(myDay.getId(),
+                                    BigDecimal.valueOf(1), BigDecimal.valueOf(2), BigDecimal.valueOf(3),
+                                    BigDecimal.valueOf(4), BigDecimal.valueOf(5), BigDecimal.valueOf(6))
+                    ));
+        }
+
+    }
+
+    @Nested
+    @DisplayName("extractShoppingListByPlan")
+    class ExtractShoppingListByPlan {
+
+        @Test
+        @DisplayName("The grams of entries with the same name are added up.")
+        void sameName() {
+            // Arrange
+            Day mySecondDay = prepareAdditionalDay(myPlan);
+            FoodEntry entry1 = prepareEntryPositional(myUser, myDay, Category.LUNCH, 1);
+            entry1.setName("Beans");
+            entry1.setGrams(BigDecimal.valueOf(100));
+
+            FoodEntry entry2 = prepareEntryPositional(myUser, mySecondDay, Category.SNACK, 1);
+            entry2.setName("Beans");
+            entry2.setGrams(BigDecimal.valueOf(250));
+
+            flushAndClear();
+
+            // Act
+            List<ShopItem> result = entryRepository.extractShoppingListByPlan(myPlan.getId());
+
+            // Assert
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                    .isEqualTo(List.of(
+                            new ShopItem("Beans", BigDecimal.valueOf(350))
+                    ));
+        }
+
+        @Test
+        @DisplayName("The grams of entries with different names are not added up.")
+        void differentName() {
+            // Arrange
+            Day mySecondDay = prepareAdditionalDay(myPlan);
+            FoodEntry entry1 = prepareEntryPositional(myUser, myDay, Category.LUNCH, 1);
+            entry1.setName("Beans");
+            entry1.setGrams(BigDecimal.valueOf(100));
+
+            FoodEntry entry2 = prepareEntryPositional(myUser, mySecondDay, Category.SNACK, 1);
+            entry2.setName("Lentils");
+            entry2.setGrams(BigDecimal.valueOf(250));
+
+            flushAndClear();
+
+            // Act
+            List<ShopItem> result = entryRepository.extractShoppingListByPlan(myPlan.getId());
+
+            // Assert
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                    .isEqualTo(List.of(
+                            new ShopItem("Beans", BigDecimal.valueOf(100)),
+                            new ShopItem("Lentils", BigDecimal.valueOf(250))
+                    ));
+        }
+
+        @Test
+        @DisplayName("Entries from other plans are not included in the calculations.")
+        void otherPlansExcluded() {
+            // Arrange
+            Plan mySecondPlan = prepareAdditionalPlan(myUser);
+            Day mySecondDay = mySecondPlan.getDays().iterator().next();
+
+            FoodEntry entry1 = prepareEntryPositional(myUser, myDay, Category.LUNCH, 1);
+            entry1.setName("Beans");
+            entry1.setGrams(BigDecimal.valueOf(100));
+
+            FoodEntry entry2 = prepareEntryPositional(myUser, mySecondDay, Category.LUNCH, 1);
+            entry2.setName("Beans");
+            entry2.setGrams(BigDecimal.valueOf(250));
+
+            flushAndClear();
+
+            // Act
+            List<ShopItem> result = entryRepository.extractShoppingListByPlan(myPlan.getId());
+
+            // Assert
+            assertThat(result)
+                    .usingRecursiveComparison()
+                    .withComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                    .isEqualTo(List.of(
+                            new ShopItem("Beans", BigDecimal.valueOf(100))
+                    ));
         }
     }
 

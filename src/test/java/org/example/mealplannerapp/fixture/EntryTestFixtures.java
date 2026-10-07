@@ -20,6 +20,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link FoodEntry} fixtures for testing
+     *
      * @return a FoodEntry builder with default values in {@code category}, {@code grams},
      * {@code unitQuantity}, {@code unitName}, and {@code vendorName}
      */
@@ -34,6 +35,7 @@ public class EntryTestFixtures {
 
     /**
      * Method for building {@link ExerciseEntry} fixtures for testing
+     *
      * @return an ExerciseEntry builder with default values in {@code category}, {@code duration},
      * and {@code levelName}
      */

@@ -15,13 +15,22 @@ public sealed interface ListedEntryResponse permits
         ListedFoodEntryResponse,
         ListedExerciseEntryResponse {
     Long id();
+
     Category category();
+
     int position();
+
     String name();
+
     BigDecimal calories();
+
     BigDecimal protein();
+
     BigDecimal carbs();
+
     BigDecimal fat();
+
     BigDecimal fiber();
+
     BigDecimal price();
 }
