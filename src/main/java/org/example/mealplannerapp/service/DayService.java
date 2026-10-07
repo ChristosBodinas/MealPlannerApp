@@ -1,6 +1,7 @@
 package org.example.mealplannerapp.service;
 
 import lombok.AllArgsConstructor;
+import org.example.mealplannerapp.common.Category;
 import org.example.mealplannerapp.dto.day.response.DaySummaryResponse;
 import org.example.mealplannerapp.dto.entry.response.listed.ListedEntryResponse;
 import org.example.mealplannerapp.entity.Day;
@@ -17,6 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 @Service
 @AllArgsConstructor
@@ -79,6 +84,22 @@ public class DayService {
                 categoryStats.stream().map(CategoryStats::price).reduce(BigDecimal.ZERO, BigDecimal::add)
         );
 
-        return dayMapper.toSummaryResponse(day, dayStats, categoryStats);
+        // Fill out category stats with "empty" categories.
+        List<CategoryStats> completeCategoryStats = new ArrayList<>(Category.values().length);
+
+        Map<Category, CategoryStats> mappedCategoryStats = categoryStats.stream().collect(Collectors.toMap(
+                CategoryStats::category, Function.identity()));
+
+        for (Category category : Category.values()) {
+                if (mappedCategoryStats.containsKey(category)) {
+                        completeCategoryStats.add(mappedCategoryStats.get(category));
+                } else {
+                        completeCategoryStats.add(new CategoryStats(category,
+                         BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                         BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
+                }
+        }
+
+        return dayMapper.toSummaryResponse(day, dayStats, completeCategoryStats);
     }
 }

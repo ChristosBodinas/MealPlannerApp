@@ -21,9 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -191,7 +195,24 @@ public class PlanService {
                 dayStats.stream().map(DayStats::price).reduce(BigDecimal.ZERO, BigDecimal::add)
         );
 
-        return planMapper.toSummaryResponse(plan, planStats, dayStats);
+        // Fill out day stats with "empty" days.
+        List<DayStats> completeDayStats = new ArrayList<>(plan.getDays().size());
+
+        Map<Long, DayStats> mappedDayStats = dayStats.stream().collect(Collectors.toMap(
+            DayStats::id, Function.identity()));
+
+        for (Day day : plan.getDays()) {
+            if (mappedDayStats.containsKey(day.getId())) {
+                completeDayStats.add(mappedDayStats.get(day.getId()));
+            } else {
+                completeDayStats.add(new DayStats(day.getId(),
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
+            }
+        }
+
+
+        return planMapper.toSummaryResponse(plan, planStats, completeDayStats);
     }
 
     @Transactional(readOnly = true)
