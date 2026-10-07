@@ -199,7 +199,6 @@ public class PlanService {
         List<DayStats> completeDayStats;
         if (dayStats.size() < plan.getDays().size()) {
             completeDayStats = new ArrayList<>(plan.getDays().size());
-
             Map<Long, DayStats> mappedDayStats = dayStats.stream().collect(Collectors.toMap(
                 DayStats::id, Function.identity()));
 

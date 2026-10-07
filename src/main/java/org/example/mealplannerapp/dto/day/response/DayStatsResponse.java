@@ -3,7 +3,7 @@ package org.example.mealplannerapp.dto.day.response;
 import java.math.BigDecimal;
 
 public record DayStatsResponse(
-        Long dayId,
+        Long id,
         BigDecimal calories,
         BigDecimal protein,
         BigDecimal carbs,
