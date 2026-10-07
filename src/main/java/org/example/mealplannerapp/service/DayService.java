@@ -85,19 +85,24 @@ public class DayService {
         );
 
         // Fill out category stats with "empty" categories.
-        List<CategoryStats> completeCategoryStats = new ArrayList<>(Category.values().length);
+        List<CategoryStats> completeCategoryStats;
+        if (categoryStats.size() < Category.values().length) {
+                completeCategoryStats = new ArrayList<>(Category.values().length);
 
-        Map<Category, CategoryStats> mappedCategoryStats = categoryStats.stream().collect(Collectors.toMap(
-                CategoryStats::category, Function.identity()));
+                Map<Category, CategoryStats> mappedCategoryStats = categoryStats.stream().collect(Collectors.toMap(
+                        CategoryStats::category, Function.identity()));
 
-        for (Category category : Category.values()) {
-                if (mappedCategoryStats.containsKey(category)) {
-                        completeCategoryStats.add(mappedCategoryStats.get(category));
-                } else {
-                        completeCategoryStats.add(new CategoryStats(category,
-                         BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-                         BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
+                for (Category category : Category.values()) {
+                        if (mappedCategoryStats.containsKey(category)) {
+                                completeCategoryStats.add(mappedCategoryStats.get(category));
+                        } else {
+                                completeCategoryStats.add(new CategoryStats(category,
+                                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
+                        }
                 }
+        } else {
+                completeCategoryStats = categoryStats;
         }
 
         return dayMapper.toSummaryResponse(day, dayStats, completeCategoryStats);

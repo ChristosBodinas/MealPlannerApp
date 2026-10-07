@@ -33,5 +33,5 @@ public interface PlanMapper {
 
     PlanSummaryResponse toSummaryResponse(Plan plan, Stats planStats, List<DayStats> dayStats);
 
-    ShopItemResponse toShoppingListResponse(ShopItem shoppingItems);
+    ShopItemResponse toShopItemResponse(ShopItem shoppingItems);
 }

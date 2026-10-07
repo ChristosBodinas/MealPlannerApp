@@ -196,21 +196,25 @@ public class PlanService {
         );
 
         // Fill out day stats with "empty" days.
-        List<DayStats> completeDayStats = new ArrayList<>(plan.getDays().size());
+        List<DayStats> completeDayStats;
+        if (dayStats.size() < plan.getDays().size()) {
+            completeDayStats = new ArrayList<>(plan.getDays().size());
 
-        Map<Long, DayStats> mappedDayStats = dayStats.stream().collect(Collectors.toMap(
-            DayStats::id, Function.identity()));
+            Map<Long, DayStats> mappedDayStats = dayStats.stream().collect(Collectors.toMap(
+                DayStats::id, Function.identity()));
 
-        for (Day day : plan.getDays()) {
-            if (mappedDayStats.containsKey(day.getId())) {
-                completeDayStats.add(mappedDayStats.get(day.getId()));
-            } else {
-                completeDayStats.add(new DayStats(day.getId(),
-                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
+            for (Day day : plan.getDays()) {
+                if (mappedDayStats.containsKey(day.getId())) {
+                    completeDayStats.add(mappedDayStats.get(day.getId()));
+                } else {
+                    completeDayStats.add(new DayStats(day.getId(),
+                    BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                    BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
+                }
             }
+        } else {
+            completeDayStats = dayStats;
         }
-
 
         return planMapper.toSummaryResponse(plan, planStats, completeDayStats);
     }
@@ -226,7 +230,7 @@ public class PlanService {
         }
 
         return entryRepository.extractShoppingListByPlan(planId).stream()
-                .map(planMapper::toShoppingListResponse)
+                .map(planMapper::toShopItemResponse)
                 .toList();
     }
 }
