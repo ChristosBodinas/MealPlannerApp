@@ -45,9 +45,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for the {@link PlanService} methods using a mocked
- * {@link PlanRepository} and a real (non-mocked) {@link PlanMapper}
- * interface.
+ * Unit tests for {@link PlanService} methods using mocked
+ * repositories and real (non-mocked) mappers.
  */
 @ExtendWith(MockitoExtension.class)
 public class PlanServiceUnitTests {

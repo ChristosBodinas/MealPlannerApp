@@ -43,6 +43,10 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for {@link FoodService} methods using a mocked
+ * {@link FoodRepository} and a real (non-mocked) {@link FoodMapper}.
+ */
 @ExtendWith(MockitoExtension.class)
 public class FoodServiceUnitTests {
 

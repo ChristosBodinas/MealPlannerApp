@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUser;
 
 /**
- * Unit tests for the {@link UserService} methods using a real (non-mocked)
+ * Unit tests for {@link UserService} methods using a real (non-mocked)
  * {@link UserMapper} instance.
  */
 public class UserServiceUnitTests {

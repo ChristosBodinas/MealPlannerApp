@@ -101,7 +101,10 @@ public class Food {
     @AttributeOverride(name = "purchaseGrams", column = @Column(name = "purchase_grams", nullable = false, precision = 6, scale = 2))
     private Set<VendorData> vendors;
 
-    // TODO: Javadoc?
+    /**
+     * Converts the food's reference units into a map for ease of access.
+     * @return a map of reference unit names and their corresponding grams
+     */
     public Map<String, BigDecimal> mapUnitsToGrams() {
         return units.stream().collect(Collectors.toMap(
                 ReferenceUnit::getName,
@@ -109,7 +112,10 @@ public class Food {
         ));
     }
 
-    // TODO: Javadoc?
+    /**
+     * Calculates the food's price per 100 grams of edible product for each vendor.
+     * @return a map of vendor names and their corresponding prices per 100 grams
+     */
     public Map<String, BigDecimal> computePrices100g() {
         return vendors.stream().collect(Collectors.toMap(
                 VendorData::getName,

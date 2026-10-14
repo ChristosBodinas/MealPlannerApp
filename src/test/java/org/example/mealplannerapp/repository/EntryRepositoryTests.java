@@ -457,9 +457,4 @@ public class EntryRepositoryTests {
 
     }
 
-    // deleteByDay
-    // TODO: Write tests. Optional.
-
-    // deleteByPlan
-    // TODO: Write tests. Optional.
 }

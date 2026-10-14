@@ -57,12 +57,30 @@ public class GlobalExceptionHandler {
                 .body(e.getMessage());
     }
 
+    @ExceptionHandler(InvalidReferenceException.class)
+    public ResponseEntity<String> handleInvalidReference(
+            InvalidReferenceException e
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+    }
+
     @ExceptionHandler(InvalidTotalException.class)
     public ResponseEntity<String> handleInvalidTotal(
             InvalidTotalException e
     ) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+    }
+
+    @ExceptionHandler(MappingMismatchException.class)
+    public ResponseEntity<String> handleMappingMismatch(
+            MappingMismatchException e
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
                 .body(e.getMessage());
     }
 

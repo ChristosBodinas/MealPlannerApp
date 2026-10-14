@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.example.mealplannerapp.embeddable.ReferenceUnit;
-import org.example.mealplannerapp.embeddable.VendorData;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Food;
 import org.hibernate.annotations.OnDelete;
@@ -113,14 +112,8 @@ public class FoodEntry extends Entry {
         }
 
         boolean vendorStillValid = food.getVendors().stream()
-                .map(VendorData::getName)   // TODO: Are these unnecessary?
-                .anyMatch(name -> name.equals(vendorName));
-
-        if (vendorStillValid) {
-            copy.setVendorName(vendorName);
-        } else {
-            copy.setVendorName(null);   // TODO: Can be shortened.
-        }
+                .anyMatch(v -> v.getName().equals(vendorName));
+        copy.setVendorName(vendorStillValid ? vendorName : null);
 
         copy.snapshotInfo();
         return copy;

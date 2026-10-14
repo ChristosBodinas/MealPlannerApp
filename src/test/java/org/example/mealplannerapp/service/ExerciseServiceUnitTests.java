@@ -37,9 +37,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for the {@link ExerciseService} methods using a mocked
- * {@link ExerciseRepository} and a real (non-mocked) {@link ExerciseMapper}
- * interface.
+ * Unit tests for {@link ExerciseService} methods using a mocked
+ * {@link ExerciseRepository} and a real (non-mocked) {@link ExerciseMapper}.
  */
 @ExtendWith(MockitoExtension.class)
 public class ExerciseServiceUnitTests {
