@@ -25,6 +25,7 @@ public class UserService {
         return userMapper.toResponse(user);
     }
 
+    @Transactional(readOnly = true)
     public UserDetailsResponse retrieveUserDetails(
             User user
     ) {

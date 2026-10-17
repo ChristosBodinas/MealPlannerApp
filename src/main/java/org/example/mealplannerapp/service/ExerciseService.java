@@ -118,6 +118,7 @@ public class ExerciseService {
      * @throws ResourceNotFoundException if {@code exerciseId} does not correspond to an existing
      *                                   exercise owned by {@code user}
      */
+    @Transactional(readOnly = true)
     public ExerciseResponse retrieveExercise(
             User user, Long exerciseId
     ) {
@@ -141,6 +142,7 @@ public class ExerciseService {
      * @return a page containing the top-level data of the retrieved exercises,
      * excluding their associated effort levels
      */
+    @Transactional(readOnly = true)
     public Page<ListedExerciseResponse> searchExercises(
             User user, String searchText, Pageable pageable
     ) {

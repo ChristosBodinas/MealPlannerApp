@@ -126,6 +126,7 @@ public class FoodService {
      * @throws ResourceNotFoundException if {@code foodId} does not correspond to an existing
      *                                   food owned by {@code user}
      */
+    @Transactional(readOnly = true)
     public FoodResponse retrieveFood(
             User user, Long foodId
     ) {
@@ -151,6 +152,7 @@ public class FoodService {
      * @return a page containing the top-level data of the retrieved foods,
      * excluding their associated units and vendors
      */
+    @Transactional(readOnly = true)
     public Page<ListedFoodResponse> searchFoods(
             User user, String searchText, Pageable pageable
     ) {

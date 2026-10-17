@@ -1,12 +1,13 @@
 package org.example.mealplannerapp.dto.day.response;
 
 import org.example.mealplannerapp.dto.StatsResponse;
+import org.example.mealplannerapp.entity.Day;
 
 import java.util.List;
 
 /**
  * Response DTO for displaying a summary of a particular
- * {@code Day}'s nutrition goals, total stats, and stats per
+ * {@link Day}'s nutrition goals, total stats, and stats per
  * category.
  */
 public record DaySummaryResponse(
