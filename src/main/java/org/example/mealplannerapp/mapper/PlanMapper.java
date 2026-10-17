@@ -4,8 +4,15 @@ import org.example.mealplannerapp.dto.plan.request.CreatePlanRequest;
 import org.example.mealplannerapp.dto.plan.request.EditPlanRequest;
 import org.example.mealplannerapp.dto.plan.response.ListedPlanResponse;
 import org.example.mealplannerapp.dto.plan.response.PlanResponse;
+import org.example.mealplannerapp.dto.plan.response.PlanSummaryResponse;
+import org.example.mealplannerapp.dto.plan.response.ShopItemResponse;
 import org.example.mealplannerapp.entity.Plan;
+import org.example.mealplannerapp.projection.DayStats;
+import org.example.mealplannerapp.projection.ShopItem;
+import org.example.mealplannerapp.projection.Stats;
 import org.mapstruct.*;
+
+import java.util.List;
 
 @Mapper(componentModel = "spring",
         uses = DayMapper.class,
@@ -26,4 +33,8 @@ public interface PlanMapper {
     PlanResponse toResponse(Plan plan);
 
     ListedPlanResponse toListedResponse(Plan plan);
+
+    PlanSummaryResponse toSummaryResponse(Plan plan, Stats planStats, List<DayStats> dayStats);
+
+    ShopItemResponse toShopItemResponse(ShopItem shoppingItems);
 }

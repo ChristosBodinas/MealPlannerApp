@@ -1,18 +1,25 @@
 package org.example.mealplannerapp.service;
 
 import org.example.mealplannerapp.common.ActivityLevel;
+import org.example.mealplannerapp.dto.StatsResponse;
+import org.example.mealplannerapp.dto.day.response.DayStatsResponse;
 import org.example.mealplannerapp.dto.plan.request.CreatePlanRequest;
 import org.example.mealplannerapp.dto.plan.request.EditPlanRequest;
 import org.example.mealplannerapp.dto.plan.response.ListedPlanResponse;
 import org.example.mealplannerapp.dto.plan.response.PlanResponse;
+import org.example.mealplannerapp.dto.plan.response.PlanSummaryResponse;
+import org.example.mealplannerapp.dto.plan.response.ShopItemResponse;
 import org.example.mealplannerapp.entity.Day;
 import org.example.mealplannerapp.entity.Plan;
 import org.example.mealplannerapp.entity.User;
 import org.example.mealplannerapp.exception.*;
-import org.example.mealplannerapp.mapper.DayMapper;
 import org.example.mealplannerapp.mapper.DayMapperImpl;
 import org.example.mealplannerapp.mapper.PlanMapper;
 import org.example.mealplannerapp.mapper.PlanMapperImpl;
+import org.example.mealplannerapp.projection.DayStats;
+import org.example.mealplannerapp.projection.ShopItem;
+import org.example.mealplannerapp.repository.DayRepository;
+import org.example.mealplannerapp.repository.EntryRepository;
 import org.example.mealplannerapp.repository.PlanRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,8 +43,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDay;
 import static org.example.mealplannerapp.fixture.PlanTestFixtures.*;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUser;
@@ -45,8 +51,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * Unit tests for {@link PlanService} methods using mocked
- * repositories and real (non-mocked) mappers.
+ * Unit tests for the {@link PlanService} methods using a mocked
+ * {@link PlanRepository} and a real (non-mocked) {@link PlanMapper}
+ * interface.
  */
 @ExtendWith(MockitoExtension.class)
 public class PlanServiceUnitTests {
@@ -62,6 +69,12 @@ public class PlanServiceUnitTests {
     @Mock
     private PlanRepository planRepository;
 
+    @Mock
+    private DayRepository dayRepository;
+
+    @Mock
+    private EntryRepository entryRepository;
+
     // VARIABLES
     private User myUser;
 
@@ -71,7 +84,7 @@ public class PlanServiceUnitTests {
         plan.computeNutritionTargets(3);
 
         for (int i = 1; i <= 3; i++) {
-            Day day = defaultDay().plan(plan).position(i).build();
+            Day day = defaultDay().id((long) i).plan(plan).position(i).build();
             plan.getDays().add(day);
         }
 
@@ -81,9 +94,8 @@ public class PlanServiceUnitTests {
     // TESTS PROPER
     @BeforeEach
     void prepareServiceAndUser() {
-        DayMapper dayMapper = new DayMapperImpl();
-        planMapper = new PlanMapperImpl(dayMapper);
-        planService = new PlanService(planRepository, planMapper);
+        planMapper = new PlanMapperImpl(new DayMapperImpl());
+        planService = new PlanService(planRepository, dayRepository, entryRepository, planMapper);
 
         myUser = defaultUser().id(USER_ID).build();
     }
@@ -121,9 +133,10 @@ public class PlanServiceUnitTests {
 
             assertThat(created).as("New plan fields should match request data.")
                     .usingRecursiveComparison()
-                    .comparingOnlyFields("name", "startWeight", "desiredWeightLoss", "activityLevel",
+                    .comparingOnlyFields("name", "startWeight", "desiredWeightLoss",
+                            "activityLevel",
                             "proteinRatio", "carbsRatio", "fatRatio")
-                    .isEqualTo(request);  // This only ensures that the mapping was correct.
+                    .isEqualTo(request); // This only ensures that the mapping was correct.
 
             assertThat(created.getDays().size()).as("New plan should have the right number of days.")
                     .isEqualTo(request.numberOfDays());
@@ -131,7 +144,8 @@ public class PlanServiceUnitTests {
             assertThat(created.getDays())
                     .as("Plan days should have unique positions.")
                     .extracting(Day::getPosition)
-                    .containsExactlyInAnyOrderElementsOf(IntStream.rangeClosed(1, request.numberOfDays()).boxed().toList());
+                    .containsExactlyInAnyOrderElementsOf(IntStream
+                            .rangeClosed(1, request.numberOfDays()).boxed().toList());
         }
 
         @Test
@@ -209,7 +223,8 @@ public class PlanServiceUnitTests {
         void planNotFeasible() {
             // Arrange
             CreatePlanRequest request = defaultCreatePlanRequest()
-                    .desiredWeightLoss(BigDecimal.valueOf(9.9)) // It's physically impossible to lose this match in 1-14 days.
+                    .desiredWeightLoss(BigDecimal.valueOf(9.9)) // It's physically impossible to
+                    // lose this match in 1-14 days.
                     .build();
 
             // Act + Assert
@@ -260,7 +275,8 @@ public class PlanServiceUnitTests {
         }
 
         @Test
-        @DisplayName("Given an existing planId owned by the current user and a request with all ratios set to null, " +
+        @DisplayName("Given an existing planId owned by the current user and a request with all ratios set to null, "
+                +
                 "leaves ratios unchanged and updates the other fields, then recalculates nutrition targets.")
         void ratiosAllNull() {
             // Arrange
@@ -278,12 +294,14 @@ public class PlanServiceUnitTests {
 
             assertThat(fetched).as("Updated plan fields should match request fields.")
                     .usingRecursiveComparison()
-                    .comparingOnlyFields("name", "startWeight", "desiredWeightLoss", "activityLevel")
+                    .comparingOnlyFields("name", "startWeight", "desiredWeightLoss",
+                            "activityLevel")
                     .isEqualTo(request);
         }
 
         @Test
-        @DisplayName("Given an existing planId owned by the current user and a request with all ratios set to non-null values, " +
+        @DisplayName("Given an existing planId owned by the current user and a request with all ratios set to non-null values, "
+                +
                 "updates all fields, then recalculates nutrition targets.")
         void ratiosAllNonNull() {
             // Arrange
@@ -301,7 +319,8 @@ public class PlanServiceUnitTests {
 
             assertThat(fetched).as("Updated plan fields should match request fields.")
                     .usingRecursiveComparison()
-                    .comparingOnlyFields("name", "startWeight", "desiredWeightLoss", "activityLevel",
+                    .comparingOnlyFields("name", "startWeight", "desiredWeightLoss",
+                            "activityLevel",
                             "proteinRatio", "carbsRatio", "fatRatio")
                     .isEqualTo(request);
         }
@@ -412,7 +431,8 @@ public class PlanServiceUnitTests {
         void planNotFeasible() {
             // Arrange
             EditPlanRequest request = defaultEditPlanRequest()
-                    .desiredWeightLoss(BigDecimal.valueOf(9.9)) // It's physically impossible to lose this match in 1-14 days.
+                    .desiredWeightLoss(BigDecimal.valueOf(9.9)) // It's physically impossible to
+                    // lose this match in 1-14 days.
                     .build();
             Plan fetched = prepareDefaultPlan();
 
@@ -424,6 +444,43 @@ public class PlanServiceUnitTests {
                     .isInstanceOf(PlanNotFeasibleException.class);
         }
 
+    }
+
+    @Nested
+    @DisplayName("deletePlan")
+    class DeletePlan {
+
+        @Test
+        @DisplayName("Given an existing planId owned by the current user, deletes that plan and all its days and entries.")
+        void planDeleted() {
+            // Arrange
+            when(planRepository.existsByIdVerified(USER_ID, PLAN_ID)).thenReturn(true);
+
+            // Act + Assert
+            assertThatCode(() -> planService.deletePlan(myUser, PLAN_ID))
+                    .as("Method should throw no exceptions.")
+                    .doesNotThrowAnyException();
+
+            verify(entryRepository, description("Entries should be deleted.")).deleteByPlan(PLAN_ID);
+            verify(dayRepository, description("Days should be deleted.")).deleteByPlan(PLAN_ID);
+            verify(planRepository, description("Plan should be deleted.")).deleteById(PLAN_ID);
+        }
+
+        @Test
+        @DisplayName("Given a non-existent or non-owned planId, throws a ResourceNotFoundException.")
+        void planNotFound() {
+            // Arrange
+            when(planRepository.existsByIdVerified(USER_ID, PLAN_ID)).thenReturn(false);
+
+            // Act + Assert
+            assertThatThrownBy(() -> planService.deletePlan(myUser, PLAN_ID))
+                    .as("Method should throw a ResourceNotFoundException.")
+                    .isInstanceOf(ResourceNotFoundException.class);
+
+            verifyNoMoreInteractions(planRepository);
+            verifyNoInteractions(entryRepository);
+            verifyNoInteractions(dayRepository);
+        }
     }
 
     @Nested
@@ -488,4 +545,140 @@ public class PlanServiceUnitTests {
 
     }
 
+    @Nested
+    @DisplayName("summarizePlan")
+    class SummarizePlan {
+
+        private DayStats prepareDayStats(Long dayId, int calories, int protein,
+                                         int carbs, int fat, int fiber, int price) {
+            return new DayStats(
+                    dayId,
+                    BigDecimal.valueOf(calories),
+                    BigDecimal.valueOf(protein),
+                    BigDecimal.valueOf(carbs),
+                    BigDecimal.valueOf(fat),
+                    BigDecimal.valueOf(fiber),
+                    BigDecimal.valueOf(price));
+        }
+
+        private DayStatsResponse prepareDayStatsResponse(Long dayId, int calories, int protein,
+                                                         int carbs, int fat, int fiber, int price) {
+            return new DayStatsResponse(
+                    dayId,
+                    BigDecimal.valueOf(calories),
+                    BigDecimal.valueOf(protein),
+                    BigDecimal.valueOf(carbs),
+                    BigDecimal.valueOf(fat),
+                    BigDecimal.valueOf(fiber),
+                    BigDecimal.valueOf(price));
+        }
+
+        @Test
+        @DisplayName("Given an existing planId owned by the current user, returns a PlanSummaryResponse.")
+        void planSummarized() {
+            // Arrange
+            Plan fetched = prepareDefaultPlan();
+            DayStats dayStats1 = prepareDayStats(1L, 1, 2, 3, 4, 5, 6);
+            DayStats dayStats2 = prepareDayStats(2L, 7, 8, 9, 10, 11, 12);
+            DayStats dayStats3 = prepareDayStats(3L, 13, 14, 15, 16, 17, 18);
+            List<DayStats> dayStats = new ArrayList<>(List.of(dayStats1, dayStats2, dayStats3));
+
+            when(planRepository.fetchByIdVerified(USER_ID, PLAN_ID)).thenReturn(Optional.of(fetched));
+            when(entryRepository.summarizeDaysByPlan(PLAN_ID)).thenReturn(dayStats);
+
+            // Act
+            PlanSummaryResponse response = planService.summarizePlan(myUser, PLAN_ID);
+
+            // Assert
+            assertThat(response.plan()).as("Plan should be properly returned.")
+                    .isEqualTo(planMapper.toResponse(fetched));
+
+            assertThat(response.planStats()).as("Plan stats should be properly calculated.")
+                    .extracting(StatsResponse::calories, StatsResponse::protein, StatsResponse::carbs,
+                            StatsResponse::fat, StatsResponse::fiber, StatsResponse::price)
+                    .containsExactly(
+                            BigDecimal.valueOf(21), BigDecimal.valueOf(24), BigDecimal.valueOf(27),
+                            BigDecimal.valueOf(30), BigDecimal.valueOf(33), BigDecimal.valueOf(36));
+
+            assertThat(response.dayStats()).as("Day stats should be properly returned.")
+                    .containsExactly(
+                            prepareDayStatsResponse(1L, 1, 2, 3, 4, 5, 6),
+                            prepareDayStatsResponse(2L, 7, 8, 9, 10, 11, 12),
+                            prepareDayStatsResponse(3L, 13, 14, 15, 16, 17, 18));
+        }
+
+        @Test
+        @DisplayName("Includes days without any entries in the returned response.")
+        void missingDaysFilled() {
+            // Arrange
+            Plan fetched = prepareDefaultPlan();
+            DayStats dayStats1 = prepareDayStats(1L, 1, 2, 3, 4, 5, 6);
+            DayStats dayStats3 = prepareDayStats(3L, 13, 14, 15, 16, 17, 18);
+            List<DayStats> dayStats = new ArrayList<>(List.of(dayStats1, dayStats3));
+
+            when(planRepository.fetchByIdVerified(USER_ID, PLAN_ID)).thenReturn(Optional.of(fetched));
+            when(entryRepository.summarizeDaysByPlan(PLAN_ID)).thenReturn(dayStats);
+
+            // Act
+            PlanSummaryResponse response = planService.summarizePlan(myUser, PLAN_ID);
+
+            // Assert
+            assertThat(response.dayStats()).as("Day stats should be properly returned.")
+                    .containsExactly(
+                            prepareDayStatsResponse(1L, 1, 2, 3, 4, 5, 6),
+                            prepareDayStatsResponse(2L, 0, 0, 0, 0, 0, 0),
+                            prepareDayStatsResponse(3L, 13, 14, 15, 16, 17, 18));
+        }
+
+        @Test
+        @DisplayName("Given a non-existent or non-owned planId, throws a ResourceNotFoundException.")
+        void planNotFound() {
+            // Arrange
+            when(planRepository.fetchByIdVerified(USER_ID, PLAN_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> planService.summarizePlan(myUser, PLAN_ID))
+                    .as("Method should throw a ResourceNotFoundException.")
+                    .isInstanceOf(ResourceNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("generateShoppingList")
+    class GenerateShoppingList {
+
+        @Test
+        @DisplayName("Given an existing planId owned by the current user, returns a list of ShopItemResponses.")
+        void listGenerated() {
+            // Arrange
+            ShopItem item1 = new ShopItem("Chicken", BigDecimal.valueOf(500.0));
+            ShopItem item2 = new ShopItem("Lentils", BigDecimal.valueOf(400.0));
+            ShopItem item3 = new ShopItem("Milk", BigDecimal.valueOf(1000.0));
+            List<ShopItem> items = new ArrayList<>(List.of(item1, item2, item3));
+
+            when(planRepository.existsByIdVerified(USER_ID, PLAN_ID)).thenReturn(true);
+            when(entryRepository.extractShoppingListByPlan(PLAN_ID)).thenReturn(items);
+
+            // Act
+            List<ShopItemResponse> response = planService.generateShoppingList(myUser, PLAN_ID);
+
+            // Assert
+            assertThat(response).as("Method outputs should match mapper outputs.")
+                    .containsExactly(planMapper.toShopItemResponse(item1),
+                            planMapper.toShopItemResponse(item2),
+                            planMapper.toShopItemResponse(item3));
+        }
+
+        @Test
+        @DisplayName("Given a non-existent or non-owned planId, throws a ResourceNotFoundException.")
+        void planNotFound() {
+            // Arrange
+            when(planRepository.existsByIdVerified(USER_ID, PLAN_ID)).thenReturn(false);
+
+            // Act + Assert
+            assertThatThrownBy(() -> planService.generateShoppingList(myUser, PLAN_ID))
+                    .as("Method should throw a ResourceNotFoundException.")
+                    .isInstanceOf(ResourceNotFoundException.class);
+        }
+    }
 }
