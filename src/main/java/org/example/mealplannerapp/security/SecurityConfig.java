@@ -7,7 +7,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
-// TODO: Javadocs.
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -17,7 +16,11 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health")
+                        .requestMatchers(
+                                "/actuator/health",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated())

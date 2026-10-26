@@ -95,7 +95,7 @@ public class PlanController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/plans/{planId}/shop_list")
+    @GetMapping("/plans/{planId}/shop")
     public ResponseEntity<List<ShopItemResponse>> generateShoppingList(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable Long planId
