@@ -2,6 +2,7 @@ package org.example.mealplannerapp.service;
 
 import org.example.mealplannerapp.common.ActivityLevel;
 import org.example.mealplannerapp.dto.StatsResponse;
+import org.example.mealplannerapp.dto.day.request.DayGoalsRequest;
 import org.example.mealplannerapp.dto.day.response.DayStatsResponse;
 import org.example.mealplannerapp.dto.plan.request.CreatePlanRequest;
 import org.example.mealplannerapp.dto.plan.request.EditPlanRequest;
@@ -17,6 +18,7 @@ import org.example.mealplannerapp.mapper.DayMapperImpl;
 import org.example.mealplannerapp.mapper.PlanMapper;
 import org.example.mealplannerapp.mapper.PlanMapperImpl;
 import org.example.mealplannerapp.projection.DayStats;
+import org.example.mealplannerapp.projection.Goals;
 import org.example.mealplannerapp.projection.ShopItem;
 import org.example.mealplannerapp.repository.DayRepository;
 import org.example.mealplannerapp.repository.EntryRepository;
@@ -45,6 +47,7 @@ import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDay;
+import static org.example.mealplannerapp.fixture.DayTestFixtures.defaultDayGoalsRequest;
 import static org.example.mealplannerapp.fixture.PlanTestFixtures.*;
 import static org.example.mealplannerapp.fixture.UserTestFixtures.defaultUser;
 import static org.mockito.ArgumentMatchers.any;
@@ -399,7 +402,7 @@ public class PlanServiceUnitTests {
         }
 
         @Test
-        @DisplayName("Given a request with some but not all ratios set to null, throws an IncompleteDataException.")
+        @DisplayName("Given a request with some but not all ratios set to null, throws a RequestShapeException.")
         void incompleteRatios() {
             // Arrange
             EditPlanRequest request = defaultEditPlanRequest()
@@ -409,8 +412,8 @@ public class PlanServiceUnitTests {
 
             // Act + Assert
             assertThatThrownBy(() -> planService.editPlanParameters(myUser, PLAN_ID, request))
-                    .as("Method should throw an IncompleteDataException.")
-                    .isInstanceOf(IncompleteRequestException.class);
+                    .as("Method should throw a RequestShapeException.")
+                    .isInstanceOf(RequestShapeException.class);
         }
 
         @Test
@@ -444,6 +447,154 @@ public class PlanServiceUnitTests {
                     .isInstanceOf(PlanNotFeasibleException.class);
         }
 
+    }
+
+    @Nested
+    @DisplayName("editDailyGoals")
+    class EditDailyGoals {
+
+        private List<DayGoalsRequest> prepareDefaultRequests(int number) {
+            List<DayGoalsRequest> requests = new ArrayList<>(number);
+            for (int i = 0; i < number; i++) {
+                DayGoalsRequest request = defaultDayGoalsRequest().build();
+                requests.add(request);
+            }
+            return requests;
+        }
+
+        private List<DayGoalsRequest> prepareValidRequests(Plan plan) {
+            int number = plan.getDays().size();
+
+            Goals usualGoals = new Goals(
+                    plan.getTargetCalories().divide(BigDecimal.valueOf(number), RoundingMode.HALF_UP),
+                    plan.getTargetProtein().divide(BigDecimal.valueOf(number), RoundingMode.HALF_UP),
+                    plan.getTargetCarbs().divide(BigDecimal.valueOf(number), RoundingMode.HALF_UP),
+                    plan.getTargetFat().divide(BigDecimal.valueOf(number), RoundingMode.HALF_UP),
+                    BigDecimal.TEN
+            );
+
+            BigDecimal totalCalories = BigDecimal.ZERO;
+            BigDecimal totalProtein = BigDecimal.ZERO;
+            BigDecimal totalCarbs = BigDecimal.ZERO;
+            BigDecimal totalFat = BigDecimal.ZERO;
+
+            List<DayGoalsRequest> requests = new ArrayList<>(number);
+            for (int i = 0; i < number - 1; i++) {
+                DayGoalsRequest request = new DayGoalsRequest(usualGoals.targetCalories(), usualGoals.targetProtein(),
+                        usualGoals.targetCarbs(), usualGoals.targetFat(), usualGoals.targetFiber());
+                requests.add(request);
+
+                totalCalories = totalCalories.add(usualGoals.targetCalories());
+                totalProtein = totalProtein.add(usualGoals.targetProtein());
+                totalCarbs = totalCarbs.add(usualGoals.targetCarbs());
+                totalFat = totalFat.add(usualGoals.targetFat());
+            }
+
+            DayGoalsRequest lastOne = new DayGoalsRequest(
+                    plan.getTargetCalories().subtract(totalCalories),
+                    plan.getTargetProtein().subtract(totalProtein),
+                    plan.getTargetCarbs().subtract(totalCarbs),
+                    plan.getTargetFat().subtract(totalFat),
+                    BigDecimal.TEN);
+            requests.add(lastOne);
+
+            return requests;
+        }
+
+        private List<DayGoalsRequest> prepareInvalidRequests(Plan plan) {
+            int number = plan.getDays().size();
+
+            List<DayGoalsRequest> requests = new ArrayList<>(number);
+            for (int i = 0; i < number; i++) {
+                DayGoalsRequest request = new DayGoalsRequest(plan.getTargetCalories(), plan.getTargetProtein(),
+                        plan.getTargetCarbs(), plan.getTargetFat(), BigDecimal.TEN);
+                requests.add(request);
+            }
+
+            return requests;
+        }
+
+        @Test
+        @DisplayName("Given an existing planId owned by the current user and a list of valid requests, updates daily goals.")
+        void goalsEdited() {
+            // Arrange
+            Plan fetched = prepareDefaultPlan();
+            List<DayGoalsRequest> requests = prepareValidRequests(fetched);
+
+            when(planRepository.fetchByIdVerified(USER_ID, PLAN_ID)).thenReturn(Optional.of(fetched));
+
+            // Act + Assert
+            assertThatCode(() -> planService.editDailyGoals(myUser, PLAN_ID, requests))
+                    .as("Method runs without throwing any exceptions.")
+                    .doesNotThrowAnyException();
+
+            assertThat(fetched.getDays()).as("Daily goals should be altered according to the requests.")
+                    .usingRecursiveComparison()
+                    .comparingOnlyFields("targetCalories", "targetProtein", "targetCarbs", "targetFat", "targetFiber")
+                    .isEqualTo(requests);
+        }
+
+        @Test
+        @DisplayName("Given fewer requests than the plan has days, throws a RequestShapeException.")
+        void tooFewRequests() {
+            // Arrange
+            Plan fetched = prepareDefaultPlan();
+            List<DayGoalsRequest> requests = prepareDefaultRequests(fetched.getDays().size() - 1);
+
+            when(planRepository.fetchByIdVerified(USER_ID, PLAN_ID)).thenReturn(Optional.of(fetched));
+
+            // Act + Assert
+            assertThatThrownBy(() -> planService.editDailyGoals(myUser, PLAN_ID, requests))
+                    .as("Method should throw a RequestShapeException.")
+                    .isInstanceOf(RequestShapeException.class);
+        }
+
+        @Test
+        @DisplayName("Given more requests than the plan has days, throws a RequestShapeException.")
+        void tooManyRequests() {
+            // Arrange
+            Plan fetched = prepareDefaultPlan();
+            List<DayGoalsRequest> requests = prepareDefaultRequests(fetched.getDays().size() + 1);
+
+            when(planRepository.fetchByIdVerified(USER_ID, PLAN_ID)).thenReturn(Optional.of(fetched));
+
+            // Act + Assert
+            assertThatThrownBy(() -> planService.editDailyGoals(myUser, PLAN_ID, requests))
+                    .as("Method should throw a RequestShapeException.")
+                    .isInstanceOf(RequestShapeException.class);
+        }
+
+        @Test
+        @DisplayName("Given goals that don't add up to the plan's totals, throw an InvalidTotalException.")
+        void goalsDontAddUp() {
+            // Arrange
+            Plan fetched = prepareDefaultPlan();
+            List<DayGoalsRequest> requests = prepareInvalidRequests(fetched);
+
+            when(planRepository.fetchByIdVerified(USER_ID, PLAN_ID)).thenReturn(Optional.of(fetched));
+
+            // Act + Assert
+            assertThatThrownBy(() -> planService.editDailyGoals(myUser, PLAN_ID, requests))
+                    .as("Method should throw an InvalidTotalException.")
+                    .isInstanceOf(InvalidTotalException.class);
+
+            assertThat(fetched.getDays()).as("Daily goals should not be altered.")
+                    .usingRecursiveComparison()
+                    .comparingOnlyFields("targetCalories", "targetProtein", "targetCarbs", "targetFat", "targetFiber")
+                    .isNotEqualTo(requests);
+        }
+
+        @Test
+        @DisplayName("Given a non-existing or non-owned planId, throws a ResourceNotFoundException.")
+        void planNotFound() {
+            // Arrange
+            List<DayGoalsRequest> requests = prepareDefaultRequests(3);
+
+            when(planRepository.fetchByIdVerified(USER_ID, PLAN_ID)).thenReturn(Optional.empty());
+
+            // Act + Assert
+            assertThatThrownBy(() -> planService.editDailyGoals(myUser, PLAN_ID, requests));
+        }
     }
 
     @Nested

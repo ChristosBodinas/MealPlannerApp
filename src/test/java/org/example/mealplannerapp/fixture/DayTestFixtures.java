@@ -1,5 +1,6 @@
 package org.example.mealplannerapp.fixture;
 
+import org.example.mealplannerapp.dto.day.request.DayGoalsRequest;
 import org.example.mealplannerapp.entity.Day;
 
 import java.math.BigDecimal;
@@ -20,6 +21,15 @@ public class DayTestFixtures {
      */
     public static Day.DayBuilder defaultDay() {
         return Day.builder()
+                .targetCalories(DEFAULT_TARGET_CALORIES)
+                .targetProtein(DEFAULT_TARGET_PROTEIN)
+                .targetCarbs(DEFAULT_TARGET_CARBS)
+                .targetFat(DEFAULT_TARGET_FAT)
+                .targetFiber(DEFAULT_TARGET_FIBER);
+    }
+
+    public static DayGoalsRequest.DayGoalsRequestBuilder defaultDayGoalsRequest() {
+        return DayGoalsRequest.builder()
                 .targetCalories(DEFAULT_TARGET_CALORIES)
                 .targetProtein(DEFAULT_TARGET_PROTEIN)
                 .targetCarbs(DEFAULT_TARGET_CARBS)

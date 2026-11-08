@@ -48,9 +48,9 @@ public class GlobalExceptionHandler {
                 .body(e.getMessage());
     }
 
-    @ExceptionHandler(IncompleteRequestException.class)
-    public ResponseEntity<String> handleIncompleteRequest(
-            IncompleteRequestException e
+    @ExceptionHandler(RequestShapeException.class)
+    public ResponseEntity<String> handleRequestShape(
+            RequestShapeException e
     ) {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)

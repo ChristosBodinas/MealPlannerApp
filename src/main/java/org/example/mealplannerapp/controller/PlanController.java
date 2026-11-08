@@ -2,6 +2,7 @@ package org.example.mealplannerapp.controller;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.example.mealplannerapp.dto.day.request.DayGoalsRequest;
 import org.example.mealplannerapp.dto.plan.request.CreatePlanRequest;
 import org.example.mealplannerapp.dto.plan.request.EditPlanRequest;
 import org.example.mealplannerapp.dto.plan.response.ListedPlanResponse;
@@ -51,6 +52,17 @@ public class PlanController {
         User user = identityService.provisionFromJwt(jwt);
         PlanResponse response = planService.editPlanParameters(user, planId, request);
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/plans/{planId}/goals")
+    public ResponseEntity<Void> editDailyGoals(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long planId,
+            @RequestBody List<@Valid DayGoalsRequest> requests
+    ) {
+        User user = identityService.provisionFromJwt(jwt);
+        planService.editDailyGoals(user, planId, requests);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/plans/{planId}")

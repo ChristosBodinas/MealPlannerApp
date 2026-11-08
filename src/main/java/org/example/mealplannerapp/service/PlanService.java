@@ -1,6 +1,7 @@
 package org.example.mealplannerapp.service;
 
 import lombok.AllArgsConstructor;
+import org.example.mealplannerapp.dto.day.request.DayGoalsRequest;
 import org.example.mealplannerapp.dto.plan.request.CreatePlanRequest;
 import org.example.mealplannerapp.dto.plan.request.EditPlanRequest;
 import org.example.mealplannerapp.dto.plan.response.ListedPlanResponse;
@@ -14,6 +15,7 @@ import org.example.mealplannerapp.entity.entry.Entry;
 import org.example.mealplannerapp.exception.*;
 import org.example.mealplannerapp.mapper.PlanMapper;
 import org.example.mealplannerapp.projection.DayStats;
+import org.example.mealplannerapp.projection.Goals;
 import org.example.mealplannerapp.projection.Stats;
 import org.example.mealplannerapp.repository.DayRepository;
 import org.example.mealplannerapp.repository.EntryRepository;
@@ -67,6 +69,28 @@ public class PlanService {
         if (tdee.compareTo(averageDailyDeficit) <= 0) {
             throw new PlanNotFeasibleException("The suggested plan is not nutritionally feasible.");
         }
+    }
+
+    private void throwIfInvalidDailyGoals(Plan plan, List<DayGoalsRequest> requests) {
+        // Plans do not have their own target fiber, so the projections below set that value to zero.
+        Goals totalDayGoals = new Goals(
+                requests.stream().map(DayGoalsRequest::targetCalories).reduce(BigDecimal.ZERO, BigDecimal::add),
+                requests.stream().map(DayGoalsRequest::targetProtein).reduce(BigDecimal.ZERO, BigDecimal::add),
+                requests.stream().map(DayGoalsRequest::targetCarbs).reduce(BigDecimal.ZERO, BigDecimal::add),
+                requests.stream().map(DayGoalsRequest::targetFat).reduce(BigDecimal.ZERO, BigDecimal::add),
+                BigDecimal.ZERO);
+
+        Goals planGoals = new Goals(
+                plan.getTargetCalories(),
+                plan.getTargetProtein(),
+                plan.getTargetCarbs(),
+                plan.getTargetFat(),
+                BigDecimal.ZERO);
+
+        if (!totalDayGoals.equals(planGoals)) {
+            throw new InvalidTotalException("Submitted daily goals do not add up to the set plan goals.");
+        }
+
     }
 
     private void computeDailyGoals(User user, Plan plan, Day day, int numberOfDays) {
@@ -127,11 +151,11 @@ public class PlanService {
      * @param planId  the identifier of the plan to be updated
      * @param request the submitted plan update data
      * @return the full data of the new plan and the days that comprise it
-     * @throws InvalidTotalException      if the submitted macronutrient ratios do not properly add up to 100%
-     * @throws IncompleteRequestException if some but not all macronutrient ratios are submitted
-     * @throws ResourceNotFoundException  if {@code planId} does not correspond to an existing
-     *                                    plan owned by {@code user}
-     * @throws PlanNotFeasibleException   if the submitted data results in zero or negative nutrition targets
+     * @throws InvalidTotalException     if the submitted macronutrient ratios do not properly add up to 100%
+     * @throws RequestShapeException     if some but not all macronutrient ratios are submitted
+     * @throws ResourceNotFoundException if {@code planId} does not correspond to an existing
+     *                                   plan owned by {@code user}
+     * @throws PlanNotFeasibleException  if the submitted data results in zero or negative nutrition targets
      */
     @Transactional
     public PlanResponse editPlanParameters(
@@ -149,7 +173,7 @@ public class PlanService {
             throwIfInvalidRatios(request.proteinRatio(), request.carbsRatio(), request.fatRatio());
             mapperMethod = planMapper::updateIncludeRatios;
         } else {
-            throw new IncompleteRequestException("Ratios were only partially filled out.");
+            throw new RequestShapeException("Ratios were only partially filled out.");
         }
 
         Long userId = user.getId();
@@ -168,6 +192,47 @@ public class PlanService {
         }
 
         return planMapper.toResponse(plan);
+    }
+
+    /**
+     * Update the nutrition goals of each {@link Day} in the {@link Plan} identified by {@code planId} and
+     * owned by {@code user} using the submitted {@code request} data.
+     *
+     * @param user     the user making the request
+     * @param planId   the identifier of the plan to be updated
+     * @param requests list of nutrition goals for each day
+     * @throws ResourceNotFoundException if {@code planId} does not correspond to an existing
+     *                                   plan owned by {@code user}
+     * @throws RequestShapeException     if too few or too many nutrition goals are submitted
+     * @throws InvalidTotalException     if the submitted goals don't add up to the plan-wide goals
+     */
+    @Transactional
+    public void editDailyGoals(
+            User user, Long planId, List<DayGoalsRequest> requests
+    ) {
+        Long userId = user.getId();
+        Plan plan = planRepository.fetchByIdVerified(userId, planId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Requested plan (id: " + planId + ") not found."));
+
+        if (requests.size() < plan.getDays().size()) {
+            throw new RequestShapeException("The requested plan contains more days than goals have been submitted for.");
+        } else if (requests.size() > plan.getDays().size()) {
+            throw new RequestShapeException("The requested plan contains fewer days than goals have been submitted for.");
+        }
+
+        throwIfInvalidDailyGoals(plan, requests);
+
+        int i = 0;
+        for (Day day : plan.getDays()) {
+            DayGoalsRequest request = requests.get(i);
+            day.setTargetCalories(request.targetCalories());
+            day.setTargetProtein(request.targetProtein());
+            day.setTargetCarbs(request.targetCarbs());
+            day.setTargetFat(request.targetFat());
+            day.setTargetFiber(request.targetFiber());
+            i++;
+        }
     }
 
     /**

@@ -230,6 +230,7 @@ All search endpoints accept the following query parameters:
 |----------|---------------------------|---------------------------------------------------------------------------------|
 | `POST`   | `/plans`                  | Create a plan and its days, and calculate nutritional targets.                  |
 | `PATCH`  | `/plans/{planId}`         | Update a plan's parameters, and recalculate nutritional targets.                |
+| `PATCH`  | `/plans/{planId}/goals`   | Manually update the daily goals for a single plan.                              |     
 | `DELETE` | `/plans/{planId}`         | Delete a plan, along with every day and entry in it.                            |
 | `GET`    | `/plans/{planId}`         | Retrieve a single plan, along with its days.                                    |
 | `GET`    | `/plans`                  | Search your plans by name. Days not included.                                   |
